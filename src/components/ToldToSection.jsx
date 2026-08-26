@@ -3,19 +3,14 @@ import { logCompletion, removeCompletionToday } from '../utils';
 import { checkAndUnlockBadges } from '../utils/badgeUtils';
 
 export default function ToldToSection() {
-  const [tasks, setTasks] = useState([]);
+  const [tasks, setTasks] = useState(() => {
+    const saved = localStorage.getItem('pinboard_tasks');
+    return saved ? JSON.parse(saved) : [];
+  });
   const [taskName, setTaskName] = useState('');
   const [whoSaidIt, setWhoSaidIt] = useState('');
   const [dueDate, setDueDate] = useState('');
   const [isScheduling, setIsScheduling] = useState(false);
-
-  // Load from local storage
-  useEffect(() => {
-    const saved = localStorage.getItem('pinboard_tasks');
-    if (saved) {
-      setTasks(JSON.parse(saved));
-    }
-  }, []);
 
   // Save to local storage whenever tasks change
   useEffect(() => {
