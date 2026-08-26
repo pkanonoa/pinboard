@@ -36,6 +36,7 @@ export default function DailyRitualsSection() {
   
   const [editingHabitId, setEditingHabitId] = useState(null);
   const [editHabitData, setEditHabitData] = useState({ name: '', goal: '', unit: '' });
+  const [expandedHabitId, setExpandedHabitId] = useState(null);
 
   // State for time picker
   const [editingReminderId, setEditingReminderId] = useState(null);
@@ -354,38 +355,14 @@ export default function DailyRitualsSection() {
                 <>
                   <div className="flex justify-between items-start mb-2">
                     <div className="flex-1 min-w-0 pr-2">
-                      <div className="flex items-start gap-1 flex-wrap">
-                        <h3 className={`font-semibold mr-1 mt-0.5 ${isCompleted ? 'text-emerald-400' : 'text-gray-100'}`}>
-                          {habit.name}
-                        </h3>
-                        <div className="flex items-center flex-shrink-0 mt-0.5">
-                          <button 
-                            onClick={() => openTimePicker(habit)}
-                            className={`p-1 rounded transition-colors ${habit.reminderTime ? 'text-emerald-400 hover:bg-gray-700' : 'text-gray-500 hover:text-gray-300 hover:bg-gray-700'}`}
-                            title={habit.reminderTime ? `Reminder set for ${formatTime12h(habit.reminderTime)}` : 'Set reminder'}
-                          >
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                          </button>
-                          
-                          <button 
-                            onClick={() => startEditHabit(habit)}
-                            className="p-1 text-gray-500 hover:text-gray-300 hover:bg-gray-700 rounded transition-colors ml-0.5"
-                            title="Edit ritual"
-                          >
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
-                          </button>
-                          
-                          <button 
-                            onClick={() => handleDeleteHabit(habit.id)}
-                            className="p-1 text-gray-500 hover:text-red-400 hover:bg-gray-700 rounded transition-colors ml-0.5"
-                            title="Delete ritual"
-                          >
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-                          </button>
-                        </div>
-                      </div>
+                      <button 
+                        onClick={() => setExpandedHabitId(expandedHabitId === habit.id ? null : habit.id)}
+                        className={`font-semibold mt-0.5 text-left transition-colors hover:text-emerald-300 focus:outline-none ${isCompleted ? 'text-emerald-400' : 'text-gray-100'}`}
+                      >
+                        {habit.name}
+                      </button>
                       
-                      <p className="text-xs text-gray-400 mt-0.5 flex items-center gap-2">
+                      <p className="text-xs text-gray-400 mt-1 flex items-center gap-2">
                         <span>{habit.count} / {habit.goal} {habit.unit}</span>
                         {habit.reminderTime && (
                           <span className="text-emerald-500/70 text-[10px] bg-emerald-900/30 px-1.5 py-0.5 rounded">
@@ -420,6 +397,35 @@ export default function DailyRitualsSection() {
                       )}
                     </div>
                   </div>
+
+                  {/* Action Buttons when Expanded */}
+                  {expandedHabitId === habit.id && (
+                    <div className="flex items-center gap-2 mt-3 mb-2 animate-fade-in-down border-t border-gray-700/50 pt-3">
+                      <button 
+                        onClick={() => openTimePicker(habit)}
+                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded text-xs transition-colors ${habit.reminderTime ? 'text-emerald-400 bg-emerald-900/30 hover:bg-emerald-900/50' : 'text-gray-300 bg-gray-700/50 hover:bg-gray-700 hover:text-gray-100'}`}
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        Reminder
+                      </button>
+                      
+                      <button 
+                        onClick={() => startEditHabit(habit)}
+                        className="flex items-center gap-1.5 px-3 py-1.5 text-gray-300 bg-gray-700/50 hover:bg-gray-700 hover:text-gray-100 rounded text-xs transition-colors"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+                        Edit
+                      </button>
+                      
+                      <button 
+                        onClick={() => handleDeleteHabit(habit.id)}
+                        className="flex items-center gap-1.5 px-3 py-1.5 text-gray-400 bg-gray-700/50 hover:bg-red-900/40 hover:text-red-400 rounded text-xs transition-colors"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                        Delete
+                      </button>
+                    </div>
+                  )}
 
               {/* Time Picker Dropdown */}
               {editingReminderId === habit.id && (
