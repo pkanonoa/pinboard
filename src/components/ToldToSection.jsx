@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { logCompletion, removeCompletionToday } from '../utils';
+import { logCompletion, removeCompletionToday, syncStateToBackend } from '../utils';
 import { checkAndUnlockBadges } from '../utils/badgeUtils';
 
 export default function ToldToSection() {
@@ -11,45 +11,28 @@ export default function ToldToSection() {
   const [whoSaidIt, setWhoSaidIt] = useState('');
   const [dueDate, setDueDate] = useState('');
   const [isScheduling, setIsScheduling] = useState(false);
+  const [dailyReviewTime, setDailyReviewTime] = useState(() => {
+    return localStorage.getItem('pinboard_daily_review_time') || '20:00';
+  });
+  const [showSettings, setShowSettings] = useState(false);
+
+  useEffect(() => {
+    localStorage.setItem('pinboard_daily_review_time', dailyReviewTime);
+  }, [dailyReviewTime]);
 
   // Save to local storage whenever tasks change
   useEffect(() => {
     localStorage.setItem('pinboard_tasks', JSON.stringify(tasks));
     checkAndUnlockBadges();
+    syncStateToBackend();
   }, [tasks]);
 
   const scheduleNotification = async (taskName, dueDateStr) => {
-    if (!('serviceWorker' in navigator)) return;
-    
-    setIsScheduling(true);
-    try {
-      const registration = await navigator.serviceWorker.ready;
-      const subscription = await registration.pushManager.getSubscription();
-      
-      if (!subscription) {
-        setIsScheduling(false);
-        return;
-      }
-
-      const date = new Date(dueDateStr);
-      
-      await fetch('/api/send-notification', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          subscription,
-          title: 'Pinboard Reminder',
-          body: `Task due: ${taskName}`,
-          scheduledFor: date.getTime()
-        })
-      });
-    } catch (e) {
-      console.error('Failed to schedule notification', e);
-    } finally {
-      setIsScheduling(false);
-    }
+    // Old explicit scheduleNotification replaced by syncStateToBackend global approach
+    // We keep this function stub here in case we want immediate pushes, but QStash handles it now.
+    // Instead we just make sure sync happens immediately:
+    await syncStateToBackend();
+    setIsScheduling(false);
   };
 
   const handleSubmit = async (e) => {
@@ -115,12 +98,39 @@ export default function ToldToSection() {
 
   return (
     <div className="w-full max-w-md bg-gray-900 border border-gray-800 rounded-xl shadow-lg p-5 z-10">
-      <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
-        <svg className="w-5 h-5 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"></path>
-        </svg>
-        Told To...
-      </h2>
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-xl font-bold text-white flex items-center gap-2">
+          <svg className="w-5 h-5 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"></path>
+          </svg>
+          Told To...
+        </h2>
+        <button 
+          onClick={() => setShowSettings(!showSettings)}
+          className="text-gray-400 hover:text-white transition-colors"
+          title="Settings"
+        >
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+          </svg>
+        </button>
+      </div>
+
+      {showSettings && (
+        <div className="mb-6 bg-gray-800 p-4 rounded-lg border border-gray-700 animate-fade-in-down">
+          <h3 className="text-sm font-medium text-gray-300 mb-3 uppercase tracking-wider">Task Notification Settings</h3>
+          <div>
+            <label className="block text-xs font-bold text-gray-400 mb-1">Daily Review Time (For tasks without due dates)</label>
+            <input 
+              type="time" 
+              value={dailyReviewTime}
+              onChange={e => setDailyReviewTime(e.target.value)}
+              className="w-full bg-gray-950 border border-gray-700 rounded px-3 py-2 text-white text-sm focus:outline-none focus:border-indigo-500 [color-scheme:dark]"
+            />
+          </div>
+        </div>
+      )}
 
       <form onSubmit={handleSubmit} className="flex flex-col gap-3 mb-6">
         <input 

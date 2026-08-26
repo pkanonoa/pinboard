@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { syncStateToBackend } from '../utils';
 
 // Vite exposes env variables prefixed with VITE_ via import.meta.env
 const publicVapidKey = import.meta.env.VITE_VAPID_PUBLIC_KEY;
@@ -58,18 +59,8 @@ export default function NotificationManager() {
           applicationServerKey: urlBase64ToUint8Array(publicVapidKey)
         });
 
-        // Send the subscription to our backend
-        await fetch('/api/send-notification', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            subscription,
-            title: 'Welcome to Pinboard!',
-            body: 'Push notifications are successfully enabled.'
-          })
-        });
+        // Send the subscription and current state to our backend
+        await syncStateToBackend();
 
         localStorage.setItem('pinboard_push_subscribed', 'true');
         setShowPrompt(false);

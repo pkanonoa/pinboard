@@ -90,3 +90,61 @@ export const removeCompletionToday = (type, id) => {
     console.error('Failed to remove completion log', e);
   }
 };
+
+export const syncStateToBackend = async () => {
+  if (!('serviceWorker' in navigator)) return;
+  
+  try {
+    const registration = await navigator.serviceWorker.ready;
+    let subscription = await registration.pushManager.getSubscription();
+    
+    if (!subscription && Notification.permission === 'granted') {
+      try {
+        const publicVapidKey = import.meta.env.VITE_VAPID_PUBLIC_KEY;
+        if (publicVapidKey) {
+          const padding = '='.repeat((4 - publicVapidKey.length % 4) % 4);
+          const base64 = (publicVapidKey + padding).replace(/-/g, '+').replace(/_/g, '/');
+          const rawData = window.atob(base64);
+          const outputArray = new Uint8Array(rawData.length);
+          for (let i = 0; i < rawData.length; ++i) { outputArray[i] = rawData.charCodeAt(i); }
+
+          subscription = await registration.pushManager.subscribe({
+            userVisibleOnly: true,
+            applicationServerKey: outputArray
+          });
+        }
+      } catch (subErr) {
+        console.error('Auto-subscribe failed:', subErr);
+      }
+    }
+    
+    if (!subscription) return; // No push subscription, no need to sync state for notifications
+
+    let habits = [];
+    try {
+      const savedRitualsStr = localStorage.getItem('pinboard_rituals_data');
+      if (savedRitualsStr) {
+        habits = JSON.parse(savedRitualsStr).habits || [];
+      }
+    } catch(e) {}
+
+    let tasks = [];
+    try {
+      const savedTasks = localStorage.getItem('pinboard_tasks');
+      if (savedTasks) {
+        tasks = JSON.parse(savedTasks);
+      }
+    } catch(e) {}
+
+    const dailyReviewTime = localStorage.getItem('pinboard_daily_review_time') || '20:00';
+    const timezoneOffset = new Date().getTimezoneOffset();
+
+    await fetch('/api/sync-state', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ subscription, habits, tasks, dailyReviewTime, timezoneOffset })
+    });
+  } catch (e) {
+    console.error('Error syncing state to backend', e);
+  }
+};

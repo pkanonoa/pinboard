@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { logCompletion, removeCompletionToday } from '../utils';
+import { logCompletion, removeCompletionToday, syncStateToBackend } from '../utils';
 import { checkAndUnlockBadges } from '../utils/badgeUtils';
+import confetti from 'canvas-confetti';
 
 const DEFAULT_HABITS = [
-  { id: 'h1', name: 'Drink Water', goal: 8, unit: 'glasses', count: 0, streak: 0, lastCompletedDate: null, reminderTime: null },
-  { id: 'h2', name: 'Exercise', goal: 1, unit: 'session', count: 0, streak: 0, lastCompletedDate: null, reminderTime: null },
-  { id: 'h3', name: 'Sleep Early', goal: 1, unit: 'time', count: 0, streak: 0, lastCompletedDate: null, reminderTime: null }
+  { id: 'h1', name: 'Drink Water', goal: 8, unit: 'glasses', count: 0, streak: 0, lastCompletedDate: null, reminderMode: 'off', reminderSettings: {} },
+  { id: 'h2', name: 'Exercise', goal: 1, unit: 'session', count: 0, streak: 0, lastCompletedDate: null, reminderMode: 'off', reminderSettings: {} },
+  { id: 'h3', name: 'Sleep Early', goal: 1, unit: 'time', count: 0, streak: 0, lastCompletedDate: null, reminderMode: 'off', reminderSettings: {} },
+  { id: 'h4', name: 'Wake up Early', goal: 1, unit: 'time', count: 0, streak: 0, lastCompletedDate: null, reminderMode: 'fixed', reminderSettings: { hours: 2, times: ['05:30'] } }
 ];
 
 const getLocalYMD = () => {
@@ -35,13 +37,8 @@ export default function DailyRitualsSection() {
   const [newHabit, setNewHabit] = useState({ name: '', goal: '', unit: '' });
   
   const [editingHabitId, setEditingHabitId] = useState(null);
-  const [editHabitData, setEditHabitData] = useState({ name: '', goal: '', unit: '' });
+  const [editHabitData, setEditHabitData] = useState({ name: '', goal: '', unit: '', reminderMode: 'off', reminderHours: 2, reminderTimes: ['09:00'] });
   const [expandedHabitId, setExpandedHabitId] = useState(null);
-
-  // State for time picker
-  const [editingReminderId, setEditingReminderId] = useState(null);
-  const [tempTime, setTempTime] = useState('');
-  const [isSchedulingId, setIsSchedulingId] = useState(null);
 
   // Load from local storage and handle daily reset
   useEffect(() => {
@@ -92,6 +89,7 @@ export default function DailyRitualsSection() {
       localStorage.setItem('pinboard_rituals_data', JSON.stringify(dataToSave));
       // Check badges after a state change is saved
       checkAndUnlockBadges();
+      syncStateToBackend();
     }
   }, [habits, lastResetDate]);
 
@@ -108,6 +106,7 @@ export default function DailyRitualsSection() {
           newStreak += 1;
           newLastCompletedDate = todayStr;
           logCompletion('habit', id);
+          confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
         }
 
         return {
@@ -159,7 +158,8 @@ export default function DailyRitualsSection() {
       count: 0,
       streak: 0,
       lastCompletedDate: null,
-      reminderTime: null
+      reminderMode: 'off',
+      reminderSettings: {}
     };
 
     setHabits([...habits, habit]);
@@ -173,8 +173,14 @@ export default function DailyRitualsSection() {
 
   const startEditHabit = (habit) => {
     setEditingHabitId(habit.id);
-    setEditHabitData({ name: habit.name, goal: habit.goal, unit: habit.unit });
-    setEditingReminderId(null);
+    setEditHabitData({ 
+      name: habit.name, 
+      goal: habit.goal, 
+      unit: habit.unit,
+      reminderMode: habit.reminderMode || 'off',
+      reminderHours: habit.reminderSettings?.hours || 2,
+      reminderTimes: habit.reminderSettings?.times || ['09:00']
+    });
   };
 
   const saveEditHabit = (e) => {
@@ -182,66 +188,17 @@ export default function DailyRitualsSection() {
     if (!editHabitData.name || !editHabitData.goal || !editHabitData.unit) return;
     setHabits(currentHabits => currentHabits.map(h => 
       h.id === editingHabitId 
-        ? { ...h, name: editHabitData.name, goal: parseInt(editHabitData.goal, 10), unit: editHabitData.unit } 
+        ? { 
+            ...h, 
+            name: editHabitData.name, 
+            goal: parseInt(editHabitData.goal, 10), 
+            unit: editHabitData.unit,
+            reminderMode: editHabitData.reminderMode,
+            reminderSettings: { hours: editHabitData.reminderHours, times: editHabitData.reminderTimes }
+          } 
         : h
     ));
     setEditingHabitId(null);
-  };
-
-  const scheduleReminder = async (habitId, habitName, time) => {
-    if (!('serviceWorker' in navigator)) return;
-    
-    setIsSchedulingId(habitId);
-    try {
-      const registration = await navigator.serviceWorker.ready;
-      const subscription = await registration.pushManager.getSubscription();
-      
-      if (!subscription) {
-        setIsSchedulingId(null);
-        return;
-      }
-
-      await fetch('/api/send-notification', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          subscription,
-          title: 'Daily Ritual Reminder',
-          body: `Time to work on your habit: ${habitName}`,
-          recurringTime: time,
-          habitId: habitId
-        })
-      });
-    } catch (e) {
-      console.error('Failed to schedule recurring notification', e);
-    } finally {
-      setIsSchedulingId(null);
-    }
-  };
-
-  const handleSaveReminder = async (id, name) => {
-    setHabits(currentHabits => currentHabits.map(h => 
-      h.id === id ? { ...h, reminderTime: tempTime } : h
-    ));
-    
-    // Call API to schedule or clear
-    await scheduleReminder(id, name, tempTime);
-    setEditingReminderId(null);
-  };
-
-  const handleClearReminder = async (id, name) => {
-    setHabits(currentHabits => currentHabits.map(h => 
-      h.id === id ? { ...h, reminderTime: null } : h
-    ));
-    
-    // Pass null/empty to API to clear it
-    await scheduleReminder(id, name, null);
-    setEditingReminderId(null);
-  };
-
-  const openTimePicker = (habit) => {
-    setTempTime(habit.reminderTime || '09:00');
-    setEditingReminderId(habit.id);
   };
 
   return (
@@ -342,6 +299,49 @@ export default function DailyRitualsSection() {
                       className="w-2/3 bg-gray-900 border border-gray-600 rounded px-3 py-2 text-sm text-white focus:border-emerald-500 focus:outline-none"
                     />
                   </div>
+
+                  <div className="mb-3 p-3 bg-gray-800/50 rounded-lg border border-gray-700">
+                    <label className="block text-xs font-bold text-gray-400 mb-1 uppercase tracking-wider">Reminder Mode</label>
+                    <select
+                      value={editHabitData.reminderMode}
+                      onChange={e => setEditHabitData({...editHabitData, reminderMode: e.target.value})}
+                      className="w-full bg-gray-900 border border-gray-600 rounded px-3 py-2 text-white text-sm focus:outline-none focus:border-emerald-500 mb-2"
+                    >
+                      <option value="off">Off</option>
+                      <option value="interval">Interval (Every X hours)</option>
+                      <option value="smart">Smart (If inactive for X hours)</option>
+                      <option value="fixed">Fixed Time</option>
+                    </select>
+
+                    {(editHabitData.reminderMode === 'interval' || editHabitData.reminderMode === 'smart') && (
+                      <div className="animate-fade-in-down">
+                        <label className="block text-xs font-bold text-gray-400 mb-1 uppercase tracking-wider">
+                          {editHabitData.reminderMode === 'interval' ? 'Remind every (hours)' : 'Remind if inactive for (hours)'}
+                        </label>
+                        <input 
+                          type="number" 
+                          min="1"
+                          max="24"
+                          value={editHabitData.reminderHours}
+                          onChange={e => setEditHabitData({...editHabitData, reminderHours: parseInt(e.target.value, 10) || 1})}
+                          className="w-full bg-gray-900 border border-gray-600 rounded px-3 py-2 text-white text-sm focus:outline-none focus:border-emerald-500"
+                        />
+                      </div>
+                    )}
+
+                    {editHabitData.reminderMode === 'fixed' && (
+                      <div className="animate-fade-in-down">
+                        <label className="block text-xs font-bold text-gray-400 mb-1 uppercase tracking-wider">Time</label>
+                        <input 
+                          type="time" 
+                          value={editHabitData.reminderTimes[0]}
+                          onChange={e => setEditHabitData({...editHabitData, reminderTimes: [e.target.value]})}
+                          className="w-full bg-gray-900 border border-gray-600 rounded px-3 py-2 text-white text-sm focus:outline-none focus:border-emerald-500 [color-scheme:dark]"
+                        />
+                      </div>
+                    )}
+                  </div>
+
                   <div className="flex gap-2">
                     <button type="submit" className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white py-2 rounded text-sm font-medium transition-all active:scale-95">
                       Save
@@ -364,9 +364,12 @@ export default function DailyRitualsSection() {
                       
                       <p className="text-xs text-gray-400 mt-1 flex items-center gap-2">
                         <span>{habit.count} / {habit.goal} {habit.unit}</span>
-                        {habit.reminderTime && (
-                          <span className="text-emerald-500/70 text-[10px] bg-emerald-900/30 px-1.5 py-0.5 rounded">
-                            @{formatTime12h(habit.reminderTime)}
+                        {habit.reminderMode && habit.reminderMode !== 'off' && (
+                          <span className="text-emerald-500/70 text-[10px] bg-emerald-900/30 px-1.5 py-0.5 rounded" title="Reminder Active">
+                            {habit.reminderMode === 'interval' ? `Every ${habit.reminderSettings?.hours}h` : 
+                             habit.reminderMode === 'smart' ? `Smart (${habit.reminderSettings?.hours}h)` : 
+                             habit.reminderMode === 'fixed' && habit.reminderSettings?.times?.[0] ? `@${formatTime12h(habit.reminderSettings.times[0])}` : 
+                             ''}
                           </span>
                         )}
                       </p>
@@ -402,14 +405,6 @@ export default function DailyRitualsSection() {
                   {expandedHabitId === habit.id && (
                     <div className="flex items-center gap-2 mt-3 mb-2 animate-fade-in-down border-t border-gray-700/50 pt-3">
                       <button 
-                        onClick={() => openTimePicker(habit)}
-                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded text-xs transition-colors ${habit.reminderTime ? 'text-emerald-400 bg-emerald-900/30 hover:bg-emerald-900/50' : 'text-gray-300 bg-gray-700/50 hover:bg-gray-700 hover:text-gray-100'}`}
-                      >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                        Reminder
-                      </button>
-                      
-                      <button 
                         onClick={() => startEditHabit(habit)}
                         className="flex items-center gap-1.5 px-3 py-1.5 text-gray-300 bg-gray-700/50 hover:bg-gray-700 hover:text-gray-100 rounded text-xs transition-colors"
                       >
@@ -426,87 +421,6 @@ export default function DailyRitualsSection() {
                       </button>
                     </div>
                   )}
-
-              {/* Time Picker Dropdown */}
-              {editingReminderId === habit.id && (
-                <div className="mt-3 mb-2 bg-gray-900 p-3 rounded-lg border border-gray-600 animate-fade-in-down flex flex-col gap-3">
-                  <div className="flex items-center gap-2">
-                    <select
-                      value={parseInt(tempTime.split(':')[0], 10) % 12 || 12}
-                      onChange={(e) => {
-                        const val = parseInt(e.target.value, 10);
-                        const isPm = parseInt(tempTime.split(':')[0], 10) >= 12;
-                        let h = val === 12 ? (isPm ? 12 : 0) : val + (isPm ? 12 : 0);
-                        setTempTime(`${String(h).padStart(2, '0')}:${tempTime.split(':')[1]}`);
-                      }}
-                      className="bg-gray-950 border border-gray-700 rounded px-2 py-1 text-white text-sm focus:outline-none focus:border-emerald-500"
-                    >
-                      {[...Array(12).keys()].map(i => (
-                        <option key={i+1} value={i+1}>{i+1}</option>
-                      ))}
-                    </select>
-                    <span className="text-gray-400 font-bold">:</span>
-                    <select
-                      value={tempTime.split(':')[1]}
-                      onChange={(e) => {
-                        setTempTime(`${tempTime.split(':')[0]}:${e.target.value}`);
-                      }}
-                      className="bg-gray-950 border border-gray-700 rounded px-2 py-1 text-white text-sm focus:outline-none focus:border-emerald-500"
-                    >
-                      {['00','05','10','15','20','25','30','35','40','45','50','55'].map(m => (
-                        <option key={m} value={m}>{m}</option>
-                      ))}
-                    </select>
-                    <select
-                      value={parseInt(tempTime.split(':')[0], 10) >= 12 ? 'PM' : 'AM'}
-                      onChange={(e) => {
-                        const isPm = e.target.value === 'PM';
-                        const currentHr12 = parseInt(tempTime.split(':')[0], 10) % 12 || 12;
-                        let h = currentHr12 === 12 ? (isPm ? 12 : 0) : currentHr12 + (isPm ? 12 : 0);
-                        setTempTime(`${String(h).padStart(2, '0')}:${tempTime.split(':')[1]}`);
-                      }}
-                      className="bg-gray-950 border border-gray-700 rounded px-2 py-1 text-white text-sm focus:outline-none focus:border-emerald-500 ml-1"
-                    >
-                      <option value="AM">AM</option>
-                      <option value="PM">PM</option>
-                    </select>
-                  </div>
-                  
-                  <div className="flex items-center gap-2">
-                    <button 
-                      onClick={() => handleSaveReminder(habit.id, habit.name)}
-                      disabled={isSchedulingId === habit.id}
-                      className="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white text-xs px-3 py-2 rounded transition-all active:scale-95 font-medium disabled:opacity-70 flex justify-center items-center gap-1"
-                    >
-                      {isSchedulingId === habit.id ? (
-                        <>
-                          <svg className="animate-spin h-3 w-3 text-white" fill="none" viewBox="0 0 24 24">
-                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                          </svg>
-                          Saving
-                        </>
-                      ) : 'Save'}
-                    </button>
-                    {habit.reminderTime && (
-                      <button 
-                        onClick={() => handleClearReminder(habit.id, habit.name)}
-                        disabled={isSchedulingId === habit.id}
-                        className="bg-red-900/50 hover:bg-red-800 text-red-200 border border-red-800 text-xs px-3 py-2 rounded transition-all active:scale-95 disabled:opacity-70"
-                      >
-                        Clear
-                      </button>
-                    )}
-                    <button 
-                      onClick={() => setEditingReminderId(null)}
-                      disabled={isSchedulingId === habit.id}
-                      className="text-gray-400 hover:text-white px-3 py-2 bg-gray-800 rounded transition-all active:scale-95 text-xs disabled:opacity-70"
-                    >
-                      Cancel
-                    </button>
-                  </div>
-                </div>
-              )}
               
                   {/* Progress Bar */}
                   <div className="w-full h-1.5 bg-gray-700 rounded-full overflow-hidden mt-1">
