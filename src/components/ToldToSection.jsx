@@ -82,47 +82,41 @@ export default function ToldToSection() {
   };
 
   const handleToggleDone = (id) => {
-    // 1. Mark as fading to trigger CSS transition
-    setTasks(currentTasks => 
-      currentTasks.map(t => t.id === id ? { ...t, isFading: true } : t)
-    );
+    const d = new Date();
+    const todayStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
     
-    // 2. Wait for animation, then mark as fully done
-    setTimeout(() => {
-      const d = new Date();
-      const todayStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-      
-      setTasks(currentTasks => 
-        currentTasks.map(t => {
-          if (t.id === id) {
-            const isCurrentlyDone = t.done;
-            const willBeDone = !isCurrentlyDone;
-            
-            if (willBeDone) {
-              logCompletion('task', id);
-            } else {
-              removeCompletionToday('task', id);
-            }
-
-            return { 
-              ...t, 
-              done: willBeDone, 
-              isFading: false,
-              completedDate: willBeDone ? todayStr : null
-            };
+    setTasks(currentTasks => 
+      currentTasks.map(t => {
+        if (t.id === id) {
+          const willBeDone = !t.done;
+          if (willBeDone) {
+            logCompletion('task', id);
+          } else {
+            removeCompletionToday('task', id);
           }
-          return t;
-        })
-      );
-    }, 300); // 300ms matches Tailwind duration-300
+          return { ...t, done: willBeDone, completedDate: willBeDone ? todayStr : null };
+        }
+        return t;
+      })
+    );
+  };
+
+  const handleDeleteTask = (id) => {
+    setTasks(currentTasks => currentTasks.filter(t => t.id !== id));
   };
 
   const clearCompleted = () => {
     setTasks(tasks.filter(t => !t.done));
   };
 
-  const activeTasks = tasks.filter(t => !t.done);
-  const completedCount = tasks.length - activeTasks.length;
+  const sortedTasks = [...tasks].sort((a, b) => {
+    if (a.done === b.done) {
+      return b.id - a.id;
+    }
+    return a.done ? 1 : -1;
+  });
+
+  const completedCount = tasks.filter(t => t.done).length;
 
   return (
     <div className="w-full max-w-md bg-gray-900 border border-gray-800 rounded-xl shadow-lg p-5 z-10">
@@ -175,27 +169,27 @@ export default function ToldToSection() {
       </form>
 
       <div className="flex flex-col gap-3">
-        {activeTasks.length === 0 ? (
+        {tasks.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-8 text-gray-500">
             <svg className="w-16 h-16 text-gray-700 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
             </svg>
-            <p className="text-sm">No pending tasks. You're all caught up!</p>
+            <p className="text-sm">No tasks. You're all caught up!</p>
           </div>
         ) : (
-          activeTasks.map(task => (
+          sortedTasks.map(task => (
             <div 
               key={task.id} 
-              className={`flex items-start gap-3 p-3 bg-gray-800 rounded-lg border border-gray-700 transition-all duration-300 ease-in-out ${task.isFading ? 'opacity-0 scale-95 translate-x-4' : 'opacity-100 scale-100 translate-x-0'}`}
+              className={`flex items-start gap-3 p-3 bg-gray-800 rounded-lg border border-gray-700 transition-all duration-300 ease-in-out ${task.done ? 'opacity-60 bg-gray-850' : 'opacity-100'}`}
             >
               <input 
                 type="checkbox" 
                 checked={task.done}
                 onChange={() => handleToggleDone(task.id)}
-                className="mt-1 w-4 h-4 rounded border-gray-600 text-indigo-500 focus:ring-indigo-500 bg-gray-700 cursor-pointer"
+                className="mt-1 w-4 h-4 rounded border-gray-600 text-indigo-500 focus:ring-indigo-500 bg-gray-700 cursor-pointer flex-shrink-0"
               />
               <div className="flex-1 min-w-0">
-                <p className="text-white font-medium break-words leading-tight">{task.name}</p>
+                <p className={`font-medium break-words leading-tight transition-colors ${task.done ? 'text-gray-500 line-through' : 'text-white'}`}>{task.name}</p>
                 
                 {(task.person || task.dueDate) && (
                   <div className="flex items-center flex-wrap gap-x-3 gap-y-1 mt-1 text-xs text-gray-400">
@@ -214,6 +208,13 @@ export default function ToldToSection() {
                   </div>
                 )}
               </div>
+              <button 
+                onClick={() => handleDeleteTask(task.id)}
+                className="text-gray-500 hover:text-red-400 p-1.5 rounded-md hover:bg-gray-700 transition-colors flex-shrink-0"
+                aria-label="Delete task"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+              </button>
             </div>
           ))
         )}
