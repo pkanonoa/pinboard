@@ -20,7 +20,9 @@ function urlBase64ToUint8Array(base64String) {
 }
 
 export default function NotificationManager() {
-  const [permissionState, setPermissionState] = useState(Notification.permission);
+  const [permissionState, setPermissionState] = useState(
+    typeof window !== 'undefined' && 'Notification' in window ? Notification.permission : 'default'
+  );
   const [showPrompt, setShowPrompt] = useState(false);
   const [isDismissed, setIsDismissed] = useState(false);
 
