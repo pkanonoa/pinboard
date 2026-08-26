@@ -34,6 +34,9 @@ export default function DailyRitualsSection() {
   const [isAdding, setIsAdding] = useState(false);
   const [newHabit, setNewHabit] = useState({ name: '', goal: '', unit: '' });
   
+  const [editingHabitId, setEditingHabitId] = useState(null);
+  const [editHabitData, setEditHabitData] = useState({ name: '', goal: '', unit: '' });
+
   // State for time picker
   const [editingReminderId, setEditingReminderId] = useState(null);
   const [tempTime, setTempTime] = useState('');
@@ -163,6 +166,27 @@ export default function DailyRitualsSection() {
     setIsAdding(false);
   };
 
+  const handleDeleteHabit = (id) => {
+    setHabits(currentHabits => currentHabits.filter(h => h.id !== id));
+  };
+
+  const startEditHabit = (habit) => {
+    setEditingHabitId(habit.id);
+    setEditHabitData({ name: habit.name, goal: habit.goal, unit: habit.unit });
+    setEditingReminderId(null);
+  };
+
+  const saveEditHabit = (e) => {
+    e.preventDefault();
+    if (!editHabitData.name || !editHabitData.goal || !editHabitData.unit) return;
+    setHabits(currentHabits => currentHabits.map(h => 
+      h.id === editingHabitId 
+        ? { ...h, name: editHabitData.name, goal: parseInt(editHabitData.goal, 10), unit: editHabitData.unit } 
+        : h
+    ));
+    setEditingHabitId(null);
+  };
+
   const scheduleReminder = async (habitId, habitName, time) => {
     if (!('serviceWorker' in navigator)) return;
     
@@ -287,56 +311,115 @@ export default function DailyRitualsSection() {
 
           return (
             <div key={habit.id} className={`p-4 rounded-lg border transition-all duration-300 ${isCompleted ? 'bg-emerald-900/20 border-emerald-800/50' : 'bg-gray-800 border-gray-700'}`}>
-              <div className="flex justify-between items-start mb-2">
-                <div>
-                  <div className="flex items-center gap-2">
-                    <h3 className={`font-semibold ${isCompleted ? 'text-emerald-400' : 'text-gray-100'}`}>
-                      {habit.name}
-                    </h3>
-                    <button 
-                      onClick={() => openTimePicker(habit)}
-                      className={`p-1 rounded transition-colors ${habit.reminderTime ? 'text-emerald-400 hover:bg-gray-700' : 'text-gray-500 hover:text-gray-300 hover:bg-gray-700'}`}
-                      title={habit.reminderTime ? `Reminder set for ${formatTime12h(habit.reminderTime)}` : 'Set reminder'}
-                    >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                    </button>
+              {editingHabitId === habit.id ? (
+                <form onSubmit={saveEditHabit} className="animate-fade-in-down">
+                  <h3 className="text-sm font-medium text-emerald-400 mb-3">Edit Ritual</h3>
+                  <input 
+                    type="text" 
+                    placeholder="Ritual Name" 
+                    required
+                    value={editHabitData.name}
+                    onChange={e => setEditHabitData({...editHabitData, name: e.target.value})}
+                    className="w-full bg-gray-900 border border-gray-600 rounded px-3 py-2 text-sm text-white mb-2 focus:border-emerald-500 focus:outline-none"
+                  />
+                  <div className="flex gap-2 mb-3">
+                    <input 
+                      type="number" 
+                      placeholder="Goal" 
+                      required
+                      min="1"
+                      value={editHabitData.goal}
+                      onChange={e => setEditHabitData({...editHabitData, goal: e.target.value})}
+                      className="w-1/3 bg-gray-900 border border-gray-600 rounded px-3 py-2 text-sm text-white focus:border-emerald-500 focus:outline-none"
+                    />
+                    <input 
+                      type="text" 
+                      placeholder="Unit" 
+                      required
+                      value={editHabitData.unit}
+                      onChange={e => setEditHabitData({...editHabitData, unit: e.target.value})}
+                      className="w-2/3 bg-gray-900 border border-gray-600 rounded px-3 py-2 text-sm text-white focus:border-emerald-500 focus:outline-none"
+                    />
                   </div>
-                  
-                  <p className="text-xs text-gray-400 mt-0.5 flex items-center gap-2">
-                    <span>{habit.count} / {habit.goal} {habit.unit}</span>
-                    {habit.reminderTime && (
-                      <span className="text-emerald-500/70 text-[10px] bg-emerald-900/30 px-1.5 py-0.5 rounded">
-                        @{formatTime12h(habit.reminderTime)}
-                      </span>
-                    )}
-                  </p>
-                </div>
-                
-                <div className="flex flex-col items-end gap-2">
                   <div className="flex gap-2">
-                    {habit.count > 0 && (
-                      <button 
-                        onClick={() => handleUndo(habit.id)}
-                        className="w-10 h-10 rounded-full flex items-center justify-center font-bold text-lg transition-transform active:scale-90 bg-gray-800 text-gray-400 hover:bg-gray-700 border border-gray-700"
-                        title="Undo"
-                      >
-                        -1
-                      </button>
-                    )}
-                    <button 
-                      onClick={() => handleTap(habit.id)}
-                      className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-lg transition-transform active:scale-90 ${isCompleted ? 'bg-emerald-500 text-emerald-950 hover:bg-emerald-400' : 'bg-gray-700 text-gray-200 hover:bg-gray-600'}`}
-                    >
-                      +1
+                    <button type="submit" className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white py-2 rounded text-sm font-medium transition-all active:scale-95">
+                      Save
+                    </button>
+                    <button type="button" onClick={() => setEditingHabitId(null)} className="px-4 bg-gray-700 hover:bg-gray-600 text-white py-2 rounded text-sm font-medium transition-all active:scale-95">
+                      Cancel
                     </button>
                   </div>
-                  {habit.streak > 0 && (
-                    <span className="text-xs font-bold text-orange-400 flex items-center gap-1" title="Current Streak">
-                      🔥 {habit.streak}
-                    </span>
-                  )}
-                </div>
-              </div>
+                </form>
+              ) : (
+                <>
+                  <div className="flex justify-between items-start mb-2">
+                    <div className="flex-1 min-w-0 pr-2">
+                      <div className="flex items-start gap-1 flex-wrap">
+                        <h3 className={`font-semibold mr-1 mt-0.5 ${isCompleted ? 'text-emerald-400' : 'text-gray-100'}`}>
+                          {habit.name}
+                        </h3>
+                        <div className="flex items-center flex-shrink-0 mt-0.5">
+                          <button 
+                            onClick={() => openTimePicker(habit)}
+                            className={`p-1 rounded transition-colors ${habit.reminderTime ? 'text-emerald-400 hover:bg-gray-700' : 'text-gray-500 hover:text-gray-300 hover:bg-gray-700'}`}
+                            title={habit.reminderTime ? `Reminder set for ${formatTime12h(habit.reminderTime)}` : 'Set reminder'}
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                          </button>
+                          
+                          <button 
+                            onClick={() => startEditHabit(habit)}
+                            className="p-1 text-gray-500 hover:text-gray-300 hover:bg-gray-700 rounded transition-colors ml-0.5"
+                            title="Edit ritual"
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+                          </button>
+                          
+                          <button 
+                            onClick={() => handleDeleteHabit(habit.id)}
+                            className="p-1 text-gray-500 hover:text-red-400 hover:bg-gray-700 rounded transition-colors ml-0.5"
+                            title="Delete ritual"
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                          </button>
+                        </div>
+                      </div>
+                      
+                      <p className="text-xs text-gray-400 mt-0.5 flex items-center gap-2">
+                        <span>{habit.count} / {habit.goal} {habit.unit}</span>
+                        {habit.reminderTime && (
+                          <span className="text-emerald-500/70 text-[10px] bg-emerald-900/30 px-1.5 py-0.5 rounded">
+                            @{formatTime12h(habit.reminderTime)}
+                          </span>
+                        )}
+                      </p>
+                    </div>
+                    
+                    <div className="flex flex-col items-end gap-2 flex-shrink-0">
+                      <div className="flex gap-2">
+                        {habit.count > 0 && (
+                          <button 
+                            onClick={() => handleUndo(habit.id)}
+                            className="w-10 h-10 rounded-full flex items-center justify-center font-bold text-lg transition-transform active:scale-90 bg-gray-800 text-gray-400 hover:bg-gray-700 border border-gray-700"
+                            title="Undo"
+                          >
+                            -1
+                          </button>
+                        )}
+                        <button 
+                          onClick={() => handleTap(habit.id)}
+                          className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-lg transition-transform active:scale-90 ${isCompleted ? 'bg-emerald-500 text-emerald-950 hover:bg-emerald-400' : 'bg-gray-700 text-gray-200 hover:bg-gray-600'}`}
+                        >
+                          +1
+                        </button>
+                      </div>
+                      {habit.streak > 0 && (
+                        <span className="text-xs font-bold text-orange-400 flex items-center gap-1" title="Current Streak">
+                          🔥 {habit.streak}
+                        </span>
+                      )}
+                    </div>
+                  </div>
 
               {/* Time Picker Dropdown */}
               {editingReminderId === habit.id && (
@@ -419,13 +502,15 @@ export default function DailyRitualsSection() {
                 </div>
               )}
               
-              {/* Progress Bar */}
-              <div className="w-full h-1.5 bg-gray-700 rounded-full overflow-hidden mt-1">
-                <div 
-                  className={`h-full transition-all duration-500 ease-out ${isCompleted ? 'bg-emerald-500' : 'bg-emerald-400/70'}`}
-                  style={{ width: `${progressPercent}%` }}
-                />
-              </div>
+                  {/* Progress Bar */}
+                  <div className="w-full h-1.5 bg-gray-700 rounded-full overflow-hidden mt-1">
+                    <div 
+                      className={`h-full transition-all duration-500 ease-out ${isCompleted ? 'bg-emerald-500' : 'bg-emerald-400/70'}`}
+                      style={{ width: `${progressPercent}%` }}
+                    />
+                  </div>
+                </>
+              )}
             </div>
           );
         })
