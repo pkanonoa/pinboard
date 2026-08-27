@@ -1,4 +1,4 @@
-const CACHE_NAME = 'pinboard-cache-v3';
+const CACHE_NAME = 'pinboard-cache-v4';
 const urlsToCache = [
   '/',
   '/index.html'
@@ -29,39 +29,37 @@ self.addEventListener('activate', event => {
 });
 
 self.addEventListener('fetch', event => {
-  event.respondWith(
-    caches.match(event.request)
-      .then(response => {
-        // Cache hit - return response
-        if (response) {
+  if (event.request.method !== 'GET') return;
+
+  // Use Network First strategy for HTML pages so we always get the latest version pointing to the latest assets
+  if (event.request.mode === 'navigate') {
+    event.respondWith(
+      fetch(event.request)
+        .then(response => {
+          const responseToCache = response.clone();
+          caches.open(CACHE_NAME).then(cache => cache.put(event.request, responseToCache));
           return response;
-        }
-        
-        // Clone request because it's a stream and can only be consumed once
-        const fetchRequest = event.request.clone();
+        })
+        .catch(() => caches.match(event.request))
+    );
+    return;
+  }
 
-        return fetch(fetchRequest).then(
-          function(response) {
-            // Check if valid response
-            if(!response || response.status !== 200 || response.type !== 'basic') {
-              return response;
-            }
-
-            // Clone response because it's a stream as well
-            const responseToCache = response.clone();
-
-            // Cache new fetched resources dynamically
-            if (event.request.url.startsWith('http')) {
-              caches.open(CACHE_NAME)
-                .then(function(cache) {
-                  cache.put(event.request, responseToCache);
-                });
-            }
-
-            return response;
+  // Use Stale-While-Revalidate for other assets (JS, CSS, images)
+  event.respondWith(
+    caches.match(event.request).then(cachedResponse => {
+      const fetchPromise = fetch(event.request)
+        .then(networkResponse => {
+          if (networkResponse && networkResponse.status === 200 && (networkResponse.type === 'basic' || networkResponse.type === 'cors')) {
+            const responseToCache = networkResponse.clone();
+            caches.open(CACHE_NAME).then(cache => cache.put(event.request, responseToCache));
           }
-        );
-      })
+          return networkResponse;
+        })
+        .catch(() => {}); // Fail silently for background updates if offline
+
+      return cachedResponse || fetchPromise;
+    })
   );
 });
 
