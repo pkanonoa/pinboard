@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { getLocalYMD, getUserStats } from '../utils';
 import { getClosestBadgeProgress } from '../utils/badgeUtils';
+import { useMascot } from '../contexts/MascotContext';
 
 const MOTIVATIONAL_QUOTES = [
   "Small steps every day.", "You are what you do consistently.", "Win the morning, win the day.",
@@ -19,6 +20,7 @@ export default function Dashboard({ setCurrentTab }) {
   const [tasks, setTasks] = useState([]);
   const [habits, setHabits] = useState([]);
   const [completionLog, setCompletionLog] = useState([]);
+  const { triggerMascot } = useMascot();
 
   useEffect(() => {
     const savedTasks = localStorage.getItem('pinboard_tasks');
@@ -47,6 +49,25 @@ export default function Dashboard({ setCurrentTab }) {
   }, []);
 
   const todayStr = getLocalYMD();
+
+  useEffect(() => {
+    // Only run this once on mount
+    const savedTasks = JSON.parse(localStorage.getItem('pinboard_tasks') || '[]');
+    const savedRituals = JSON.parse(localStorage.getItem('pinboard_rituals_data') || '{}');
+    const h = savedRituals.habits || [];
+    
+    if (savedTasks.length > 0 || h.length > 0) {
+      const hasOverdue = savedTasks.some(t => !t.done && t.dueDate && new Date(t.dueDate) < new Date());
+      if (hasOverdue) {
+        triggerMascot('sad', "You have overdue tasks... let's catch up!", 5000);
+      } else {
+        triggerMascot('happy', "Welcome back! Let's crush today!", 4000);
+      }
+    } else {
+      triggerMascot('happy', "Welcome! Let's get started!", 4000);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Run only once
 
   const completedTasksToday = tasks.filter(t => t.done && t.completedDate === todayStr).length;
   const habitsDoneToday = habits.filter(h => h.count >= h.goal && h.lastCompletedDate === todayStr).length;

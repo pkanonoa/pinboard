@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { logCompletion, removeCompletionToday, syncStateToBackend } from '../utils';
 import { checkAndUnlockBadges } from '../utils/badgeUtils';
+import { useMascot } from '../contexts/MascotContext';
 
 export default function ToldToSection() {
   const [tasks, setTasks] = useState(() => {
@@ -15,6 +16,7 @@ export default function ToldToSection() {
     return localStorage.getItem('pinboard_daily_review_time') || '20:00';
   });
   const [showSettings, setShowSettings] = useState(false);
+  const { triggerMascot } = useMascot();
 
   useEffect(() => {
     localStorage.setItem('pinboard_daily_review_time', dailyReviewTime);
@@ -28,9 +30,6 @@ export default function ToldToSection() {
   }, [tasks]);
 
   const scheduleNotification = async (taskName, dueDateStr) => {
-    // Old explicit scheduleNotification replaced by syncStateToBackend global approach
-    // We keep this function stub here in case we want immediate pushes, but QStash handles it now.
-    // Instead we just make sure sync happens immediately:
     await syncStateToBackend();
     setIsScheduling(false);
   };
@@ -69,6 +68,7 @@ export default function ToldToSection() {
           const willBeDone = !t.done;
           if (willBeDone) {
             logCompletion('task', id);
+            triggerMascot('joy', "+10 pts! Great job completing that task!", 4000);
           } else {
             removeCompletionToday('task', id);
           }
