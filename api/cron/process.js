@@ -111,8 +111,11 @@ export default async function handler(req, res) {
            if (task.done) continue;
            
            if (task.dueDate) {
-              const taskTime = new Date(task.dueDate).getTime();
-              const diffMins = (taskTime - now) / 60000;
+              // task.dueDate is a local string (e.g. "2026-08-27T14:03"). 
+              // Vercel parses this as UTC, so we must add the timezoneOffset to get the true absolute time.
+              const parsedTime = new Date(task.dueDate).getTime();
+              const trueTaskTime = parsedTime + (timezoneOffset * 60000);
+              const diffMins = (trueTaskTime - now) / 60000;
               
               if (diffMins > 0 && diffMins <= (24 * 60) && diffMins > (24 * 60 - 15)) {
                  notificationsToSend.push({ title: 'Task due tomorrow', body: task.name });
@@ -120,7 +123,10 @@ export default async function handler(req, res) {
               else if (diffMins > 0 && diffMins <= 120 && diffMins > 105) {
                  notificationsToSend.push({ title: 'Task due in 2 hours', body: task.name });
               }
-              else if (diffMins < 0 && localMin < 15) {
+              else if (diffMins <= 0 && diffMins > -15) {
+                 notificationsToSend.push({ title: 'Task is due right now!', body: task.name });
+              }
+              else if (diffMins < -15 && localMin < 15) {
                  notificationsToSend.push({ title: 'Overdue task!', body: task.name });
               }
            }
