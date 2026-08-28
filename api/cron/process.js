@@ -111,32 +111,69 @@ export default async function handler(req, res) {
         }
       }
 
-      // Tasks processing (Daily Review Digest)
-      if (dailyReviewTime) {
-         const [dh, dm] = dailyReviewTime.split(':').map(Number);
-         const dueTime = Date.UTC(userYear, userMonth, userDate, dh, dm, 0) - (timezoneOffset * 60 * 1000);
-         
-         if (dueTime > lastCronRun && dueTime <= now) {
-            const pendingTasks = (tasks || []).filter(t => !t.done);
-            if (pendingTasks.length > 0) {
-               let bodyStr = pendingTasks.slice(0, 3).map(t => `• ${t.name}`).join('\n');
-               if (pendingTasks.length > 3) {
-                 bodyStr += `\n...and ${pendingTasks.length - 3} more.`;
-               }
-               
-               const taskNotifKey = `notified_${endpointHash}_task_digest_due`;
-               const alreadySent = await kv.get(taskNotifKey);
-               if (!alreadySent) {
-                 try {
-                   await webpush.sendNotification(subscription, JSON.stringify({ title: '📋 Daily Task Review', body: bodyStr, type: 'task' }));
-                   await kv.set(taskNotifKey, true, { ex: 3600 });
-                   sentCount++;
-                 } catch (e) {
-                   console.error('Error sending push', e);
-                 }
-               }
+      // Tasks processing
+      if (tasks && tasks.length > 0) {
+        // 1. Individual task due date notifications
+        for (const task of tasks) {
+          if (task.done || !task.dueDate) continue;
+
+          // dueDate is a datetime-local string: "YYYY-MM-DDThh:mm"
+          if (task.dueDate.includes('T')) {
+            const [datePart, timePart] = task.dueDate.split('T');
+            if (datePart && timePart) {
+              const [y, m, d] = datePart.split('-').map(Number);
+              const [h, min] = timePart.split(':').map(Number);
+              
+              const taskDueTime = Date.UTC(y, m - 1, d, h, min, 0) - (timezoneOffset * 60 * 1000);
+              
+              if (taskDueTime > lastCronRun && taskDueTime <= now) {
+                const taskDueKey = `notified_${endpointHash}_task_${task.id}_due`;
+                const alreadySentDue = await kv.get(taskDueKey);
+                if (!alreadySentDue) {
+                  try {
+                    await webpush.sendNotification(subscription, JSON.stringify({ 
+                      title: `⏰ Task Due!`, 
+                      body: `${task.name}`, 
+                      type: 'task' 
+                    }));
+                    await kv.set(taskDueKey, true, { ex: 86400 }); // expire in 24h
+                    sentCount++;
+                  } catch (e) {
+                    console.error('Error sending task due push', e);
+                  }
+                }
+              }
             }
-         }
+          }
+        }
+
+        // 2. Daily Review Digest
+        if (dailyReviewTime) {
+           const [dh, dm] = dailyReviewTime.split(':').map(Number);
+           const digestDueTime = Date.UTC(userYear, userMonth, userDate, dh, dm, 0) - (timezoneOffset * 60 * 1000);
+           
+           if (digestDueTime > lastCronRun && digestDueTime <= now) {
+              const pendingTasks = tasks.filter(t => !t.done);
+              if (pendingTasks.length > 0) {
+                 let bodyStr = pendingTasks.slice(0, 3).map(t => `• ${t.name}`).join('\n');
+                 if (pendingTasks.length > 3) {
+                   bodyStr += `\n...and ${pendingTasks.length - 3} more.`;
+                 }
+                 
+                 const taskNotifKey = `notified_${endpointHash}_task_digest_due`;
+                 const alreadySent = await kv.get(taskNotifKey);
+                 if (!alreadySent) {
+                   try {
+                     await webpush.sendNotification(subscription, JSON.stringify({ title: '📋 Daily Task Review', body: bodyStr, type: 'task' }));
+                     await kv.set(taskNotifKey, true, { ex: 3600 });
+                     sentCount++;
+                   } catch (e) {
+                     console.error('Error sending push', e);
+                   }
+                 }
+              }
+           }
+        }
       }
     }
 
