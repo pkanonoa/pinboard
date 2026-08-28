@@ -776,7 +776,7 @@ export default function DailyRitualsSection() {
 
                             {/* Action Sheet */}
                             {activeMenuId === habit.id && (
-                              <div className="absolute top-full right-0 mt-1 w-36 bg-gray-900/50 backdrop-blur-lg rounded-xl shadow-[0_8px_30px_rgb(0,0,0,0.5)] border border-gray-700/60 overflow-hidden z-[60] animate-fade-in-down origin-top-right">
+                              <div className="absolute top-full right-0 mt-1 w-36 bg-gray-900/20 backdrop-blur-xl rounded-xl shadow-[0_8px_30px_rgb(0,0,0,0.5)] border border-gray-700/60 overflow-hidden z-[60] animate-fade-in-down origin-top-right">
                                 <button onClick={(e) => { e.stopPropagation(); setActiveMenuId(null); startEditHabit(habit); }} className="w-full text-left px-4 py-2.5 text-sm text-gray-200 hover:bg-gray-800/60 transition-colors flex items-center gap-2">
                                   <span>✏️</span> Edit
                                 </button>
