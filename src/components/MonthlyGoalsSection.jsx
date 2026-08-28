@@ -8,7 +8,7 @@ export default function MonthlyGoalsSection() {
   const [currentMonth, setCurrentMonth] = useState('');
   const [isAdding, setIsAdding] = useState(false);
   const [newGoal, setNewGoal] = useState({
-    name: '', category: 'Body', target: '', unit: '', trackingType: 'count_toward', linkedHabitId: ''
+    name: '', category: 'Body', target: '', unit: '', trackingType: 'count_toward', linkedHabitIds: []
   });
   const [availableHabits, setAvailableHabits] = useState([]);
   const [summaryData, setSummaryData] = useState(null); // { oldMonth, goals }
@@ -88,14 +88,14 @@ export default function MonthlyGoalsSection() {
       target: parseFloat(newGoal.target) || 1,
       unit: newGoal.unit,
       trackingType: newGoal.trackingType,
-      linkedHabitId: newGoal.linkedHabitId,
+      linkedHabitIds: newGoal.linkedHabitIds,
       progress: 0,
       history: [],
       isCompleted: false
     };
 
     saveData([...goals, goal]);
-    setNewGoal({ name: '', category: 'Body', target: '', unit: '', trackingType: 'count_toward', linkedHabitId: '' });
+    setNewGoal({ name: '', category: 'Body', target: '', unit: '', trackingType: 'count_toward', linkedHabitIds: [] });
     setIsAdding(false);
   };
 
@@ -209,6 +209,11 @@ export default function MonthlyGoalsSection() {
         isCompleted: false
       };
     });
+    saveData(newGoals);
+  };
+
+  const handleDelete = (id) => {
+    const newGoals = goals.filter(g => g.id !== id);
     saveData(newGoals);
   };
 
@@ -346,18 +351,28 @@ export default function MonthlyGoalsSection() {
           )}
 
           <div className="mb-4">
-            <label className="text-[10px] text-gray-400 uppercase tracking-wider block mb-1">Link to Daily Ritual (Optional)</label>
-            <select 
-              value={newGoal.linkedHabitId}
-              onChange={e => setNewGoal({...newGoal, linkedHabitId: e.target.value})}
-              className="w-full bg-gray-900 border border-gray-600 rounded-lg px-3 py-2 text-sm text-white focus:border-indigo-500 focus:outline-none"
-            >
-              <option value="">-- No link --</option>
+            <label className="text-[10px] text-gray-400 uppercase tracking-wider block mb-2">Link to Daily Rituals (Optional)</label>
+            <div className="bg-gray-900 border border-gray-600 rounded-lg p-2 max-h-32 overflow-y-auto flex flex-col gap-1">
+              {availableHabits.length === 0 && <span className="text-xs text-gray-500 p-1">No rituals found.</span>}
               {availableHabits.map(h => (
-                <option key={h.id} value={h.id}>{h.name}</option>
+                <label key={h.id} className="flex items-center gap-2 text-sm text-gray-300 p-1 cursor-pointer hover:bg-gray-800 rounded">
+                  <input 
+                    type="checkbox"
+                    checked={newGoal.linkedHabitIds.includes(h.id)}
+                    onChange={(e) => {
+                      if (e.target.checked) {
+                        setNewGoal({ ...newGoal, linkedHabitIds: [...newGoal.linkedHabitIds, h.id] });
+                      } else {
+                        setNewGoal({ ...newGoal, linkedHabitIds: newGoal.linkedHabitIds.filter(id => id !== h.id) });
+                      }
+                    }}
+                    className="accent-indigo-500 rounded focus:ring-indigo-500 bg-gray-800 border-gray-600"
+                  />
+                  <span>{h.name}</span>
+                </label>
               ))}
-            </select>
-            <p className="text-[10px] text-gray-500 mt-1 leading-tight">If linked, completing the daily ritual will automatically log progress here.</p>
+            </div>
+            <p className="text-[10px] text-gray-500 mt-1 leading-tight">If linked, completing any of the selected rituals will automatically log progress here.</p>
           </div>
           
           <button type="submit" className="w-full bg-indigo-600 hover:bg-indigo-500 text-white py-2 rounded-lg text-sm font-bold transition-all active:scale-95">
@@ -383,6 +398,7 @@ export default function MonthlyGoalsSection() {
               onLog={handleLog} 
               onComplete={handleComplete} 
               onUndo={handleUndo} 
+              onDelete={handleDelete}
             />
           ))
         )}

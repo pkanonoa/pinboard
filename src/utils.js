@@ -101,7 +101,10 @@ export const syncMonthlyGoalProgress = (habitId, amount) => {
     let updated = false;
     
     data.goals = data.goals.map(g => {
-      if (g.linkedHabitId === habitId) {
+      // Support old string linkedHabitId or new array linkedHabitIds
+      const isLinked = g.linkedHabitIds ? g.linkedHabitIds.includes(habitId) : (g.linkedHabitId === habitId);
+      
+      if (isLinked) {
         updated = true;
         let newProgress = g.progress;
         let newHistory = [...g.history];
