@@ -289,30 +289,31 @@ export default function OnboardingScreen({ onComplete }) {
         </div>
       )}
 
-      {/* STEP 5: NOTIFICATIONS */}
+      {/* NOTIFICATIONS POPUP (Overlay over Step 4) */}
       {step === 5 && (
-        <div className="flex flex-col items-center justify-center animate-fade-in text-center w-full max-w-sm h-full">
-          <div className="text-6xl mb-6 text-teal-400 drop-shadow-[0_0_15px_rgba(45,212,191,0.5)]">
-            🔔
+        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 animate-fade-in">
+          <div className="bg-gray-900 border border-gray-800 rounded-3xl p-6 w-full max-w-sm flex flex-col items-center text-center shadow-2xl relative overflow-hidden">
+            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-teal-500 to-indigo-500"></div>
+            
+            <div className="text-5xl mb-4 mt-2">🔔</div>
+            <h2 className="text-2xl font-bold mb-2">Enable Notifications</h2>
+            <p className="text-gray-400 text-sm mb-6">Neo will nudge you at the right time, every day so you never forget.</p>
+            
+            <div className="flex flex-col w-full gap-3">
+              <button 
+                onClick={requestNotifications}
+                className="w-full bg-indigo-500 hover:bg-indigo-400 text-white font-bold py-3 rounded-xl transition-transform active:scale-95"
+              >
+                Enable Notifications
+              </button>
+              <button 
+                onClick={handleLater}
+                className="w-full bg-gray-800 hover:bg-gray-700 text-gray-300 font-bold py-3 rounded-xl transition-colors"
+              >
+                Later
+              </button>
+            </div>
           </div>
-          <h2 className="text-3xl font-bold mb-3">Never forget again</h2>
-          <p className="text-gray-400 text-lg mb-8">Neo will nudge you at the right time, every day.</p>
-          
-          <img src={neoImg} alt="Neo" className="w-[150px] mb-12 neo-float" style={{ transform: 'scaleX(-1)' }} />
-          
-          <button 
-            onClick={requestNotifications}
-            className="w-full bg-indigo-500 hover:bg-indigo-400 text-white shadow-[0_0_20px_rgba(99,102,241,0.4)] font-bold text-lg py-4 rounded-2xl transition-transform active:scale-95 mb-4"
-          >
-            Enable Notifications
-          </button>
-          
-          <button 
-            onClick={handleLater}
-            className="text-gray-500 hover:text-gray-300 font-medium text-sm transition-colors"
-          >
-            Continue anyway (you can enable this later)
-          </button>
         </div>
       )}
 
