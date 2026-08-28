@@ -7,6 +7,7 @@ export default function MonthlyGoalsSection() {
   const [goals, setGoals] = useState([]);
   const [currentMonth, setCurrentMonth] = useState('');
   const [isAdding, setIsAdding] = useState(false);
+  const [editingGoalId, setEditingGoalId] = useState(null);
   const [newGoal, setNewGoal] = useState({
     name: '', category: 'Body', target: '', unit: '', trackingType: 'count_toward', linkedHabitIds: []
   });
@@ -81,22 +82,55 @@ export default function MonthlyGoalsSection() {
     e.preventDefault();
     if (!newGoal.name) return;
 
-    const goal = {
-      id: `mg_${Date.now()}`,
-      name: newGoal.name,
-      category: newGoal.category,
-      target: parseFloat(newGoal.target) || 1,
-      unit: newGoal.unit,
-      trackingType: newGoal.trackingType,
-      linkedHabitIds: newGoal.linkedHabitIds,
-      progress: 0,
-      history: [],
-      isCompleted: false
-    };
+    if (editingGoalId) {
+      const updatedGoals = goals.map(g => {
+        if (g.id === editingGoalId) {
+          return {
+            ...g,
+            name: newGoal.name,
+            category: newGoal.category,
+            target: parseFloat(newGoal.target) || 1,
+            unit: newGoal.unit,
+            trackingType: newGoal.trackingType,
+            linkedHabitIds: newGoal.linkedHabitIds
+          };
+        }
+        return g;
+      });
+      saveData(updatedGoals);
+    } else {
+      const goal = {
+        id: `mg_${Date.now()}`,
+        name: newGoal.name,
+        category: newGoal.category,
+        target: parseFloat(newGoal.target) || 1,
+        unit: newGoal.unit,
+        trackingType: newGoal.trackingType,
+        linkedHabitIds: newGoal.linkedHabitIds,
+        progress: 0,
+        history: [],
+        isCompleted: false
+      };
+      saveData([...goals, goal]);
+    }
 
-    saveData([...goals, goal]);
     setNewGoal({ name: '', category: 'Body', target: '', unit: '', trackingType: 'count_toward', linkedHabitIds: [] });
     setIsAdding(false);
+    setEditingGoalId(null);
+  };
+
+  const handleEdit = (goal) => {
+    setNewGoal({
+      name: goal.name,
+      category: goal.category,
+      target: goal.target,
+      unit: goal.unit || '',
+      trackingType: goal.trackingType,
+      linkedHabitIds: goal.linkedHabitIds || []
+    });
+    setEditingGoalId(goal.id);
+    setIsAdding(true);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleLog = (id, amount) => {
@@ -187,9 +221,15 @@ export default function MonthlyGoalsSection() {
       if (lastEntry.date !== todayStr) return g; // Only allow undoing today's logs
 
       let newProgress = g.progress;
-      if (g.trackingType === 'cumulative' || g.trackingType === 'count_toward') {
-        // We don't know the exact "last log amount" if they logged multiple times today, so we just remove the entire day.
-        // For better UX, we just remove the whole day.
+      if (g.trackingType === 'count_toward') {
+        newProgress -= 1;
+        if (lastEntry.value > 1) {
+          lastEntry.value -= 1;
+        } else {
+          newHistory.pop();
+        }
+      } else if (g.trackingType === 'cumulative') {
+        // For cumulative, we pop the whole day since we don't store individual log amounts
         newProgress -= lastEntry.value;
         newHistory.pop();
       } else if (g.trackingType === 'daily_log') {
@@ -275,7 +315,15 @@ export default function MonthlyGoalsSection() {
           Monthly Goals
         </h2>
         <button 
-          onClick={() => setIsAdding(!isAdding)}
+          onClick={() => {
+            if (isAdding) {
+              setIsAdding(false);
+              setEditingGoalId(null);
+              setNewGoal({ name: '', category: 'Body', target: '', unit: '', trackingType: 'count_toward', linkedHabitIds: [] });
+            } else {
+              setIsAdding(true);
+            }
+          }}
           className="text-sm bg-gray-800 hover:bg-gray-700 text-gray-300 px-3 py-1.5 rounded-lg transition-all active:scale-95 border border-gray-700"
         >
           {isAdding ? 'Cancel' : '+ New Goal'}
@@ -314,10 +362,10 @@ export default function MonthlyGoalsSection() {
                 onChange={e => setNewGoal({...newGoal, trackingType: e.target.value})}
                 className="w-full bg-gray-900 border border-gray-600 rounded-lg px-3 py-2 text-sm text-white focus:border-indigo-500 focus:outline-none"
               >
-                <option value="count_toward">Count Toward</option>
-                <option value="cumulative">Cumulative Total</option>
-                <option value="daily_log">Daily Average Log</option>
-                <option value="binary">Binary (Done/Not Done)</option>
+                <option value="count_toward">Number of Times (e.g. 20 gym visits)</option>
+                <option value="cumulative">Total Amount (e.g. 500 pages)</option>
+                <option value="daily_log">Daily Average (e.g. 175 lbs)</option>
+                <option value="binary">Done / Not Done (e.g. Run a marathon)</option>
               </select>
             </div>
           </div>
@@ -376,7 +424,7 @@ export default function MonthlyGoalsSection() {
           </div>
           
           <button type="submit" className="w-full bg-indigo-600 hover:bg-indigo-500 text-white py-2 rounded-lg text-sm font-bold transition-all active:scale-95">
-            Create Goal
+            {editingGoalId ? 'Save Changes' : 'Create Goal'}
           </button>
         </form>
       )}
@@ -399,6 +447,7 @@ export default function MonthlyGoalsSection() {
               onComplete={handleComplete} 
               onUndo={handleUndo} 
               onDelete={handleDelete}
+              onEdit={handleEdit}
             />
           ))
         )}
