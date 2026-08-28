@@ -22,6 +22,38 @@ export default function SettingsSection() {
     if (saved) {
       try { setHabits(JSON.parse(saved).habits || []); } catch (e) {}
     }
+
+    // Auto-subscribe if they enabled it in device settings
+    if ('Notification' in window && Notification.permission === 'granted' && !notificationsEnabled) {
+      const subscribe = async () => {
+        try {
+          const reg = await navigator.serviceWorker.ready;
+          // Note: using the same key from NotificationManager
+          const publicVapidKey = import.meta.env.VITE_VAPID_PUBLIC_KEY;
+          
+          const urlBase64ToUint8Array = (base64String) => {
+            const padding = '='.repeat((4 - base64String.length % 4) % 4);
+            const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+            const rawData = window.atob(base64);
+            const outputArray = new Uint8Array(rawData.length);
+            for (let i = 0; i < rawData.length; ++i) { outputArray[i] = rawData.charCodeAt(i); }
+            return outputArray;
+          };
+
+          await reg.pushManager.subscribe({
+            userVisibleOnly: true,
+            applicationServerKey: urlBase64ToUint8Array(publicVapidKey)
+          });
+          
+          setNotificationsEnabled(true);
+          localStorage.setItem('pinboard_push_subscribed', 'true');
+          syncStateToBackend();
+        } catch (e) {
+          console.error('Auto-subscribe failed:', e);
+        }
+      };
+      subscribe();
+    }
   }, []);
 
   const saveHabits = (newHabits) => {
@@ -156,15 +188,11 @@ export default function SettingsSection() {
       <section className="bg-gray-900 border border-gray-800 rounded-xl p-5 shadow-lg">
         <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-4">Notifications</h3>
         
-        <div className="flex items-center justify-between mb-4">
-          <span className="text-white font-medium">Enable Push Notifications</span>
-          <button 
-            onClick={handleToggleNotifications}
-            className={`w-12 h-6 rounded-full transition-colors relative ${notificationsEnabled ? 'bg-emerald-500' : 'bg-gray-700'}`}
-          >
-            <div className={`w-4 h-4 bg-white rounded-full absolute top-1 transition-transform ${notificationsEnabled ? 'translate-x-7' : 'translate-x-1'}`}></div>
-          </button>
-        </div>
+        {(!('Notification' in window) || Notification.permission !== 'granted') && (
+          <div className="bg-gray-800 p-4 rounded-lg mb-4 text-center border border-gray-700">
+            <p className="text-gray-300 text-sm">Please enable notifications in your device app settings to receive reminders.</p>
+          </div>
+        )}
 
         <div className="flex items-center justify-between mb-4">
           <span className="text-white font-medium">Daily Review Time</span>
