@@ -79,7 +79,6 @@ function App() {
   return (
     <div className="flex flex-col items-center min-h-screen p-4 relative pt-16 pb-24 overflow-x-hidden">
       <BadgeCelebration />
-      <NotificationManager />
       <NotificationDrawer 
         isOpen={isDrawerOpen} 
         onClose={() => setIsDrawerOpen(false)} 
