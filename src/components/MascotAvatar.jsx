@@ -55,9 +55,12 @@ export default function MascotAvatar() {
         whileTap={{ scale: 0.9 }}
         onClick={dismissMascot} // Tapping character also dismisses current message
       >
-        <img 
+        <video 
           src={`/avatar/${moodFileMap[mood] || 'neon-happy'}.webp`} 
-          alt={`Neon looking ${mood}`}
+          autoPlay
+          loop
+          muted
+          playsInline
           className="w-24 h-24 object-contain drop-shadow-2xl filter brightness-110"
         />
       </motion.div>

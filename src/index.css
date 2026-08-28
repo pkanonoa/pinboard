@@ -4,8 +4,20 @@
 
 @layer base {
   html, body {
-    @apply bg-gray-950 text-gray-100;
-    background-color: #030712;
+    @apply bg-gray-950 text-gray-100 transition-colors duration-300;
+    background-color: #030712; /* Default: Darker */
+  }
+
+  html[data-theme="dark"] body {
+    background-color: #111827; /* Tailwind gray-900 */
+  }
+
+  html[data-theme="darker"] body {
+    background-color: #030712; /* Tailwind gray-950 */
+  }
+
+  html[data-theme="amoled"] body {
+    background-color: #000000;
   }
 }
 
