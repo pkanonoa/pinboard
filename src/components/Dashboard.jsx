@@ -2,19 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { getLocalYMD, getUserStats } from '../utils';
 import { getClosestBadgeProgress } from '../utils/badgeUtils';
 
-const MOTIVATIONAL_QUOTES = [
-  "Small steps every day.", "You are what you do consistently.", "Win the morning, win the day.",
-  "Focus on the process.", "Progress, not perfection.", "Make it happen.",
-  "One day at a time.", "Consistency is the key to success.", "Keep pushing forward.",
-  "Every expert was once a beginner.", "Don't stop until you're proud.", "Believe you can.",
-  "Action is the foundational key to success.", "Do it for your future self.", "Strive for progress.",
-  "Dream big, start small.", "Make today count.", "Discipline equals freedom.",
-  "Great things take time.", "Keep the momentum going.", "Your only limit is you.",
-  "Stay focused, stay humble.", "Push yourself.", "Trust the process.",
-  "Rise and grind.", "Be stronger than your excuses.", "The secret of getting ahead is getting started.",
-  "You can and you will.", "Success is a series of small wins.", "Never give up on your goals."
-];
-
 import NeoAvatar from './NeoAvatar';
 
 export default function Dashboard({ setCurrentTab }) {
@@ -108,39 +95,22 @@ export default function Dashboard({ setCurrentTab }) {
   const weekDays = getWeekDays();
   const dayNames = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
 
-  const currentHour = new Date().getHours();
-  let greeting = "Good evening";
-  if (currentHour < 12) greeting = "Good morning";
-  else if (currentHour < 18) greeting = "Good afternoon";
-
-  const getDayOfYear = () => {
-    const now = new Date();
-    const start = new Date(now.getFullYear(), 0, 0);
-    const diff = now - start;
-    const oneDay = 1000 * 60 * 60 * 24;
-    return Math.floor(diff / oneDay);
-  };
-  const quote = MOTIVATIONAL_QUOTES[getDayOfYear() % MOTIVATIONAL_QUOTES.length];
-
   const badgeProgress = getClosestBadgeProgress();
 
   return (
     <div className="w-full max-w-md flex flex-col gap-6 z-10 pb-8">
       
       {/* Header Section */}
-      <div className="flex flex-col mb-2 pr-14">
-        <div className="flex justify-between items-end mb-1">
-          <h1 className="text-2xl font-bold text-white">{greeting}!</h1>
-          <div className="flex items-center gap-1.5 bg-indigo-500/20 px-2.5 py-1 rounded-full border border-indigo-500/30">
-            <span className="text-[10px] font-bold text-indigo-300 uppercase tracking-wider">{stats.currentLevel.name}</span>
-            <span className="w-1 h-1 rounded-full bg-indigo-400"></span>
-            <span className="text-[10px] font-bold text-amber-400">{stats.points} pts</span>
-          </div>
+      <div className="flex justify-between items-center mb-2 pr-14">
+        <h1 className="text-2xl font-bold text-white">Home</h1>
+        <div className="flex items-center gap-1.5 bg-indigo-500/20 px-3 py-1.5 rounded-full border border-indigo-500/30">
+          <span className="text-[10px] font-bold text-indigo-300 uppercase tracking-wider">{stats.currentLevel.name}</span>
+          <span className="w-1 h-1 rounded-full bg-indigo-400"></span>
+          <span className="text-[10px] font-bold text-amber-400">{stats.points} pts</span>
         </div>
-        <p className="text-sm text-gray-400 italic">"{quote}"</p>
       </div>
 
-      <NeoAvatar habits={habits} />
+      <NeoAvatar habits={habits} tasks={tasks} />
       
       {/* Summary Cards */}
       <div className="flex flex-col">

@@ -38,12 +38,9 @@ export default function RewardsSection() {
   }
 
   return (
-    <div className="w-full max-w-md bg-gray-900 border border-gray-800 rounded-xl shadow-lg p-5 z-10 pb-8">
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="text-xl font-bold text-white flex items-center gap-2">
-          <svg className="w-5 h-5 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-          </svg>
+    <div className="w-full max-w-md z-10 flex flex-col gap-6 pt-6 pb-8">
+      <div className="flex justify-between items-center">
+        <h2 className="text-2xl font-bold text-white flex items-center gap-2">
           Rewards
         </h2>
       </div>
@@ -78,37 +75,39 @@ export default function RewardsSection() {
       </div>
 
       {/* Badges Grid */}
-      <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-4 px-1">Badges</h3>
-      <div className="grid grid-cols-2 gap-3">
-        {BADGE_DEFINITIONS.map(badgeDef => {
-          const earnedInfo = earnedBadges.find(b => b.id === badgeDef.id);
-          const isEarned = !!earnedInfo;
+      <div className="flex flex-col gap-4">
+        <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider px-1">Badges</h3>
+        <div className="grid grid-cols-2 gap-3">
+          {BADGE_DEFINITIONS.map(badgeDef => {
+            const earnedInfo = earnedBadges.find(b => b.id === badgeDef.id);
+            const isEarned = !!earnedInfo;
 
-          return (
-            <div 
-              key={badgeDef.id} 
-              className={`relative flex flex-col items-center text-center p-4 rounded-xl border transition-all duration-300 ${
-                isEarned 
-                  ? 'bg-gray-800 border-amber-500/40 shadow-[0_0_15px_rgba(251,191,36,0.1)]' 
-                  : 'bg-gray-900 border-gray-800 opacity-60 filter grayscale'
-              }`}
-            >
-              <div className="text-4xl mb-3 drop-shadow-md">{badgeDef.icon}</div>
-              <h4 className={`font-bold text-sm mb-1 ${isEarned ? 'text-white' : 'text-gray-400'}`}>{badgeDef.name}</h4>
-              <p className="text-[10px] text-gray-500 leading-tight mb-2 flex-grow">{badgeDef.description}</p>
-              
-              {isEarned ? (
-                <span className="text-[9px] font-bold text-amber-500 bg-amber-500/10 px-2 py-1 rounded-full w-full">
-                  Earned {new Date(earnedInfo.timestamp).toLocaleDateString()}
-                </span>
-              ) : (
-                <span className="text-[9px] font-medium text-gray-600 bg-gray-800 px-2 py-1 rounded-full w-full">
-                  Locked
-                </span>
-              )}
-            </div>
-          );
-        })}
+            return (
+              <div 
+                key={badgeDef.id} 
+                className={`relative flex flex-col items-center text-center p-4 rounded-2xl transition-all duration-300 ${
+                  isEarned 
+                    ? 'bg-[#1e1e28] border border-amber-500/20 shadow-[0_0_15px_rgba(251,191,36,0.05)]' 
+                    : 'bg-[#16161f] opacity-60 filter grayscale'
+                }`}
+              >
+                <div className="text-4xl mb-3 drop-shadow-md">{badgeDef.icon}</div>
+                <h4 className={`font-bold text-sm mb-1 ${isEarned ? 'text-white' : 'text-gray-400'}`}>{badgeDef.name}</h4>
+                <p className="text-[10px] text-gray-500 leading-tight mb-3 flex-grow">{badgeDef.description}</p>
+                
+                {isEarned ? (
+                  <span className="text-[9px] font-bold text-amber-500 bg-amber-500/10 px-2 py-1 rounded-md w-full">
+                    Earned {new Date(earnedInfo.timestamp).toLocaleDateString()}
+                  </span>
+                ) : (
+                  <span className="text-[9px] font-medium text-gray-500 bg-[#2a2a35] px-2 py-1 rounded-md w-full">
+                    Locked
+                  </span>
+                )}
+              </div>
+            );
+          })}
+        </div>
       </div>
     </div>
   );

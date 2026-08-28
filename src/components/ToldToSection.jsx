@@ -79,6 +79,7 @@ export default function ToldToSection() {
           const willBeDone = !t.done;
           if (willBeDone) {
             logCompletion('task', id);
+            window.dispatchEvent(new CustomEvent('neo_celebration'));
           } else {
             removeCompletionToday('task', id);
           }

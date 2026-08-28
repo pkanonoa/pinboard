@@ -247,6 +247,7 @@ export default function DailyRitualsSection() {
           newLastCompletedDate = todayStr;
           logCompletion('habit', id);
           confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
+          window.dispatchEvent(new CustomEvent('neo_celebration'));
         }
 
         return {
@@ -353,6 +354,7 @@ export default function DailyRitualsSection() {
           newLastCompletedDate = todayStr;
           logCompletion('habit', id);
           confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
+          window.dispatchEvent(new CustomEvent('neo_celebration'));
         } else if (habit.count >= habit.goal && newCount < habit.goal && habit.lastCompletedDate === todayStr) {
           newStreak = Math.max(0, newStreak - 1);
           newLastCompletedDate = '';

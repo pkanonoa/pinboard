@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Home, Goal, ClipboardList, Repeat, MoreHorizontal } from 'lucide-react';
+import { Home, Goal, ClipboardList, Repeat, MoreHorizontal, Bell } from 'lucide-react';
 import InstallPrompt from './components/InstallPrompt';
 import NotificationManager from './components/NotificationManager';
 import ToldToSection from './components/ToldToSection';
@@ -7,6 +7,7 @@ import DailyRitualsSection from './components/DailyRitualsSection';
 import Dashboard from './components/Dashboard';
 import ChartsSection from './components/ChartsSection';
 import BadgeCelebration from './components/BadgeCelebration';
+import NeoCelebration from './components/NeoCelebration';
 import RewardsSection from './components/RewardsSection';
 import SettingsSection from './components/SettingsSection';
 import NotificationDrawer from './components/NotificationDrawer';
@@ -159,6 +160,7 @@ function App() {
       onTouchEnd={onTouchEnd}
     >
       <BadgeCelebration />
+      <NeoCelebration />
       <NotificationDrawer 
         isOpen={isDrawerOpen} 
         onClose={() => setIsDrawerOpen(false)} 
@@ -168,15 +170,14 @@ function App() {
       {/* Bell Icon */}
       <button 
         onClick={() => setIsDrawerOpen(true)}
-        className="fixed top-4 right-4 z-[35] p-3 bg-gray-800/80 backdrop-blur-md rounded-full shadow-lg border border-gray-700/50 hover:bg-gray-700 transition-colors"
+        className="fixed top-4 right-4 z-[35] w-9 h-9 flex items-center justify-center bg-gray-800/80 backdrop-blur-md rounded-full shadow-md border border-gray-700/50 hover:bg-gray-700 active:scale-95 transition-all"
+        title="Notifications"
       >
-        <svg className="w-6 h-6 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path>
-        </svg>
+        <Bell className="w-4.5 h-4.5 text-indigo-400" strokeWidth={2} />
         {unreadCount > 0 && (
-          <span className="absolute top-2 right-2.5 flex h-3 w-3">
+          <span className="absolute top-1.5 right-1.5 flex h-2 w-2">
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-            <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500 border-2 border-gray-900"></span>
+            <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500 border border-gray-900"></span>
           </span>
         )}
       </button>
