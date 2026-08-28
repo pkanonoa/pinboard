@@ -505,29 +505,6 @@ export default function DailyRitualsSection() {
 
             return (
               <div key={habit.id} className={`p-4 rounded-lg border transition-all duration-300 relative ${habit.paused ? 'bg-gray-800 border-gray-700 saturate-[0.35]' : isCompleted ? 'bg-emerald-900/20 border-emerald-800/50' : 'bg-gray-800 border-gray-700'}`}>
-                {/* 3-dot Menu Button */}
-                <button 
-                  onClick={(e) => { e.stopPropagation(); setActiveMenuId(activeMenuId === habit.id ? null : habit.id); }}
-                  className="absolute top-2 right-2 p-2 text-gray-500 hover:text-gray-300 rounded-lg hover:bg-gray-700/50 transition-colors z-10"
-                >
-                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M6 10a2 2 0 11-4 0 2 2 0 014 0zM12 10a2 2 0 11-4 0 2 2 0 014 0zM16 12a2 2 0 100-4 2 2 0 000 4z"></path></svg>
-                </button>
-
-                {/* Action Sheet */}
-                {activeMenuId === habit.id && (
-                  <div className="absolute top-10 right-2 w-36 bg-gray-900 rounded-xl shadow-xl border border-gray-700 overflow-hidden z-20 animate-fade-in-down origin-top-right">
-                    <button onClick={() => { setActiveMenuId(null); startEditHabit(habit); }} className="w-full text-left px-4 py-2.5 text-sm text-gray-200 hover:bg-gray-800 flex items-center gap-2">
-                      <span>✏️</span> Edit
-                    </button>
-                    <button onClick={() => { setActiveMenuId(null); setPauseModalId(habit.id); }} className="w-full text-left px-4 py-2.5 text-sm text-gray-200 hover:bg-gray-800 flex items-center gap-2">
-                      <span>⏸</span> Pause
-                    </button>
-                    <div className="h-px bg-gray-800 my-0.5"></div>
-                    <button onClick={() => { setActiveMenuId(null); handleDeleteHabit(habit.id); }} className="w-full text-left px-4 py-2.5 text-sm text-red-400 hover:bg-red-900/20 flex items-center gap-2">
-                      <span>🗑</span> Delete
-                    </button>
-                  </div>
-                )}
 
                 {editingHabitId === habit.id ? (
                   <form onSubmit={saveEditHabit} className="animate-fade-in-down">
@@ -787,6 +764,31 @@ export default function DailyRitualsSection() {
                           )()}
                             </>
                           )}
+                          
+                          {/* 3-dot Menu Button and Dropdown */}
+                          <div className="relative">
+                            <button 
+                              onClick={(e) => { e.stopPropagation(); setActiveMenuId(activeMenuId === habit.id ? null : habit.id); }}
+                              className="w-10 h-10 flex items-center justify-center text-gray-500 hover:text-gray-300 rounded-full hover:bg-gray-700/50 transition-colors"
+                            >
+                              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M6 10a2 2 0 11-4 0 2 2 0 014 0zM12 10a2 2 0 11-4 0 2 2 0 014 0zM16 12a2 2 0 100-4 2 2 0 000 4z"></path></svg>
+                            </button>
+
+                            {/* Action Sheet */}
+                            {activeMenuId === habit.id && (
+                              <div className="absolute top-full right-0 mt-1 w-36 bg-gray-900/50 backdrop-blur-lg rounded-xl shadow-[0_8px_30px_rgb(0,0,0,0.5)] border border-gray-700/60 overflow-hidden z-[60] animate-fade-in-down origin-top-right">
+                                <button onClick={(e) => { e.stopPropagation(); setActiveMenuId(null); startEditHabit(habit); }} className="w-full text-left px-4 py-2.5 text-sm text-gray-200 hover:bg-gray-800/60 transition-colors flex items-center gap-2">
+                                  <span>✏️</span> Edit
+                                </button>
+                                <button onClick={(e) => { e.stopPropagation(); setActiveMenuId(null); setPauseModalId(habit.id); }} className="w-full text-left px-4 py-2.5 text-sm text-gray-200 hover:bg-gray-800/60 transition-colors flex items-center gap-2">
+                                  <span>⏸</span> Pause
+                                </button>
+                                <button onClick={(e) => { e.stopPropagation(); setActiveMenuId(null); handleDeleteHabit(habit.id); }} className="w-full text-left px-4 py-2.5 text-sm text-red-400 hover:bg-red-900/30 transition-colors flex items-center gap-2">
+                                  <span>🗑</span> Delete
+                                </button>
+                              </div>
+                            )}
+                          </div>
                         </div>
                         {habit.streak > 0 && (
                           <span className="text-xs font-bold text-orange-400 flex items-center gap-1" title="Current Streak">
