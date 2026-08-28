@@ -105,13 +105,14 @@ export default function DailyRitualsSection() {
   useEffect(() => {
     const savedDataStr = localStorage.getItem('pinboard_rituals_data');
     let loadedHabits = DEFAULT_HABITS;
-    let loadedResetDate = getLocalYMD();
+    // Default to '' not today — if the field is missing, always reset
+    let loadedResetDate = '';
 
     if (savedDataStr) {
       try {
         const savedData = JSON.parse(savedDataStr);
         loadedHabits = savedData.habits || DEFAULT_HABITS;
-        loadedResetDate = savedData.lastResetDate || getLocalYMD();
+        loadedResetDate = savedData.lastResetDate || '';
       } catch (e) {
         console.error("Failed to parse rituals data", e);
       }
@@ -120,10 +121,11 @@ export default function DailyRitualsSection() {
     const todayStr = getLocalYMD();
     const yesterdayStr = getYesterdayYMD();
 
-    // Reset counts if it's a new day
+    // Reset counts if it's a new day (or lastResetDate was missing)
     if (loadedResetDate !== todayStr) {
       loadedHabits = loadedHabits.map(habit => {
         let newStreak = habit.streak;
+        // Break streak if not completed yesterday or today
         if (habit.lastCompletedDate !== yesterdayStr && habit.lastCompletedDate !== todayStr) {
           newStreak = 0;
         }
@@ -131,11 +133,14 @@ export default function DailyRitualsSection() {
           ...habit,
           count: 0,
           streak: newStreak,
-          failedDate: null
+          failedDate: null,
+          // Clear lastCompletedDate if it's from a previous day so "Done" state resets too
+          lastCompletedDate: habit.lastCompletedDate === todayStr ? todayStr : null,
         };
       });
       loadedResetDate = todayStr;
     }
+
 
     setHabits(loadedHabits);
     setLastResetDate(loadedResetDate);
@@ -158,7 +163,7 @@ export default function DailyRitualsSection() {
           if (habit.lastCompletedDate !== yesterdayStr && habit.lastCompletedDate !== currentDateStr) {
             newStreak = 0;
           }
-          return { ...habit, count: 0, streak: newStreak, failedDate: null };
+          return { ...habit, count: 0, streak: newStreak, failedDate: null, lastCompletedDate: habit.lastCompletedDate === currentDateStr ? currentDateStr : null };
         }));
         setLastResetDate(currentDateStr);
         return; // Skip the rest of this tick
