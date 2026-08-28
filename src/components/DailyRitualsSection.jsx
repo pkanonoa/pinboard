@@ -140,12 +140,33 @@ export default function DailyRitualsSection() {
     setHabits(loadedHabits);
     setLastResetDate(loadedResetDate);
 
-    // Setup 1-minute ticker for time-locked habits
+    // Track last reset date so the interval can detect day rollover
+    let lastKnownDate = getLocalYMD();
+
+    // Setup 1-minute ticker for time-locked habits + midnight reset
     const interval = setInterval(() => {
       const currentNow = new Date();
       setNow(currentNow);
 
+      // ── Midnight daily reset ──────────────────────────────────────────
+      const currentDateStr = getLocalYMD();
+      if (currentDateStr !== lastKnownDate) {
+        lastKnownDate = currentDateStr;
+        const yesterdayStr = getYesterdayYMD();
+        setHabits(current => current.map(habit => {
+          let newStreak = habit.streak;
+          if (habit.lastCompletedDate !== yesterdayStr && habit.lastCompletedDate !== currentDateStr) {
+            newStreak = 0;
+          }
+          return { ...habit, count: 0, streak: newStreak, failedDate: null };
+        }));
+        setLastResetDate(currentDateStr);
+        return; // Skip the rest of this tick
+      }
+      // ─────────────────────────────────────────────────────────────────
+
       setHabits(current => {
+
         let changed = false;
         let unpausedCount = 0;
         let unpausedHabitIds = [];
