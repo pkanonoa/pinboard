@@ -91,6 +91,61 @@ export const removeCompletionToday = (type, id) => {
   }
 };
 
+export const syncMonthlyGoalProgress = (habitId, amount) => {
+  try {
+    const saved = localStorage.getItem('pinboard_monthly_goals');
+    if (!saved) return;
+    
+    const data = JSON.parse(saved);
+    const todayStr = getLocalYMD();
+    let updated = false;
+    
+    data.goals = data.goals.map(g => {
+      if (g.linkedHabitId === habitId) {
+        updated = true;
+        let newProgress = g.progress;
+        let newHistory = [...g.history];
+        
+        if (g.trackingType === 'cumulative' || g.trackingType === 'count_toward') {
+          newProgress += amount;
+          const existingToday = newHistory.findIndex(h => h.date === todayStr);
+          if (existingToday >= 0) {
+            newHistory[existingToday].value += amount;
+          } else {
+            newHistory.push({ date: todayStr, value: amount });
+          }
+        } else if (g.trackingType === 'binary') {
+          g.isCompleted = amount > 0;
+          newProgress = amount > 0 ? g.target : 0;
+        } else if (g.trackingType === 'daily_log') {
+          const existingToday = newHistory.findIndex(h => h.date === todayStr);
+          if (existingToday >= 0) {
+            newHistory[existingToday].value += amount; 
+          } else {
+            newHistory.push({ date: todayStr, value: amount });
+          }
+          const sum = newHistory.reduce((acc, h) => acc + h.value, 0);
+          newProgress = parseFloat((sum / newHistory.length).toFixed(1));
+        }
+
+        return {
+          ...g,
+          progress: Math.max(0, newProgress),
+          history: newHistory,
+          isCompleted: g.trackingType !== 'daily_log' ? (Math.max(0, newProgress) >= g.target) : false
+        };
+      }
+      return g;
+    });
+
+    if (updated) {
+      localStorage.setItem('pinboard_monthly_goals', JSON.stringify(data));
+    }
+  } catch (e) {
+    console.error('Failed to sync monthly goal', e);
+  }
+};
+
 export const syncStateToBackend = async () => {
   if (!('serviceWorker' in navigator)) return;
   

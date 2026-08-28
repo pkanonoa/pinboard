@@ -19,6 +19,8 @@ export default function Dashboard({ setCurrentTab }) {
   const [tasks, setTasks] = useState([]);
   const [habits, setHabits] = useState([]);
   const [completionLog, setCompletionLog] = useState([]);
+  const [monthlyGoals, setMonthlyGoals] = useState([]);
+  const [stats, setStats] = useState({ points: 0, currentLevel: LEVELS[0], nextLevel: LEVELS[1], previousMax: 0 });
 
   useEffect(() => {
     const savedTasks = localStorage.getItem('pinboard_tasks');
@@ -44,20 +46,24 @@ export default function Dashboard({ setCurrentTab }) {
         // ignore
       }
     }
+    
+    setStats(getUserStats());
+
+    // Load monthly goals for chips
+    const d = new Date();
+    const monthKey = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+    const savedMonthly = localStorage.getItem('pinboard_monthly_goals');
+    if (savedMonthly) {
+      try {
+        const parsed = JSON.parse(savedMonthly);
+        if (parsed.currentMonth === monthKey) {
+          setMonthlyGoals(parsed.goals || []);
+        }
+      } catch (e) {}
+    }
   }, []);
 
   const todayStr = getLocalYMD();
-
-  useEffect(() => {
-    // Only run this once on mount
-    const savedTasks = JSON.parse(localStorage.getItem('pinboard_tasks') || '[]');
-    const savedRituals = JSON.parse(localStorage.getItem('pinboard_rituals_data') || '{}');
-    const h = savedRituals.habits || [];
-    
-    // Previous mascot logic was here
-    
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // Run only once
 
   const completedTasksToday = tasks.filter(t => t.done && t.completedDate === todayStr).length;
   const habitsDoneToday = habits.filter(h => h.count >= h.goal && h.lastCompletedDate === todayStr).length;
@@ -65,9 +71,6 @@ export default function Dashboard({ setCurrentTab }) {
 
   const pendingTasks = tasks.filter(t => !t.done);
   
-  // Tasks due today or overdue
-  // But wait, what if they don't have a dueDate? Prompt says: "tasks due today or overdue".
-  // To keep it simple, we can just show the first few pending tasks, prioritizing ones with due dates.
   const sortedPendingTasks = [...pendingTasks].sort((a, b) => {
     if (a.dueDate && b.dueDate) {
       return new Date(a.dueDate) - new Date(b.dueDate);
@@ -80,7 +83,6 @@ export default function Dashboard({ setCurrentTab }) {
   const displayTasks = sortedPendingTasks.slice(0, 3);
   const displayHabits = habits.slice(0, 3);
 
-  // Compute this week's days (Mon - Sun)
   const getWeekDays = () => {
     const d = new Date();
     const day = d.getDay();
@@ -99,7 +101,6 @@ export default function Dashboard({ setCurrentTab }) {
   const weekDays = getWeekDays();
   const dayNames = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
 
-  // Greeting & Quote
   const currentHour = new Date().getHours();
   let greeting = "Good evening";
   if (currentHour < 12) greeting = "Good morning";
@@ -114,8 +115,6 @@ export default function Dashboard({ setCurrentTab }) {
   };
   const quote = MOTIVATIONAL_QUOTES[getDayOfYear() % MOTIVATIONAL_QUOTES.length];
 
-  // User Stats & Badge
-  const stats = getUserStats();
   const badgeProgress = getClosestBadgeProgress();
 
   return (
@@ -135,19 +134,56 @@ export default function Dashboard({ setCurrentTab }) {
       </div>
       
       {/* Summary Cards */}
-      <div className="grid grid-cols-3 gap-3">
-        <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 flex flex-col items-center justify-center text-center shadow-lg">
-          <span className="text-3xl font-bold text-indigo-400 mb-1">{completedTasksToday}</span>
-          <span className="text-[10px] text-gray-400 uppercase tracking-wider font-semibold">Tasks Done</span>
+      <div className="flex flex-col">
+        <div className="grid grid-cols-3 gap-3">
+          <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 flex flex-col items-center justify-center text-center shadow-lg">
+            <span className="text-3xl font-bold text-indigo-400 mb-1">{completedTasksToday}</span>
+            <span className="text-[10px] text-gray-400 uppercase tracking-wider font-semibold">Tasks Done</span>
+          </div>
+          <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 flex flex-col items-center justify-center text-center shadow-lg">
+            <span className="text-3xl font-bold text-emerald-400 mb-1">{habitsDoneToday}</span>
+            <span className="text-[10px] text-gray-400 uppercase tracking-wider font-semibold">Rituals Done</span>
+          </div>
+          <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 flex flex-col items-center justify-center text-center shadow-lg">
+            <span className="text-3xl font-bold text-amber-400 mb-1">{bestStreak}</span>
+            <span className="text-[10px] text-gray-400 uppercase tracking-wider font-semibold">Best Streak</span>
+          </div>
         </div>
-        <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 flex flex-col items-center justify-center text-center shadow-lg">
-          <span className="text-3xl font-bold text-emerald-400 mb-1">{habitsDoneToday}</span>
-          <span className="text-[10px] text-gray-400 uppercase tracking-wider font-semibold">Rituals Done</span>
-        </div>
-        <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 flex flex-col items-center justify-center text-center shadow-lg">
-          <span className="text-3xl font-bold text-amber-400 mb-1">{bestStreak}</span>
-          <span className="text-[10px] text-gray-400 uppercase tracking-wider font-semibold">Best Streak</span>
-        </div>
+        {/* Monthly Goal Chips */}
+        {monthlyGoals.length > 0 && (
+          <div className="flex flex-wrap gap-2 mt-4 justify-center animate-fade-in-up delay-200">
+            {monthlyGoals.map(mg => {
+              let statusColor = 'bg-gray-700 text-gray-300';
+              let dotColor = 'bg-gray-400';
+              if (mg.trackingType === 'binary' || mg.isCompleted) {
+                if (mg.isCompleted) {
+                  statusColor = 'bg-emerald-900/30 text-emerald-400 border border-emerald-800/50';
+                  dotColor = 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)]';
+                }
+              } else {
+                const now = new Date();
+                const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+                const expected = (mg.target / daysInMonth) * now.getDate();
+                if (mg.progress >= expected) {
+                  statusColor = 'bg-emerald-900/30 text-emerald-400 border border-emerald-800/50';
+                  dotColor = 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)]';
+                } else if (mg.progress >= expected * 0.8) {
+                  statusColor = 'bg-yellow-900/30 text-yellow-400 border border-yellow-800/50';
+                  dotColor = 'bg-yellow-500 shadow-[0_0_8px_rgba(234,179,8,0.8)]';
+                } else {
+                  statusColor = 'bg-red-900/30 text-red-400 border border-red-800/50';
+                  dotColor = 'bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.8)]';
+                }
+              }
+              return (
+                <div key={mg.id} onClick={() => setCurrentTab('goals')} className={`cursor-pointer flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-medium transition-all ${statusColor}`}>
+                  <span className={`w-1.5 h-1.5 rounded-full ${dotColor}`}></span>
+                  {mg.name}
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
 
       {/* Today's Badge Progress */}

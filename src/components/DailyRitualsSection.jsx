@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { logCompletion, removeCompletionToday, syncStateToBackend } from '../utils';
+import { logCompletion, removeCompletionToday, syncStateToBackend, syncMonthlyGoalProgress } from '../utils';
 import { checkAndUnlockBadges } from '../utils/badgeUtils';
 import confetti from 'canvas-confetti';
 
@@ -151,6 +151,8 @@ export default function DailyRitualsSection() {
           logCompletion('habit', id);
           confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
         }
+        
+        syncMonthlyGoalProgress(id, 1);
 
         return {
           ...habit,
@@ -180,6 +182,12 @@ export default function DailyRitualsSection() {
           newStreak = Math.max(0, newStreak - 1);
           newLastCompletedDate = ''; 
           removeCompletionToday('habit', id);
+        }
+        
+        if (habit.type === 'big_number') {
+          syncMonthlyGoalProgress(id, newCount - habit.count);
+        } else {
+          syncMonthlyGoalProgress(id, -1);
         }
 
         return {
@@ -211,6 +219,8 @@ export default function DailyRitualsSection() {
           logCompletion('habit', id);
           confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
         }
+        
+        syncMonthlyGoalProgress(id, newCount - habit.count);
 
         return {
           ...habit,
