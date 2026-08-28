@@ -81,26 +81,28 @@ export default async function handler(req, res) {
                  }
               }
             } else if (isInterval) {
-              const intervalHrs = habit.reminderInterval || 2;
+              const intervalValue = habit.reminderInterval || 2;
+              const intervalUnit = habit.reminderIntervalUnit || 'hours';
+              const intervalMs = intervalUnit === 'minutes' ? intervalValue * 60 * 1000 : intervalValue * 60 * 60 * 1000;
+
               const localHour = userLocalNow.getUTCHours();
               
               // Only alert during waking hours (e.g. 8am to 10pm)
               if (localHour >= 8 && localHour < 22) {
-                if (localHour % intervalHrs === 0) {
-                  const intervalNotifKey = `notified_${endpointHash}_ritual_${habit.id}_interval_${todayStr}_${localHour}`;
-                  const alreadySentInterval = await kv.get(intervalNotifKey);
-                  if (!alreadySentInterval) {
-                    try {
-                      await webpush.sendNotification(subscription, JSON.stringify({ 
-                        title: `🔄 Routine: ${habit.name}`, 
-                        body: `Quick reminder for your interval ritual!`, 
-                        type: 'habit' 
-                      }));
-                      await kv.set(intervalNotifKey, true, { ex: 86400 });
-                      sentCount++;
-                    } catch (e) {
-                      console.error('Error sending push', e);
-                    }
+                const lastSentKey = `last_sent_${endpointHash}_ritual_${habit.id}`;
+                const lastSentTime = parseInt(await kv.get(lastSentKey) || '0', 10);
+                
+                if (now - lastSentTime >= intervalMs) {
+                  try {
+                    await webpush.sendNotification(subscription, JSON.stringify({ 
+                      title: `🔄 Routine: ${habit.name}`, 
+                      body: `Quick reminder for your interval ritual!`, 
+                      type: 'habit' 
+                    }));
+                    await kv.set(lastSentKey, now);
+                    sentCount++;
+                  } catch (e) {
+                    console.error('Error sending push', e);
                   }
                 }
               }

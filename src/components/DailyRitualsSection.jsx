@@ -37,7 +37,7 @@ export default function DailyRitualsSection() {
   const [newHabit, setNewHabit] = useState({ name: '', goal: '', unit: '', type: 'countable', targetTime: '09:00', graceWindow: '30' });
 
   const [editingHabitId, setEditingHabitId] = useState(null);
-  const [editHabitData, setEditHabitData] = useState({ name: '', goal: '', unit: '', type: 'countable', targetTime: '09:00', graceWindow: '30', reminderEnabled: false, reminderType: 'fixed', reminderTime: '09:00', reminderInterval: 2 });
+  const [editHabitData, setEditHabitData] = useState({ name: '', goal: '', unit: '', type: 'countable', targetTime: '09:00', graceWindow: '30', reminderEnabled: false, reminderType: 'fixed', reminderTime: '09:00', reminderInterval: 2, reminderIntervalUnit: 'hours' });
   const [expandedHabitId, setExpandedHabitId] = useState(null);
   const [bigNumberInputs, setBigNumberInputs] = useState({});
   const [now, setNow] = useState(new Date());
@@ -258,7 +258,8 @@ export default function DailyRitualsSection() {
       reminderEnabled: false,
       reminderType: 'fixed',
       reminderTime: '09:00',
-      reminderInterval: 2
+      reminderInterval: 2,
+      reminderIntervalUnit: 'hours'
     };
 
     if (newHabit.type === 'countable' || newHabit.type === 'big_number') {
@@ -293,7 +294,8 @@ export default function DailyRitualsSection() {
       reminderEnabled: habit.reminderEnabled || false,
       reminderType: habit.reminderType || 'fixed',
       reminderTime: habit.reminderTime || '09:00',
-      reminderInterval: habit.reminderInterval || 2
+      reminderInterval: habit.reminderInterval || 2,
+      reminderIntervalUnit: habit.reminderIntervalUnit || 'hours'
     });
   };
 
@@ -311,7 +313,8 @@ export default function DailyRitualsSection() {
         reminderEnabled: editHabitData.reminderEnabled,
         reminderType: editHabitData.reminderType || 'fixed',
         reminderTime: editHabitData.reminderTime,
-        reminderInterval: editHabitData.reminderInterval || 2
+        reminderInterval: editHabitData.reminderInterval === '' ? 2 : parseInt(editHabitData.reminderInterval, 10),
+        reminderIntervalUnit: editHabitData.reminderIntervalUnit || 'hours'
       };
 
       if (editHabitData.type === 'countable' || editHabitData.type === 'big_number') {
@@ -548,15 +551,24 @@ export default function DailyRitualsSection() {
 
                           {editHabitData.reminderType === 'interval' && (
                             <div className="animate-fade-in-down flex items-center justify-between pt-1">
-                              <label className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-0">Every (hours)</label>
-                              <input
-                                type="number"
-                                min="1"
-                                max="24"
-                                value={editHabitData.reminderInterval || 2}
-                                onChange={e => setEditHabitData({ ...editHabitData, reminderInterval: parseInt(e.target.value) || 2 })}
-                                className="bg-gray-900 w-20 border border-gray-600 rounded px-3 py-1 text-white text-sm focus:outline-none focus:border-emerald-500"
-                              />
+                              <label className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-0">Every</label>
+                              <div className="flex gap-2">
+                                <input
+                                  type="number"
+                                  min="1"
+                                  value={editHabitData.reminderInterval === '' ? '' : editHabitData.reminderInterval}
+                                  onChange={e => setEditHabitData({ ...editHabitData, reminderInterval: e.target.value === '' ? '' : parseInt(e.target.value, 10) })}
+                                  className="bg-gray-900 w-16 border border-gray-600 rounded px-2 py-1 text-white text-sm focus:outline-none focus:border-emerald-500"
+                                />
+                                <select
+                                  value={editHabitData.reminderIntervalUnit || 'hours'}
+                                  onChange={e => setEditHabitData({ ...editHabitData, reminderIntervalUnit: e.target.value })}
+                                  className="bg-gray-900 border border-gray-600 rounded px-2 py-1 text-white text-sm focus:outline-none focus:border-emerald-500"
+                                >
+                                  <option value="hours">Hours</option>
+                                  <option value="minutes">Minutes</option>
+                                </select>
+                              </div>
                             </div>
                           )}
                         </>
@@ -596,7 +608,7 @@ export default function DailyRitualsSection() {
                           )}
                           {habit.reminderEnabled && habit.reminderType === 'interval' && (
                             <span className="text-emerald-500/70 text-[10px] bg-emerald-900/30 px-1.5 py-0.5 rounded" title="Reminder Active">
-                              Every {habit.reminderInterval || 2}h
+                              Every {habit.reminderInterval || 2}{habit.reminderIntervalUnit === 'minutes' ? 'm' : 'h'}
                             </span>
                           )}
                         </p>
