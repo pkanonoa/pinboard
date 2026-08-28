@@ -321,6 +321,15 @@ export default function SettingsSection() {
         </div>
         <p className="text-sm font-bold text-white">Pinboard <span className="font-normal text-gray-400">v1.2.0</span></p>
         <p className="text-xs text-gray-500">Made for you 🌱</p>
+        <button
+          onClick={() => {
+            localStorage.removeItem('pinboard_onboarded');
+            window.location.reload();
+          }}
+          className="mt-4 px-4 py-2 bg-gray-800 hover:bg-gray-700 text-gray-400 text-xs font-semibold rounded-lg transition-colors border border-gray-700"
+        >
+          Redo Setup
+        </button>
       </section>
 
     </div>

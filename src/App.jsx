@@ -10,6 +10,7 @@ import RewardsSection from './components/RewardsSection';
 import SettingsSection from './components/SettingsSection';
 import NotificationDrawer from './components/NotificationDrawer';
 import MonthlyGoalsSection from './components/MonthlyGoalsSection';
+import OnboardingScreen from './components/OnboardingScreen';
 import { getNotifications, cleanOldNotifications } from './db';
 import { syncStateToBackend } from './utils';
 
@@ -17,10 +18,16 @@ function App() {
   const [currentTab, setCurrentTab] = useState('dashboard');
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [onboarded, setOnboarded] = useState(true);
 
   // Initialize theme on load
   useEffect(() => {
-    syncStateToBackend();
+    const isOnboarded = localStorage.getItem('pinboard_onboarded') === 'true';
+    setOnboarded(isOnboarded);
+    
+    if (isOnboarded) {
+      syncStateToBackend();
+    }
     
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible') {
@@ -64,6 +71,10 @@ function App() {
       setUnreadCount(notifs.filter(n => !n.read).length);
     } catch(e) {}
   };
+
+  if (!onboarded) {
+    return <OnboardingScreen onComplete={() => setOnboarded(true)} />;
+  }
 
   return (
     <div className="flex flex-col items-center min-h-screen p-4 relative pt-16 pb-24 overflow-x-hidden">
