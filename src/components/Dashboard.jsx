@@ -20,7 +20,7 @@ export default function Dashboard({ setCurrentTab }) {
   const [habits, setHabits] = useState([]);
   const [completionLog, setCompletionLog] = useState([]);
   const [monthlyGoals, setMonthlyGoals] = useState([]);
-  const [stats, setStats] = useState({ points: 0, currentLevel: LEVELS[0], nextLevel: LEVELS[1], previousMax: 0 });
+  const [stats, setStats] = useState(() => getUserStats());
 
   useEffect(() => {
     const savedTasks = localStorage.getItem('pinboard_tasks');
