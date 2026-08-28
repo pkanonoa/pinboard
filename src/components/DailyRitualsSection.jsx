@@ -356,10 +356,10 @@ export default function DailyRitualsSection() {
             onChange={e => setNewHabit({ ...newHabit, type: e.target.value })}
             className="w-full bg-gray-900 border border-gray-600 rounded px-3 py-2 text-sm text-white mb-2 focus:border-emerald-500 focus:outline-none"
           >
-            <option value="one_time">Simple Check-off (e.g. Exercise)</option>
-            <option value="countable">Multiple Times (e.g. 8 glasses of water)</option>
-            <option value="big_number">Track Amount (e.g. 10,000 steps)</option>
-            <option value="time_locked">Scheduled (e.g. Wake up by 7 AM)</option>
+            <option value="countable">+1 (water, pages)</option>
+            <option value="one_time">Mark Done (exercise, shower)</option>
+            <option value="time_locked">Window only (sleep, wake up)</option>
+            <option value="big_number">Single log (steps, calories)</option>
           </select>
 
           <input
@@ -448,10 +448,10 @@ export default function DailyRitualsSection() {
                       onChange={e => setEditHabitData({ ...editHabitData, type: e.target.value })}
                       className="w-full bg-gray-900 border border-gray-600 rounded px-3 py-2 text-sm text-white mb-2 focus:border-emerald-500 focus:outline-none"
                     >
-                      <option value="one_time">Simple Check-off (e.g. Exercise)</option>
-                      <option value="countable">Multiple Times (e.g. 8 glasses of water)</option>
-                      <option value="big_number">Track Amount (e.g. 10,000 steps)</option>
-                      <option value="time_locked">Scheduled (e.g. Wake up by 7 AM)</option>
+                      <option value="countable">+1 (water, pages)</option>
+                      <option value="one_time">Mark Done (exercise, shower)</option>
+                      <option value="time_locked">Window only (sleep, wake up)</option>
+                      <option value="big_number">Single log (steps, calories)</option>
                     </select>
 
                     <input
