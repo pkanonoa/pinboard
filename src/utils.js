@@ -93,21 +93,21 @@ export const removeCompletionToday = (type, id) => {
 
 export const syncMonthlyGoalProgress = (habitId, amount) => {
   try {
-    const saved = localStorage.getItem('pinboard_monthly_goals');
+    const saved = localStorage.getItem('pinboard_goals');
     if (!saved) return;
     
-    const data = JSON.parse(saved);
+    let goals = JSON.parse(saved);
     const todayStr = getLocalYMD();
     let updated = false;
     
-    data.goals = data.goals.map(g => {
+    goals = goals.map(g => {
       // Support old string linkedHabitId or new array linkedHabitIds
       const isLinked = g.linkedHabitIds ? g.linkedHabitIds.includes(habitId) : (g.linkedHabitId === habitId);
       
       if (isLinked) {
         updated = true;
         let newProgress = g.progress;
-        let newHistory = [...g.history];
+        let newHistory = [...(g.history || [])];
         
         if (g.trackingType === 'cumulative' || g.trackingType === 'count_toward') {
           newProgress += amount;
@@ -142,7 +142,8 @@ export const syncMonthlyGoalProgress = (habitId, amount) => {
     });
 
     if (updated) {
-      localStorage.setItem('pinboard_monthly_goals', JSON.stringify(data));
+      localStorage.setItem('pinboard_goals', JSON.stringify(goals));
+      window.dispatchEvent(new Event('pinboard_goals_updated'));
     }
   } catch (e) {
     console.error('Failed to sync monthly goal', e);
