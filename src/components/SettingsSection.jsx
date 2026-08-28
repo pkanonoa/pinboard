@@ -157,7 +157,7 @@ export default function SettingsSection() {
         <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-4">Notifications</h3>
         
         <div className="flex items-center justify-between mb-4">
-          <span className="text-white font-medium">Master Toggle</span>
+          <span className="text-white font-medium">Enable Push Notifications</span>
           <button 
             onClick={handleToggleNotifications}
             className={`w-12 h-6 rounded-full transition-colors relative ${notificationsEnabled ? 'bg-emerald-500' : 'bg-gray-700'}`}
