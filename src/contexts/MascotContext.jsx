@@ -18,7 +18,7 @@ export function MascotProvider({ children }) {
         setMascotState(prev => {
           // Only auto-hide if a newer message hasn't been triggered
           if (Date.now() - prev.timestamp >= duration - 100) {
-            return { ...prev, isVisible: false };
+            return { ...prev, isVisible: false, mood: 'happy', message: null };
           }
           return prev;
         });
@@ -27,7 +27,7 @@ export function MascotProvider({ children }) {
   };
 
   const dismissMascot = () => {
-    setMascotState(prev => ({ ...prev, isVisible: false }));
+    setMascotState(prev => ({ ...prev, isVisible: false, mood: 'happy', message: null }));
   };
 
   // Listen for global badge events

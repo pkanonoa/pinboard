@@ -61,10 +61,10 @@ export default function Dashboard({ setCurrentTab }) {
       if (hasOverdue) {
         triggerMascot('sad', "You have overdue tasks... let's catch up!", 5000);
       } else {
-        triggerMascot('happy', "Welcome back! Let's crush today!", 4000);
+        triggerMascot('happy', "Hi! I'm Neon 🌱 Ready to crush your goals today?", 4000);
       }
     } else {
-      triggerMascot('happy', "Welcome! Let's get started!", 4000);
+      triggerMascot('happy', "Hi! I'm Neon 🌱 Ready to crush your goals today?", 4000);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // Run only once

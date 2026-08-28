@@ -113,7 +113,7 @@ export default function DailyRitualsSection() {
           if (newStreak > habit.streak && newStreak > 1) {
             triggerMascot('heart-eye', "Streak increased! You're on fire! 🔥", 4000);
           } else {
-            triggerMascot('cry-laugh', "+5 pts! Ritual complete!", 4000);
+            triggerMascot('heart-eye', "+5 pts! Ritual complete!", 4000);
           }
         }
 

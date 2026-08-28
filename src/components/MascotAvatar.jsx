@@ -2,6 +2,18 @@ import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useMascot } from '../contexts/MascotContext';
 
+const moodFileMap = {
+  angry: 'neon-angry',
+  'cry-laugh': 'neon-cry_laugh',
+  happy: 'neon-happy',
+  'heart-eye': 'neon-heart_eyes',
+  joy: 'neon-joy',
+  sad: 'neon-sad',
+  shy: 'neon-shy',
+  surprised: 'neon-surpriced',
+  winiking: 'neon-happy' // fallback for previous asset name
+};
+
 export default function MascotAvatar() {
   const { mascotState, dismissMascot } = useMascot();
   const { mood, message, isVisible } = mascotState;
@@ -44,7 +56,7 @@ export default function MascotAvatar() {
         onClick={dismissMascot} // Tapping character also dismisses current message
       >
         <img 
-          src={`/avatar/${mood}.png`} 
+          src={`/avatar/${moodFileMap[mood] || 'neon-happy'}.webp`} 
           alt={`Neon looking ${mood}`}
           className="w-24 h-24 object-contain drop-shadow-2xl filter brightness-110"
         />
