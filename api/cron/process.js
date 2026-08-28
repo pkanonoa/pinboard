@@ -17,6 +17,9 @@ export default async function handler(req, res) {
   }
 
   try {
+    const lastCronRun = (await kv.get('last_cron_run')) || (Date.now() - 5 * 60 * 1000);
+    await kv.set('last_cron_run', Date.now());
+
     const endpoints = await kv.smembers('active_subscriptions');
     if (!endpoints || endpoints.length === 0) {
       return res.status(200).json({ message: 'No active subscriptions.' });
@@ -28,17 +31,20 @@ export default async function handler(req, res) {
     const now = Date.now();
     let sentCount = 0;
 
-    for (const state of states) {
+    for (let i = 0; i < states.length; i++) {
+      const state = states[i];
+      const endpoint = endpoints[i];
       if (!state || !state.subscription) continue;
 
       const { subscription, habits, tasks, dailyReviewTime, timezoneOffset } = state;
       
-      const localNow = new Date(now - (timezoneOffset * 60000));
-      const localHour = localNow.getUTCHours();
-      const localMin = localNow.getUTCMinutes();
-      const todayStr = `${localNow.getUTCFullYear()}-${String(localNow.getUTCMonth()+1).padStart(2, '0')}-${String(localNow.getUTCDate()).padStart(2, '0')}`;
-
-      const notificationsToSend = [];
+      const userLocalNow = new Date(now + timezoneOffset * 60 * 1000);
+      const userYear = userLocalNow.getUTCFullYear();
+      const userMonth = userLocalNow.getUTCMonth();
+      const userDate = userLocalNow.getUTCDate();
+      
+      const todayStr = `${userYear}-${String(userMonth+1).padStart(2, '0')}-${String(userDate).padStart(2, '0')}`;
+      const endpointHash = endpoint.substring(0, 16);
 
       // Habits processing
       if (habits) {
@@ -47,9 +53,9 @@ export default async function handler(req, res) {
 
           if (habit.reminderEnabled && habit.reminderTime) {
             const [th, tm] = habit.reminderTime.split(':').map(Number);
-            const diff = (localHour * 60 + localMin) - (th * 60 + tm);
+            const dueTime = Date.UTC(userYear, userMonth, userDate, th, tm, 0) - (timezoneOffset * 60 * 1000);
             
-            if (diff >= 0 && diff < 15) {
+            if (dueTime > lastCronRun && dueTime <= now) {
                let title = `⏰ Time for ${habit.name}`;
                let body = `You haven't completed this yet today.`;
 
@@ -58,8 +64,18 @@ export default async function handler(req, res) {
                  title = '⏰ Time to wakeup!';
                  body = 'Rise and shine, it is time to start your day!';
                }
-
-               notificationsToSend.push({ title, body, type: 'habit' });
+               
+               const ritualNotifKey = `notified_${endpointHash}_ritual_${habit.id}_daily`;
+               const alreadySentRitual = await kv.get(ritualNotifKey);
+               if (!alreadySentRitual) {
+                 try {
+                   await webpush.sendNotification(subscription, JSON.stringify({ title, body, type: 'habit' }));
+                   await kv.set(ritualNotifKey, true, { ex: 86400 });
+                   sentCount++;
+                 } catch (e) {
+                   console.error('Error sending push', e);
+                 }
+               }
             }
           }
         }
@@ -68,8 +84,9 @@ export default async function handler(req, res) {
       // Tasks processing (Daily Review Digest)
       if (dailyReviewTime) {
          const [dh, dm] = dailyReviewTime.split(':').map(Number);
-         const diff = (localHour * 60 + localMin) - (dh * 60 + dm);
-         if (diff >= 0 && diff < 15) {
+         const dueTime = Date.UTC(userYear, userMonth, userDate, dh, dm, 0) - (timezoneOffset * 60 * 1000);
+         
+         if (dueTime > lastCronRun && dueTime <= now) {
             const pendingTasks = (tasks || []).filter(t => !t.done);
             if (pendingTasks.length > 0) {
                let bodyStr = pendingTasks.slice(0, 3).map(t => `• ${t.name}`).join('\n');
@@ -77,21 +94,18 @@ export default async function handler(req, res) {
                  bodyStr += `\n...and ${pendingTasks.length - 3} more.`;
                }
                
-               notificationsToSend.push({
-                 title: '📋 Daily Task Review',
-                 body: bodyStr,
-                 type: 'task'
-               });
+               const taskNotifKey = `notified_${endpointHash}_task_digest_due`;
+               const alreadySent = await kv.get(taskNotifKey);
+               if (!alreadySent) {
+                 try {
+                   await webpush.sendNotification(subscription, JSON.stringify({ title: '📋 Daily Task Review', body: bodyStr, type: 'task' }));
+                   await kv.set(taskNotifKey, true, { ex: 3600 });
+                   sentCount++;
+                 } catch (e) {
+                   console.error('Error sending push', e);
+                 }
+               }
             }
-         }
-      }
-
-      for (const note of notificationsToSend) {
-         try {
-           await webpush.sendNotification(subscription, JSON.stringify(note));
-           sentCount++;
-         } catch (e) {
-           console.error('Error sending push', e);
          }
       }
     }

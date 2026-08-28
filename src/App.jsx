@@ -11,6 +11,7 @@ import SettingsSection from './components/SettingsSection';
 import NotificationDrawer from './components/NotificationDrawer';
 import MonthlyGoalsSection from './components/MonthlyGoalsSection';
 import { getNotifications, cleanOldNotifications } from './db';
+import { syncStateToBackend } from './utils';
 
 function App() {
   const [currentTab, setCurrentTab] = useState('dashboard');
@@ -19,6 +20,15 @@ function App() {
 
   // Initialize theme on load
   useEffect(() => {
+    syncStateToBackend();
+    
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        syncStateToBackend();
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
     const savedTheme = localStorage.getItem('pinboard_theme') || 'darker';
     document.documentElement.setAttribute('data-theme', savedTheme);
     
@@ -39,6 +49,7 @@ function App() {
     }
     
     return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
       window.removeEventListener('focus', checkUnread);
       window.removeEventListener('notifications_read', checkUnread);
       if ('serviceWorker' in navigator) {

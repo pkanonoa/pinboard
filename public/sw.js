@@ -1,4 +1,4 @@
-const CACHE_NAME = 'pinboard-cache-v6';
+const CACHE_NAME = 'pinboard-cache-v7';
 const urlsToCache = [
   '/',
   '/index.html'
@@ -118,65 +118,60 @@ function cleanOldNotificationsFromDB() {
 }
 
 // Handle incoming push notifications
-self.addEventListener('push', function(event) {
-  let payload = { title: 'Pinboard', body: 'New update from Pinboard!', type: 'summary' };
-  
-  if (event.data) {
-    try {
-      payload = event.data.json();
-    } catch (e) {
-      payload.body = event.data.text();
-    }
-  }
+self.addEventListener('push', event => {
+  const data = event.data?.json() ?? {};
 
   const notificationObj = {
     id: Date.now().toString() + Math.random().toString(36).substring(2, 9),
-    title: payload.title,
-    body: payload.body,
-    type: payload.type || 'summary',
+    title: data.title || 'Pinboard',
+    body: data.body || 'Time to check Pinboard!',
+    type: data.type || 'general',
     timestamp: Date.now(),
     read: false
   };
 
   const options = {
-    body: payload.body,
+    body: data.body || 'Time to check Pinboard!',
     icon: '/logo.jpg',
-    vibrate: [100, 50, 100],
+    badge: '/logo.jpg',
+    tag: data.tag || `pinboard-${Date.now()}`,
+    renotify: true,
+    requireInteraction: false,
+    silent: false,
     data: {
-      dateOfArrival: Date.now(),
-      primaryKey: '1'
+      url: data.url || '/',
+      taskId: data.taskId || null,
+      type: data.type || 'general'
     }
   };
 
   event.waitUntil(
     Promise.all([
-      saveNotificationToDB(notificationObj).then(() => {
-        return self.clients.matchAll({ type: 'window' }).then(windowClients => {
+      saveNotificationToDB(notificationObj)
+        .then(() => self.clients.matchAll({ type: 'window' }))
+        .then(windowClients => {
           for (let client of windowClients) {
             client.postMessage({ type: 'NEW_NOTIFICATION' });
           }
-        });
-      }),
-      self.registration.showNotification(payload.title, options)
+        })
+        .catch(err => console.error("SW DB save error", err)),
+      self.registration.showNotification(
+        data.title || 'Pinboard',
+        options
+      )
     ])
   );
 });
 
 // Handle notification clicks
-self.addEventListener('notificationclick', function(event) {
+self.addEventListener('notificationclick', event => {
   event.notification.close();
   event.waitUntil(
-    clients.matchAll({ type: 'window' }).then(windowClients => {
-      // If a window is already open, focus it
-      for (let i = 0; i < windowClients.length; i++) {
-        let client = windowClients[i];
-        if (client.url === '/' && 'focus' in client) {
-          return client.focus();
-        }
-      }
-      // Otherwise, open a new window
-      if (clients.openWindow) {
-        return clients.openWindow('/');
+    clients.matchAll({ type: 'window' }).then(clientList => {
+      if (clientList.length > 0) {
+        clientList[0].focus();
+      } else {
+        clients.openWindow(event.notification.data?.url || '/');
       }
     })
   );

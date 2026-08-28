@@ -195,7 +195,8 @@ export const syncStateToBackend = async () => {
     } catch(e) {}
 
     const dailyReviewTime = localStorage.getItem('pinboard_daily_review_time') || '20:00';
-    const timezoneOffset = new Date().getTimezoneOffset();
+    const timezoneOffset = new Date().getTimezoneOffset() * -1;
+    console.log('Sending timezoneOffset:', timezoneOffset);
 
     await fetch('/api/sync-state', {
       method: 'POST',
