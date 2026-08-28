@@ -181,7 +181,7 @@ function App() {
         )}
       </button>
 
-      {currentTab !== 'goals' && currentTab !== 'tasks' && currentTab !== 'more' && (
+      {currentTab !== 'goals' && currentTab !== 'tasks' && currentTab !== 'more' && currentTab !== 'rituals' && (
         <h1 className="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-purple-400 mb-8">
           Pinboard
         </h1>
