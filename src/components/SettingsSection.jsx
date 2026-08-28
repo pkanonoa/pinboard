@@ -100,24 +100,10 @@ export default function SettingsSection() {
         
       } catch (e) {
         console.error(e);
-        alert('Error: ' + e.message);
+        alert('Database Error: ' + e.message);
       }
     } else {
       alert('Please enable notifications first.');
-    }
-  };
-
-  const triggerRealCron = async () => {
-    try {
-      const res = await fetch('/api/cron/process', { method: 'POST' });
-      const data = await res.json();
-      if (data.sent !== undefined) {
-        alert(`Cron executed successfully! Sent ${data.sent} real notifications.`);
-      } else {
-        alert('Cron executed, but check console for response: ' + JSON.stringify(data));
-      }
-    } catch (e) {
-      alert('Error triggering cron: ' + e.message);
     }
   };
 
@@ -192,17 +178,9 @@ export default function SettingsSection() {
 
         <button 
           onClick={testNotification}
-          className="w-full py-2 bg-gray-800 hover:bg-gray-700 text-indigo-400 font-bold rounded-lg transition-colors border border-gray-700 mb-2"
+          className="w-full py-2 bg-gray-800 hover:bg-gray-700 text-indigo-400 font-bold rounded-lg transition-colors border border-gray-700"
         >
           Test Notification
-        </button>
-        
-        <button 
-          onClick={triggerRealCron}
-          disabled={!notificationsEnabled}
-          className={`w-full py-2 rounded-lg text-sm font-bold transition-all ${notificationsEnabled ? 'bg-indigo-900/40 text-indigo-300 hover:bg-indigo-900/60 border border-indigo-700/50' : 'hidden'}`}
-        >
-          Trigger Real Backend Cron (For Testing)
         </button>
       </section>
 
