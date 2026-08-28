@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import neoHappy from "../assets/neo-happy.png";
 
 const QUOTES = [
@@ -91,7 +91,7 @@ export default function NeoCelebration() {
         </div>
 
         <button
-          className="w-full flex items-center justify-center py-3 border-t border-gray-800/60 hover:bg-gray-800/30 active:bg-gray-800/50 transition-colors"
+          className="w-full flex items-center justify-center py-3 hover:bg-gray-800/30 active:bg-gray-800/50 transition-colors"
           onClick={handleDismiss}
         >
           <span className="text-gray-500 text-xs font-medium tracking-widest uppercase">
