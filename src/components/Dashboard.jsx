@@ -52,15 +52,21 @@ export default function Dashboard({ setCurrentTab }) {
     setStats(getUserStats());
 
     // Load goals for chips
-    const savedGoals = localStorage.getItem('pinboard_goals');
-    if (savedGoals) {
-      try {
-        const parsed = JSON.parse(savedGoals);
-        if (Array.isArray(parsed)) {
-          setMonthlyGoals(parsed);
-        }
-      } catch(e) {}
-    }
+    const loadGoals = () => {
+      const savedGoals = localStorage.getItem('pinboard_goals');
+      if (savedGoals) {
+        try {
+          const parsed = JSON.parse(savedGoals);
+          if (Array.isArray(parsed)) {
+            setMonthlyGoals(parsed);
+          }
+        } catch(e) {}
+      }
+    };
+    loadGoals();
+
+    window.addEventListener('pinboard_goals_updated', loadGoals);
+    return () => window.removeEventListener('pinboard_goals_updated', loadGoals);
   }, []);
 
   const todayStr = getLocalYMD();

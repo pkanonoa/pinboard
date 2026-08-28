@@ -183,16 +183,6 @@ export default function GoalCard({ goal, onLog, onComplete, onUndo, onDelete, on
                     </form>
                   )}
                 </div>
-                
-                {goal.progress > 0 && !goal.isCompleted && (
-                   <button 
-                     onClick={() => onUndo(goal.id)}
-                     className="w-11 h-11 shrink-0 rounded-xl flex items-center justify-center text-gray-400 bg-gray-900 hover:bg-gray-700 border border-gray-700 transition-colors active:scale-95"
-                     title="Undo Last"
-                   >
-                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"></path></svg>
-                   </button>
-                )}
               </div>
             )}
           </div>

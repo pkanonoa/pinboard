@@ -298,14 +298,47 @@ export default function DailyRitualsSection() {
     }));
   };
 
+  const handleResetHabit = (id) => {
+    const todayStr = getLocalYMD();
+    const targetHabit = habits.find(h => h.id === id);
+    if (!targetHabit || targetHabit.count === 0 || targetHabit.paused) return;
+
+    // Deduct today's full logged count from linked goals
+    syncMonthlyGoalProgress(id, -targetHabit.count);
+
+    setHabits(currentHabits => currentHabits.map(habit => {
+      if (habit.id === id) {
+        let newStreak = habit.streak;
+        let newLastCompletedDate = habit.lastCompletedDate;
+
+        if (habit.count >= habit.goal && habit.lastCompletedDate === todayStr) {
+          newStreak = Math.max(0, newStreak - 1);
+          newLastCompletedDate = '';
+          removeCompletionToday('habit', id);
+        }
+
+        return {
+          ...habit,
+          count: 0,
+          streak: newStreak,
+          lastCompletedDate: newLastCompletedDate
+        };
+      }
+      return habit;
+    }));
+    setBigNumberInputs(prev => ({ ...prev, [id]: undefined }));
+  };
+
   const handleLogBigNumber = (id, e) => {
     e.preventDefault();
     const val = parseInt(bigNumberInputs[id], 10);
-    if (!val || val <= 0) return;
+    if (isNaN(val) || val < 0) return;
 
     const targetHabit = habits.find(h => h.id === id);
     if (!targetHabit || targetHabit.paused) return;
 
+    // Synchronize difference with linked goals:
+    // If val is 0, this syncs (0 - targetHabit.count) which subtracts today's count from the goal
     syncMonthlyGoalProgress(id, val - targetHabit.count);
 
     const todayStr = getLocalYMD();
@@ -320,6 +353,10 @@ export default function DailyRitualsSection() {
           newLastCompletedDate = todayStr;
           logCompletion('habit', id);
           confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
+        } else if (habit.count >= habit.goal && newCount < habit.goal && habit.lastCompletedDate === todayStr) {
+          newStreak = Math.max(0, newStreak - 1);
+          newLastCompletedDate = '';
+          removeCompletionToday('habit', id);
         }
 
         return {
@@ -331,7 +368,7 @@ export default function DailyRitualsSection() {
       }
       return habit;
     }));
-    setBigNumberInputs(prev => ({ ...prev, [id]: '' }));
+    setBigNumberInputs(prev => ({ ...prev, [id]: undefined }));
   };
 
   const handlePauseSubmit = () => {
@@ -790,18 +827,32 @@ export default function DailyRitualsSection() {
                             )()}
 
                             {habit.type === 'countable' && (
-                              isCompleted ? (
-                                <div className="px-4 py-2 bg-emerald-900/30 text-emerald-400 rounded-lg font-medium text-sm flex items-center justify-center cursor-pointer active:scale-95 transition-transform" onClick={() => handleUndo(habit.id)}>
-                                  Done
-                                </div>
-                              ) : (
+                              <div className="flex items-center gap-1.5">
                                 <button
-                                  onClick={() => handleTap(habit.id)}
-                                  className="px-4 py-2 bg-indigo-500/20 text-indigo-400 hover:bg-indigo-500/30 rounded-lg font-medium text-sm flex items-center justify-center transition-colors active:scale-95 min-w-[3rem]"
+                                  onClick={() => handleUndo(habit.id)}
+                                  disabled={habit.count <= 0}
+                                  className={`px-3 py-2 rounded-lg font-medium text-sm flex items-center justify-center transition-colors min-w-[2.5rem] ${
+                                    habit.count <= 0
+                                      ? 'bg-[#2a2a35]/40 text-gray-600 cursor-not-allowed'
+                                      : 'bg-[#2a2a35] text-gray-300 hover:bg-gray-700 active:scale-95'
+                                  }`}
+                                  title="Decrease 1"
                                 >
-                                  +1
+                                  -1
                                 </button>
-                              )
+                                {isCompleted ? (
+                                  <div className="px-4 py-2 bg-emerald-900/30 text-emerald-400 rounded-lg font-medium text-sm flex items-center justify-center cursor-pointer active:scale-95 transition-transform" onClick={() => handleUndo(habit.id)}>
+                                    Done
+                                  </div>
+                                ) : (
+                                  <button
+                                    onClick={() => handleTap(habit.id)}
+                                    className="px-4 py-2 bg-indigo-500/20 text-indigo-400 hover:bg-indigo-500/30 rounded-lg font-medium text-sm flex items-center justify-center transition-colors active:scale-95 min-w-[3rem]"
+                                  >
+                                    +1
+                                  </button>
+                                )}
+                              </div>
                             )}
 
                             {habit.type === 'one_time' && (
@@ -820,18 +871,33 @@ export default function DailyRitualsSection() {
                             )}
                             
                             {habit.type === 'big_number' && (
-                              isCompleted ? (
-                                <div className="px-4 py-2 bg-emerald-900/30 text-emerald-400 rounded-lg font-medium text-sm flex items-center justify-center cursor-pointer active:scale-95 transition-transform" onClick={() => handleUndo(habit.id)}>
-                                  Done
-                                </div>
-                              ) : (
-                                <button
-                                  onClick={() => setBigNumberInputs(prev => ({ ...prev, [habit.id]: prev[habit.id] !== undefined ? undefined : '' }))}
-                                  className="px-4 py-2 bg-indigo-500/20 text-indigo-400 hover:bg-indigo-500/30 rounded-lg font-medium text-sm flex items-center justify-center transition-colors active:scale-95 whitespace-nowrap"
-                                >
-                                  Log
-                                </button>
-                              )
+                              <div className="flex items-center gap-1.5">
+                                {habit.count > 0 && (
+                                  <button
+                                    onClick={() => handleResetHabit(habit.id)}
+                                    className="px-3 py-2 bg-[#2a2a35] text-gray-300 hover:bg-gray-700 rounded-lg font-medium text-sm flex items-center justify-center transition-colors active:scale-95 whitespace-nowrap"
+                                    title="Reset today's log"
+                                  >
+                                    Reset
+                                  </button>
+                                )}
+                                {isCompleted ? (
+                                  <div 
+                                    className="px-4 py-2 bg-emerald-900/30 text-emerald-400 rounded-lg font-medium text-sm flex items-center justify-center cursor-pointer active:scale-95 transition-transform" 
+                                    onClick={() => setBigNumberInputs(prev => ({ ...prev, [habit.id]: prev[habit.id] !== undefined ? undefined : habit.count }))}
+                                    title="Click to edit or adjust"
+                                  >
+                                    Done
+                                  </div>
+                                ) : (
+                                  <button
+                                    onClick={() => setBigNumberInputs(prev => ({ ...prev, [habit.id]: prev[habit.id] !== undefined ? undefined : (habit.count > 0 ? habit.count : '') }))}
+                                    className="px-4 py-2 bg-indigo-500/20 text-indigo-400 hover:bg-indigo-500/30 rounded-lg font-medium text-sm flex items-center justify-center transition-colors active:scale-95 whitespace-nowrap"
+                                  >
+                                    {bigNumberInputs[habit.id] !== undefined ? 'Cancel' : (habit.count > 0 ? 'Edit' : 'Log')}
+                                  </button>
+                                )}
+                              </div>
                             )}
                           </>
                         )}
@@ -839,6 +905,11 @@ export default function DailyRitualsSection() {
                         {/* Action Sheet (Long Press) */}
                         {activeMenuId === habit.id && (
                           <div className="absolute top-full right-0 mt-2 w-36 bg-[#16161f] border border-gray-700/60 rounded-xl shadow-2xl overflow-hidden z-[60] animate-fade-in-down origin-top-right">
+                            {habit.count > 0 && (
+                              <button onClick={(e) => { e.stopPropagation(); setActiveMenuId(null); handleResetHabit(habit.id); }} className="w-full text-left px-4 py-3 text-sm text-amber-400 hover:bg-gray-800 transition-colors flex items-center gap-2">
+                                <span>🔄</span> Reset today
+                              </button>
+                            )}
                             <button onClick={(e) => { e.stopPropagation(); setActiveMenuId(null); startEditHabit(habit); }} className="w-full text-left px-4 py-3 text-sm text-gray-200 hover:bg-gray-800 transition-colors flex items-center gap-2">
                               <span>✏️</span> Edit
                             </button>
@@ -854,19 +925,29 @@ export default function DailyRitualsSection() {
                     </div>
 
                     {/* Big Number Form */}
-                    {habit.type === 'big_number' && !isCompleted && bigNumberInputs[habit.id] !== undefined && (
+                    {habit.type === 'big_number' && bigNumberInputs[habit.id] !== undefined && (
                       <form onSubmit={(e) => handleLogBigNumber(habit.id, e)} className="flex gap-2 mt-2 z-10 animate-fade-in-up">
                         <input
                           type="number"
-                          min="1"
-                          placeholder={`Log ${habit.unit}...`}
-                          value={bigNumberInputs[habit.id] || ''}
+                          min="0"
+                          placeholder={`Log ${habit.unit || 'amount'}...`}
+                          value={bigNumberInputs[habit.id] ?? ''}
                           onChange={(e) => setBigNumberInputs({ ...bigNumberInputs, [habit.id]: e.target.value })}
                           className="flex-1 bg-[#16161f] border-none rounded-xl px-4 py-2 text-sm text-white focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                          autoFocus
                         />
                         <button type="submit" className="bg-indigo-500 hover:bg-indigo-600 text-white px-5 py-2 rounded-xl font-semibold text-sm transition-colors">
                           Save
                         </button>
+                        {habit.count > 0 && (
+                          <button
+                            type="button"
+                            onClick={() => handleResetHabit(habit.id)}
+                            className="bg-red-500/20 text-red-400 hover:bg-red-500/30 px-3 py-2 rounded-xl font-semibold text-sm transition-colors"
+                          >
+                            Reset
+                          </button>
+                        )}
                       </form>
                     )}
 

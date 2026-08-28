@@ -113,9 +113,9 @@ export const syncMonthlyGoalProgress = (habitId, amount) => {
           newProgress += amount;
           const existingToday = newHistory.findIndex(h => h.date === todayStr);
           if (existingToday >= 0) {
-            newHistory[existingToday].value += amount;
+            newHistory[existingToday].value = Math.max(0, newHistory[existingToday].value + amount);
           } else {
-            newHistory.push({ date: todayStr, value: amount });
+            newHistory.push({ date: todayStr, value: Math.max(0, amount) });
           }
         } else if (g.trackingType === 'binary') {
           g.isCompleted = amount > 0;
@@ -123,9 +123,9 @@ export const syncMonthlyGoalProgress = (habitId, amount) => {
         } else if (g.trackingType === 'daily_log') {
           const existingToday = newHistory.findIndex(h => h.date === todayStr);
           if (existingToday >= 0) {
-            newHistory[existingToday].value += amount; 
+            newHistory[existingToday].value = Math.max(0, newHistory[existingToday].value + amount); 
           } else {
-            newHistory.push({ date: todayStr, value: amount });
+            newHistory.push({ date: todayStr, value: Math.max(0, amount) });
           }
           const sum = newHistory.reduce((acc, h) => acc + h.value, 0);
           newProgress = parseFloat((sum / newHistory.length).toFixed(1));
