@@ -139,11 +139,16 @@ export default function NeoAvatar({ habits = [], tasks = [] }) {
       welcomeMsg = `${greeting} Everything is crushed today! You're unstoppable! 🌟`;
     }
 
-    setSpeech(welcomeMsg);
-    if (speechTimeoutRef.current) clearTimeout(speechTimeoutRef.current);
-    speechTimeoutRef.current = setTimeout(() => {
-      setSpeech(null);
-    }, 5500);
+    // Only show the welcome greeting once per session (not on every tab switch)
+    const hasGreetedThisSession = sessionStorage.getItem('neo_greeted');
+    if (!hasGreetedThisSession) {
+      sessionStorage.setItem('neo_greeted', '1');
+      setSpeech(welcomeMsg);
+      if (speechTimeoutRef.current) clearTimeout(speechTimeoutRef.current);
+      speechTimeoutRef.current = setTimeout(() => {
+        setSpeech(null);
+      }, 5500);
+    }
 
     // Automatic motivational quote timer: fires every 15 minutes (900,000 ms)
     const FIFTEEN_MINUTES_MS = 15 * 60 * 1000;
