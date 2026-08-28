@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { logCompletion, removeCompletionToday, syncStateToBackend } from '../utils';
 import { checkAndUnlockBadges } from '../utils/badgeUtils';
 import confetti from 'canvas-confetti';
-import { useMascot } from '../contexts/MascotContext';
 
 const DEFAULT_HABITS = [
   { id: 'h1', name: 'Drink Water', goal: 8, unit: 'glasses', count: 0, streak: 0, lastCompletedDate: null, reminderMode: 'off', reminderSettings: {} },
@@ -40,7 +39,6 @@ export default function DailyRitualsSection() {
   const [editingHabitId, setEditingHabitId] = useState(null);
   const [editHabitData, setEditHabitData] = useState({ name: '', goal: '', unit: '', reminderMode: 'off', reminderHours: 2, reminderTimes: ['09:00'] });
   const [expandedHabitId, setExpandedHabitId] = useState(null);
-  const { triggerMascot } = useMascot();
 
   // Load from local storage and handle daily reset
   useEffect(() => {
@@ -109,12 +107,6 @@ export default function DailyRitualsSection() {
           newLastCompletedDate = todayStr;
           logCompletion('habit', id);
           confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
-          
-          if (newStreak > habit.streak && newStreak > 1) {
-            triggerMascot('heart-eye', "Streak increased! You're on fire! 🔥", 4000);
-          } else {
-            triggerMascot('heart-eye', "+5 pts! Ritual complete!", 4000);
-          }
         }
 
         return {

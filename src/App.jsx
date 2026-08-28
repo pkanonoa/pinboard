@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import InstallPrompt from './components/InstallPrompt';
 import NotificationManager from './components/NotificationManager';
 import ToldToSection from './components/ToldToSection';
@@ -8,38 +8,34 @@ import ChartsSection from './components/ChartsSection';
 import BadgeCelebration from './components/BadgeCelebration';
 import RewardsSection from './components/RewardsSection';
 import SettingsSection from './components/SettingsSection';
-import { MascotProvider } from './contexts/MascotContext';
-import MascotAvatar from './components/MascotAvatar';
 
 function App() {
   const [currentTab, setCurrentTab] = useState('dashboard');
 
   // Initialize theme on load
-  React.useEffect(() => {
+  useEffect(() => {
     const savedTheme = localStorage.getItem('pinboard_theme') || 'darker';
     document.documentElement.setAttribute('data-theme', savedTheme);
   }, []);
 
   return (
-    <MascotProvider>
-      <div className="flex flex-col items-center min-h-screen p-4 relative pt-12 pb-24 overflow-x-hidden">
-        <BadgeCelebration />
-        <NotificationManager />
-        <MascotAvatar />
-        
-        <h1 className="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-purple-400 mb-8">
-          Pinboard
-        </h1>
-        
-        {currentTab === 'dashboard' && <Dashboard setCurrentTab={setCurrentTab} />}
-        {currentTab === 'tasks' && <ToldToSection />}
-        {currentTab === 'rituals' && <DailyRitualsSection />}
-        {currentTab === 'charts' && <ChartsSection />}
-        {currentTab === 'rewards' && <RewardsSection />}
-        {currentTab === 'settings' && <SettingsSection />}
+    <div className="flex flex-col items-center min-h-screen p-4 relative pt-12 pb-24 overflow-x-hidden">
+      <BadgeCelebration />
+      <NotificationManager />
+      
+      <h1 className="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-purple-400 mb-8">
+        Pinboard
+      </h1>
+      
+      {currentTab === 'dashboard' && <Dashboard setCurrentTab={setCurrentTab} />}
+      {currentTab === 'tasks' && <ToldToSection />}
+      {currentTab === 'rituals' && <DailyRitualsSection />}
+      {currentTab === 'charts' && <ChartsSection />}
+      {currentTab === 'rewards' && <RewardsSection />}
+      {currentTab === 'settings' && <SettingsSection />}
 
-        {/* PWA Install Prompt */}
-        <InstallPrompt />
+      {/* PWA Install Prompt */}
+      <InstallPrompt />
 
       {/* Bottom Navigation */}
       <div className="fixed bottom-0 left-0 right-0 h-16 bg-gray-900 border-t border-gray-800 flex items-center justify-around z-50 px-6 pb-safe">
@@ -105,3 +101,4 @@ function App() {
 }
 
 export default App
+
