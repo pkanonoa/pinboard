@@ -51,31 +51,59 @@ export default async function handler(req, res) {
         for (const habit of habits) {
           if (habit.count >= habit.goal && habit.lastCompletedDate === todayStr) continue;
 
-          if (habit.reminderEnabled && habit.reminderTime) {
-            const [th, tm] = habit.reminderTime.split(':').map(Number);
-            const dueTime = Date.UTC(userYear, userMonth, userDate, th, tm, 0) - (timezoneOffset * 60 * 1000);
+          if (habit.reminderEnabled) {
+            const isInterval = habit.reminderType === 'interval';
             
-            if (dueTime > lastCronRun && dueTime <= now) {
-               let title = `⏰ Time for ${habit.name}`;
-               let body = `You haven't completed this yet today.`;
+            if (!isInterval && habit.reminderTime) {
+              const [th, tm] = habit.reminderTime.split(':').map(Number);
+              const dueTime = Date.UTC(userYear, userMonth, userDate, th, tm, 0) - (timezoneOffset * 60 * 1000);
+              
+              if (dueTime > lastCronRun && dueTime <= now) {
+                 let title = `⏰ Time for ${habit.name}`;
+                 let body = `You haven't completed this yet today.`;
 
-               const lowerName = habit.name.toLowerCase();
-               if (lowerName.includes('wake up') || lowerName.includes('wakeup')) {
-                 title = '⏰ Time to wakeup!';
-                 body = 'Rise and shine, it is time to start your day!';
-               }
-               
-               const ritualNotifKey = `notified_${endpointHash}_ritual_${habit.id}_daily`;
-               const alreadySentRitual = await kv.get(ritualNotifKey);
-               if (!alreadySentRitual) {
-                 try {
-                   await webpush.sendNotification(subscription, JSON.stringify({ title, body, type: 'habit' }));
-                   await kv.set(ritualNotifKey, true, { ex: 86400 });
-                   sentCount++;
-                 } catch (e) {
-                   console.error('Error sending push', e);
+                 const lowerName = habit.name.toLowerCase();
+                 if (lowerName.includes('wake up') || lowerName.includes('wakeup')) {
+                   title = '⏰ Time to wakeup!';
+                   body = 'Rise and shine, it is time to start your day!';
                  }
-               }
+                 
+                 const ritualNotifKey = `notified_${endpointHash}_ritual_${habit.id}_daily`;
+                 const alreadySentRitual = await kv.get(ritualNotifKey);
+                 if (!alreadySentRitual) {
+                   try {
+                     await webpush.sendNotification(subscription, JSON.stringify({ title, body, type: 'habit' }));
+                     await kv.set(ritualNotifKey, true, { ex: 86400 });
+                     sentCount++;
+                   } catch (e) {
+                     console.error('Error sending push', e);
+                   }
+                 }
+              }
+            } else if (isInterval) {
+              const intervalHrs = habit.reminderInterval || 2;
+              const localHour = userLocalNow.getUTCHours();
+              
+              // Only alert during waking hours (e.g. 8am to 10pm)
+              if (localHour >= 8 && localHour < 22) {
+                if (localHour % intervalHrs === 0) {
+                  const intervalNotifKey = `notified_${endpointHash}_ritual_${habit.id}_interval_${todayStr}_${localHour}`;
+                  const alreadySentInterval = await kv.get(intervalNotifKey);
+                  if (!alreadySentInterval) {
+                    try {
+                      await webpush.sendNotification(subscription, JSON.stringify({ 
+                        title: `🔄 Routine: ${habit.name}`, 
+                        body: `Quick reminder for your interval ritual!`, 
+                        type: 'habit' 
+                      }));
+                      await kv.set(intervalNotifKey, true, { ex: 86400 });
+                      sentCount++;
+                    } catch (e) {
+                      console.error('Error sending push', e);
+                    }
+                  }
+                }
+              }
             }
           }
         }
