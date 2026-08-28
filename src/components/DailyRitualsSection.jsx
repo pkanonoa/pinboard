@@ -144,6 +144,8 @@ export default function DailyRitualsSection() {
     // Call sync exactly once (avoiding React Strict Mode double-invocation of state updaters)
     syncMonthlyGoalProgress(id, 1);
     
+    window.dispatchEvent(new CustomEvent('neo-bounce'));
+    
     setHabits(currentHabits => currentHabits.map(habit => {
       if (habit.id === id) {
         const newCount = habit.count + 1;

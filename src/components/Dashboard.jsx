@@ -15,6 +15,8 @@ const MOTIVATIONAL_QUOTES = [
   "You can and you will.", "Success is a series of small wins.", "Never give up on your goals."
 ];
 
+import NeoAvatar from './NeoAvatar';
+
 export default function Dashboard({ setCurrentTab }) {
   const [tasks, setTasks] = useState([]);
   const [habits, setHabits] = useState([]);
@@ -67,7 +69,7 @@ export default function Dashboard({ setCurrentTab }) {
 
   const completedTasksToday = tasks.filter(t => t.done && t.completedDate === todayStr).length;
   const habitsDoneToday = habits.filter(h => h.count >= h.goal && h.lastCompletedDate === todayStr).length;
-  const bestStreak = habits.length > 0 ? Math.max(...habits.map(h => h.streak)) : 0;
+  const bestStreak = habits.length > 0 ? Math.max(...habits.map(h => h.streak || 0)) : 0;
 
   const pendingTasks = tasks.filter(t => !t.done);
   
@@ -132,6 +134,8 @@ export default function Dashboard({ setCurrentTab }) {
         </div>
         <p className="text-sm text-gray-400 italic">"{quote}"</p>
       </div>
+
+      <NeoAvatar habits={habits} />
       
       {/* Summary Cards */}
       <div className="flex flex-col">
