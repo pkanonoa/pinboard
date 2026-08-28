@@ -1,4 +1,4 @@
-const CACHE_NAME = 'pinboard-cache-v4';
+const CACHE_NAME = 'pinboard-cache-v5';
 const urlsToCache = [
   '/',
   '/index.html'
@@ -24,7 +24,10 @@ self.addEventListener('activate', event => {
           }
         })
       );
-    }).then(() => self.clients.claim())
+      );
+    })
+    .then(() => cleanOldNotificationsFromDB())
+    .then(() => self.clients.claim())
   );
 });
 
@@ -63,9 +66,61 @@ self.addEventListener('fetch', event => {
   );
 });
 
+// Simple IndexedDB helper for the service worker
+function saveNotificationToDB(notification) {
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open('PinboardDB', 1);
+    request.onupgradeneeded = (e) => {
+      const db = e.target.result;
+      if (!db.objectStoreNames.contains('notifications')) {
+        db.createObjectStore('notifications', { keyPath: 'id' });
+      }
+    };
+    request.onsuccess = () => {
+      const db = request.result;
+      const tx = db.transaction('notifications', 'readwrite');
+      tx.objectStore('notifications').put(notification);
+      tx.oncomplete = () => resolve();
+      tx.onerror = () => reject(tx.error);
+    };
+    request.onerror = () => reject(request.error);
+  });
+}
+
+function cleanOldNotificationsFromDB() {
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open('PinboardDB', 1);
+    request.onsuccess = () => {
+      const db = request.result;
+      if (!db.objectStoreNames.contains('notifications')) {
+        resolve();
+        return;
+      }
+      const tx = db.transaction('notifications', 'readwrite');
+      const store = tx.objectStore('notifications');
+      const getAllReq = store.getAll();
+      
+      getAllReq.onsuccess = () => {
+        const notifications = getAllReq.result || [];
+        const now = Date.now();
+        const ONE_DAY_MS = 24 * 60 * 60 * 1000;
+        
+        notifications.forEach(note => {
+          if (now - note.timestamp > ONE_DAY_MS) {
+            store.delete(note.id);
+          }
+        });
+      };
+      tx.oncomplete = () => resolve();
+      tx.onerror = () => reject(tx.error);
+    };
+    request.onerror = () => reject(request.error);
+  });
+}
+
 // Handle incoming push notifications
 self.addEventListener('push', function(event) {
-  let payload = { title: 'Pinboard', body: 'New update from Pinboard!' };
+  let payload = { title: 'Pinboard', body: 'New update from Pinboard!', type: 'summary' };
   
   if (event.data) {
     try {
@@ -75,9 +130,18 @@ self.addEventListener('push', function(event) {
     }
   }
 
+  const notificationObj = {
+    id: Date.now().toString() + Math.random().toString(36).substring(2, 9),
+    title: payload.title,
+    body: payload.body,
+    type: payload.type || 'summary',
+    timestamp: Date.now(),
+    read: false
+  };
+
   const options = {
     body: payload.body,
-    icon: '/vite.svg',
+    icon: '/logo.jpg',
     vibrate: [100, 50, 100],
     data: {
       dateOfArrival: Date.now(),
@@ -86,7 +150,10 @@ self.addEventListener('push', function(event) {
   };
 
   event.waitUntil(
-    self.registration.showNotification(payload.title, options)
+    Promise.all([
+      saveNotificationToDB(notificationObj),
+      self.registration.showNotification(payload.title, options)
+    ])
   );
 });
 

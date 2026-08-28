@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { getLocalYMD, getUserStats } from '../utils';
 import { getClosestBadgeProgress } from '../utils/badgeUtils';
-import { getClosestBadgeProgress } from '../utils/badgeUtils';
 
 const MOTIVATIONAL_QUOTES = [
   "Small steps every day.", "You are what you do consistently.", "Win the morning, win the day.",
@@ -19,7 +18,6 @@ const MOTIVATIONAL_QUOTES = [
 export default function Dashboard({ setCurrentTab }) {
   const [tasks, setTasks] = useState([]);
   const [habits, setHabits] = useState([]);
-  const [completionLog, setCompletionLog] = useState([]);
   const [completionLog, setCompletionLog] = useState([]);
 
   useEffect(() => {

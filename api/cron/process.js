@@ -99,7 +99,8 @@ export default async function handler(req, res) {
 
              notificationsToSend.push({
                title,
-               body
+               body,
+               type: 'habit'
              });
           }
         }
@@ -118,16 +119,16 @@ export default async function handler(req, res) {
               const diffMins = (trueTaskTime - now) / 60000;
               
               if (diffMins > 0 && diffMins <= (24 * 60) && diffMins > (24 * 60 - 15)) {
-                 notificationsToSend.push({ title: 'Task due tomorrow', body: task.name });
+                 notificationsToSend.push({ title: 'Task due tomorrow', body: task.name, type: 'task' });
               }
               else if (diffMins > 0 && diffMins <= 120 && diffMins > 105) {
-                 notificationsToSend.push({ title: 'Task due in 2 hours', body: task.name });
+                 notificationsToSend.push({ title: 'Task due in 2 hours', body: task.name, type: 'task' });
               }
               else if (diffMins <= 0 && diffMins > -15) {
-                 notificationsToSend.push({ title: 'Task is due right now!', body: task.name });
+                 notificationsToSend.push({ title: 'Task is due right now!', body: task.name, type: 'task' });
               }
               else if (diffMins < -15 && localMin < 15) {
-                 notificationsToSend.push({ title: 'Overdue task!', body: task.name });
+                 notificationsToSend.push({ title: 'Overdue task!', body: task.name, type: 'task' });
               }
            }
         }
@@ -141,7 +142,8 @@ export default async function handler(req, res) {
             if (undatedPending.length > 0) {
                notificationsToSend.push({
                  title: 'Daily Task Review',
-                 body: `You have ${undatedPending.length} pending tasks to look at.`
+                 body: `You have ${undatedPending.length} pending tasks to look at.`,
+                 type: 'task'
                });
             }
          }
@@ -154,7 +156,8 @@ export default async function handler(req, res) {
          const pendingTasks = allTasks.filter(t => !t.done).length;
          notificationsToSend.push({
             title: 'Daily Summary',
-            body: `You finished ${completedHabits}/${allHabits.length} rituals today. ${pendingTasks} tasks pending.`
+            body: `You finished ${completedHabits}/${allHabits.length} rituals today. ${pendingTasks} tasks pending.`,
+            type: 'summary'
          });
       }
 

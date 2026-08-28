@@ -8,21 +8,65 @@ import ChartsSection from './components/ChartsSection';
 import BadgeCelebration from './components/BadgeCelebration';
 import RewardsSection from './components/RewardsSection';
 import SettingsSection from './components/SettingsSection';
+import NotificationDrawer from './components/NotificationDrawer';
+import { getNotifications, cleanOldNotifications } from './db';
 
 function App() {
   const [currentTab, setCurrentTab] = useState('dashboard');
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
 
   // Initialize theme on load
   useEffect(() => {
     const savedTheme = localStorage.getItem('pinboard_theme') || 'darker';
     document.documentElement.setAttribute('data-theme', savedTheme);
+    
+    // Cleanup old notifications and check unread count
+    cleanOldNotifications().then(() => {
+      checkUnread();
+    });
+    
+    window.addEventListener('focus', checkUnread);
+    window.addEventListener('notifications_read', checkUnread);
+    return () => {
+      window.removeEventListener('focus', checkUnread);
+      window.removeEventListener('notifications_read', checkUnread);
+    };
   }, []);
 
+  const checkUnread = async () => {
+    try {
+      const notifs = await getNotifications();
+      setUnreadCount(notifs.filter(n => !n.read).length);
+    } catch(e) {}
+  };
+
   return (
-    <div className="flex flex-col items-center min-h-screen p-4 relative pt-12 pb-24 overflow-x-hidden">
+    <div className="flex flex-col items-center min-h-screen p-4 relative pt-16 pb-24 overflow-x-hidden">
       <BadgeCelebration />
       <NotificationManager />
+      <NotificationDrawer 
+        isOpen={isDrawerOpen} 
+        onClose={() => setIsDrawerOpen(false)} 
+        setCurrentTab={setCurrentTab} 
+      />
       
+      {/* Bell Icon */}
+      <button 
+        onClick={() => setIsDrawerOpen(true)}
+        className="fixed top-4 right-4 z-[35] p-3 bg-gray-800/80 backdrop-blur-md rounded-full shadow-lg border border-gray-700/50 hover:bg-gray-700 transition-colors"
+      >
+        <svg className="w-6 h-6 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path>
+        </svg>
+        {unreadCount > 0 && (
+          <span className="absolute top-2 right-2.5 flex h-3 w-3">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+            <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500 border-2 border-gray-900"></span>
+          </span>
+        )}
+      </button>
+
       <h1 className="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-purple-400 mb-8">
         Pinboard
       </h1>
@@ -96,7 +140,6 @@ function App() {
         </button>
       </div>
     </div>
-    </MascotProvider>
   )
 }
 
