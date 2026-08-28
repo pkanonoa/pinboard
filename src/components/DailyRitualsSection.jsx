@@ -504,18 +504,19 @@ export default function DailyRitualsSection() {
   };
 
   return (
-    <div className="w-full max-w-md z-10 flex flex-col gap-6">
-      <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold text-white flex items-center gap-2">
+    <div className="w-full max-w-md z-10 flex flex-col gap-4">
+      <div className="flex justify-between items-center pr-14">
+        <h1 className="text-2xl font-bold text-white flex items-center gap-2">
           Rituals
-        </h2>
-        <button
-          onClick={() => setIsAdding(!isAdding)}
-          className="flex items-center gap-1.5 bg-[#1e1e28] text-indigo-300 hover:bg-gray-800 px-4 py-2 rounded-xl text-sm font-medium transition-colors"
-        >
-          {isAdding ? 'Cancel' : '+ Custom'}
-        </button>
+        </h1>
       </div>
+
+      <button
+        onClick={() => setIsAdding(!isAdding)}
+        className="flex items-center justify-center gap-1.5 w-full bg-[#1e1e28] text-indigo-300 hover:bg-gray-800 py-3 rounded-xl text-sm font-medium transition-colors border border-gray-800/60 active:scale-95 shadow-sm"
+      >
+        {isAdding ? 'Cancel' : '+ Custom ritual'}
+      </button>
 
       {isAdding && (
         <form onSubmit={handleAddCustom} className="mb-6 bg-gray-800 p-4 rounded-lg border border-gray-700 animate-fade-in-down">

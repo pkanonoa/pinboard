@@ -54,6 +54,15 @@ export default function SettingsSection() {
       };
       subscribe();
     }
+
+    const focus = localStorage.getItem('pinboard_settings_focus');
+    if (focus) {
+      localStorage.removeItem('pinboard_settings_focus');
+      setTimeout(() => {
+        const el = document.getElementById(`settings-${focus}`);
+        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 150);
+    }
   }, []);
 
   const saveHabits = (newHabits) => {
@@ -185,7 +194,7 @@ export default function SettingsSection() {
       </div>
 
       {/* Notifications */}
-      <section className="bg-gray-900 border border-gray-800 rounded-xl p-5 shadow-lg">
+      <section id="settings-notifications" className="bg-gray-900 border border-gray-800 rounded-xl p-5 shadow-lg">
         <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-4">Notifications</h3>
         
         {(!('Notification' in window) || Notification.permission !== 'granted') && (
@@ -213,7 +222,7 @@ export default function SettingsSection() {
       </section>
 
       {/* Habits Management */}
-      <section className="bg-gray-900 border border-gray-800 rounded-xl p-5 shadow-lg">
+      <section id="settings-rituals" className="bg-gray-900 border border-gray-800 rounded-xl p-5 shadow-lg">
         <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-4">Rituals Management</h3>
         <p className="text-xs text-gray-500 mb-3">Drag to reorder. Tap a habit to edit.</p>
         
@@ -354,9 +363,9 @@ export default function SettingsSection() {
         </section>
       )}
 
-      {/* App Preferences */}
-      <section className="bg-gray-900 border border-gray-800 rounded-xl p-5 shadow-lg">
-        <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-4">App</h3>
+      {/* App Preferences / Account */}
+      <section id="settings-account" className="bg-gray-900 border border-gray-800 rounded-xl p-5 shadow-lg">
+        <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-4">App & Account</h3>
         
         <div className="mb-6">
           <span className="text-white font-medium block mb-2">Theme</span>

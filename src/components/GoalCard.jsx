@@ -43,7 +43,7 @@ export default function GoalCard({ goal, onLog, onComplete, onUndo, onDelete, on
     }
     
     // Default fallback
-    return { label: 'In progress', color: 'text-indigo-400 bg-indigo-900/30' };
+    return { label: 'In progress', color: 'text-indigo-400 bg-indigo-500/20' };
   };
 
   const status = getStatus();
@@ -68,29 +68,29 @@ export default function GoalCard({ goal, onLog, onComplete, onUndo, onDelete, on
   };
 
   return (
-    <div className={`rounded-2xl border transition-all duration-300 overflow-hidden ${isExpanded ? 'bg-gray-800 border-gray-700' : 'bg-gray-900 border-gray-800 hover:bg-gray-800/60'}`}>
+    <div className={`rounded-2xl transition-all duration-300 overflow-hidden bg-[#1e1e28] select-none ${isExpanded ? 'shadow-xl shadow-black/20' : ''}`}>
       
       {/* Summary View (Always visible, click to expand) */}
       <div 
         onClick={() => setIsExpanded(!isExpanded)}
-        className="p-4 cursor-pointer select-none relative"
+        className="p-4 cursor-pointer relative"
       >
         <div className="flex justify-between items-start mb-3">
           <div className="pr-4">
-            <h3 className={`font-bold text-[16px] leading-tight mb-1 ${goal.isCompleted ? 'text-gray-400 line-through' : 'text-gray-100'}`}>
+            <h3 className={`font-medium text-base leading-tight mb-1 ${goal.isCompleted ? 'text-gray-400 line-through' : 'text-white'}`}>
               {goal.name}
             </h3>
-            <p className="text-[13px] text-gray-500 font-medium">
+            <p className="text-[13px] text-gray-400 font-medium">
               {goal.category} {goal.dueDate ? `· due ${formatDate(goal.dueDate)}` : '· ongoing'}
             </p>
           </div>
-          <div className={`shrink-0 px-2.5 py-1 rounded-full text-[11px] font-bold tracking-wide ${status.color}`}>
+          <div className={`shrink-0 px-3 py-1.5 rounded-lg text-xs font-medium tracking-wide flex items-center justify-center ${status.color}`}>
             {status.label}
           </div>
         </div>
 
         {/* Slim Progress Bar */}
-        <div className="w-full h-1.5 bg-gray-800/80 rounded-full overflow-hidden mt-2">
+        <div className="w-full h-1.5 bg-[#16161f] rounded-full overflow-hidden mt-3">
           <div 
             className={`h-full rounded-full transition-all duration-500 ${goal.isCompleted ? 'bg-emerald-500' : status.label === 'At risk' ? 'bg-amber-500' : status.label === 'Overdue' ? 'bg-red-500' : 'bg-indigo-500'}`}
             style={{ width: `${progressPct}%` }}
@@ -100,7 +100,7 @@ export default function GoalCard({ goal, onLog, onComplete, onUndo, onDelete, on
 
       {/* Expanded Actions View */}
       {isExpanded && (
-        <div className="px-4 pb-4 pt-2 border-t border-gray-700/50 bg-gray-800/30 animate-fade-in-down">
+        <div className="px-4 pb-4 pt-4 border-t border-[#16161f] bg-[#1a1a24] animate-fade-in-down">
           
           <div className="flex justify-between items-center mb-4">
             <span className="text-xs text-gray-400 font-medium">
@@ -109,7 +109,7 @@ export default function GoalCard({ goal, onLog, onComplete, onUndo, onDelete, on
             
             <div className="flex gap-2">
               {onTogglePause && (
-                <button onClick={(e) => { e.stopPropagation(); onTogglePause(goal.id); }} className={`p-1.5 rounded-md transition-colors ${goal.paused ? 'text-amber-400 bg-amber-900/20 hover:bg-amber-900/40' : 'text-gray-400 bg-gray-800 hover:text-amber-400'}`} title={goal.paused ? "Resume" : "Pause"}>
+                <button onClick={(e) => { e.stopPropagation(); onTogglePause(goal.id); }} className={`p-1.5 rounded-md transition-colors ${goal.paused ? 'text-amber-400 bg-amber-900/20 hover:bg-amber-900/40' : 'text-gray-400 hover:text-amber-400'}`} title={goal.paused ? "Resume" : "Pause"}>
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     {goal.paused 
                       ? <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"></path>
@@ -117,10 +117,10 @@ export default function GoalCard({ goal, onLog, onComplete, onUndo, onDelete, on
                   </svg>
                 </button>
               )}
-              <button onClick={(e) => { e.stopPropagation(); onEdit(goal); }} className="p-1.5 text-gray-400 hover:text-indigo-400 bg-gray-800 rounded-md transition-colors" title="Edit">
+              <button onClick={(e) => { e.stopPropagation(); onEdit(goal); }} className="p-1.5 text-gray-400 hover:text-indigo-400 transition-colors" title="Edit">
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
               </button>
-              <button onClick={(e) => { e.stopPropagation(); if(confirm('Delete this goal?')) onDelete(goal.id); }} className="p-1.5 text-gray-400 hover:text-red-400 bg-gray-800 rounded-md transition-colors" title="Delete">
+              <button onClick={(e) => { e.stopPropagation(); if(confirm('Delete this goal?')) onDelete(goal.id); }} className="p-1.5 text-gray-400 hover:text-red-400 transition-colors" title="Delete">
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
               </button>
             </div>
@@ -171,12 +171,12 @@ export default function GoalCard({ goal, onLog, onComplete, onUndo, onDelete, on
                         value={logValue}
                         onChange={(e) => setLogValue(e.target.value)}
                         disabled={goal.isCompleted}
-                        className="flex-1 bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm text-white focus:border-indigo-500 focus:outline-none disabled:opacity-50"
+                        className="flex-1 bg-[#16161f] border-none rounded-xl px-4 py-2 text-sm text-white focus:ring-1 focus:ring-indigo-500 focus:outline-none disabled:opacity-50"
                       />
                       <button 
                         type="submit" 
                         disabled={goal.isCompleted || !logValue}
-                        className="px-4 bg-indigo-600 hover:bg-indigo-500 disabled:bg-gray-700 text-white font-bold rounded-xl transition-colors active:scale-95 shadow-lg shadow-indigo-900/20"
+                        className="px-6 bg-indigo-500 hover:bg-indigo-600 disabled:bg-gray-700 text-white font-bold rounded-xl transition-colors active:scale-95"
                       >
                         Log
                       </button>

@@ -272,10 +272,9 @@ export default function GoalsSection() {
   };
 
   return (
-    <div className="w-full max-w-md mx-auto animate-fade-in pb-8 pt-4">
-      
-      <div className="flex justify-between items-center mb-6 pl-2">
-        <h2 className="text-[28px] font-bold text-white tracking-tight">Goals</h2>
+    <div className="w-full max-w-md z-10 flex flex-col gap-4">
+      <div className="flex justify-between items-center pr-14">
+        <h1 className="text-2xl font-bold text-white flex items-center gap-2">Goals</h1>
       </div>
 
       <button 
@@ -288,20 +287,20 @@ export default function GoalsSection() {
             setIsAdding(true);
           }
         }}
-        className="w-full mb-6 bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3.5 rounded-xl transition-all active:scale-95 shadow-lg shadow-indigo-900/20 text-[15px]"
+        className="flex items-center justify-center gap-1.5 w-full bg-[#1e1e28] text-indigo-300 hover:bg-gray-800 py-3 rounded-xl text-sm font-medium transition-colors border border-gray-800/60 active:scale-95 shadow-sm"
       >
         {isAdding ? 'Cancel' : '+ New goal'}
       </button>
 
       {isAdding && (
-        <form onSubmit={handleAddGoal} className="mb-6 bg-gray-900 p-5 rounded-2xl border border-gray-800 animate-fade-in-down shadow-xl">
+        <form onSubmit={handleAddGoal} className="bg-[#1e1e28] p-5 rounded-2xl animate-fade-in-down shadow-xl z-20">
           <input 
             type="text" 
             placeholder="Goal Name (e.g. Read 500 Pages)" 
             required
             value={newGoal.name}
             onChange={e => setNewGoal({...newGoal, name: e.target.value})}
-            className="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3 text-[15px] text-white mb-4 focus:border-indigo-500 focus:outline-none placeholder-gray-500"
+            className="w-full bg-[#16161f] border-none rounded-xl px-4 py-3 text-[15px] text-white mb-4 focus:ring-1 focus:ring-indigo-500 focus:outline-none placeholder-gray-500"
           />
           
           <div className="flex gap-3 mb-4">
@@ -310,7 +309,7 @@ export default function GoalsSection() {
               <select 
                 value={newGoal.category}
                 onChange={e => setNewGoal({...newGoal, category: e.target.value})}
-                className="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3 text-[14px] text-white focus:border-indigo-500 focus:outline-none appearance-none"
+                className="w-full bg-[#16161f] border-none rounded-xl px-4 py-3 text-[14px] text-white focus:ring-1 focus:ring-indigo-500 focus:outline-none appearance-none"
               >
                 <option value="Body">Body</option>
                 <option value="Performance">Performance</option>
@@ -324,7 +323,7 @@ export default function GoalsSection() {
                 type="date" 
                 value={newGoal.dueDate}
                 onChange={e => setNewGoal({...newGoal, dueDate: e.target.value})}
-                className="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3 text-[14px] text-white focus:border-indigo-500 focus:outline-none [color-scheme:dark]"
+                className="w-full bg-[#16161f] border-none rounded-xl px-4 py-3 text-[14px] text-white focus:ring-1 focus:ring-indigo-500 focus:outline-none [color-scheme:dark]"
               />
             </div>
           </div>
@@ -334,7 +333,7 @@ export default function GoalsSection() {
             <select 
               value={newGoal.trackingType}
               onChange={e => setNewGoal({...newGoal, trackingType: e.target.value})}
-              className="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3 text-[14px] text-white focus:border-indigo-500 focus:outline-none appearance-none"
+              className="w-full bg-[#16161f] border-none rounded-xl px-4 py-3 text-[14px] text-white focus:ring-1 focus:ring-indigo-500 focus:outline-none appearance-none"
             >
               <option value="count_toward">Number of Times (e.g. 20 gym visits)</option>
               <option value="cumulative">Total Amount (e.g. 500 pages)</option>
@@ -354,7 +353,7 @@ export default function GoalsSection() {
                   step="any"
                   value={newGoal.target}
                   onChange={e => setNewGoal({...newGoal, target: e.target.value})}
-                  className="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3 text-[14px] text-white focus:border-indigo-500 focus:outline-none"
+                  className="w-full bg-[#16161f] border-none rounded-xl px-4 py-3 text-[14px] text-white focus:ring-1 focus:ring-indigo-500 focus:outline-none"
                 />
               </div>
               <div className="w-1/2">
@@ -365,7 +364,7 @@ export default function GoalsSection() {
                   placeholder="e.g. pages"
                   value={newGoal.unit}
                   onChange={e => setNewGoal({...newGoal, unit: e.target.value})}
-                  className="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3 text-[14px] text-white focus:border-indigo-500 focus:outline-none placeholder-gray-500"
+                  className="w-full bg-[#16161f] border-none rounded-xl px-4 py-3 text-[14px] text-white focus:ring-1 focus:ring-indigo-500 focus:outline-none placeholder-gray-500"
                 />
               </div>
             </div>
@@ -373,10 +372,10 @@ export default function GoalsSection() {
 
           <div className="mb-6">
             <label className="text-[11px] text-gray-500 font-bold uppercase tracking-wider block mb-2 pl-1">Link to Daily Rituals (Optional)</label>
-            <div className="bg-gray-800 border border-gray-700 rounded-xl p-2 max-h-32 overflow-y-auto flex flex-col gap-1">
+            <div className="bg-[#16161f] rounded-xl p-2 max-h-32 overflow-y-auto flex flex-col gap-1">
               {availableHabits.length === 0 && <span className="text-xs text-gray-500 p-2">No rituals found.</span>}
               {availableHabits.map(h => (
-                <label key={h.id} className="flex items-center gap-3 text-[14px] text-gray-300 p-2 cursor-pointer hover:bg-gray-700/50 rounded-lg transition-colors">
+                <label key={h.id} className="flex items-center gap-3 text-[14px] text-gray-300 p-2 cursor-pointer hover:bg-gray-800 rounded-lg transition-colors">
                   <input 
                     type="checkbox"
                     checked={newGoal.linkedHabitIds.includes(h.id)}
@@ -396,7 +395,7 @@ export default function GoalsSection() {
             <p className="text-[10px] text-gray-500 mt-2 leading-tight pl-1">If linked, completing any of the selected rituals will automatically log progress here.</p>
           </div>
           
-          <button type="submit" className="w-full bg-indigo-600 hover:bg-indigo-500 text-white py-3.5 rounded-xl text-[15px] font-bold transition-all active:scale-95 shadow-lg shadow-indigo-900/20">
+          <button type="submit" className="w-full bg-indigo-500 hover:bg-indigo-600 text-white py-3.5 rounded-xl text-[15px] font-bold transition-all active:scale-95">
             {editingGoalId ? 'Save Changes' : 'Create Goal'}
           </button>
         </form>

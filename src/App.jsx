@@ -154,7 +154,7 @@ function App() {
 
   return (
     <div 
-      className="flex flex-col items-center min-h-screen p-4 relative pt-16 pb-24 overflow-x-hidden"
+      className="flex flex-col items-center min-h-screen p-4 relative pt-4 pb-24 overflow-x-hidden"
       onTouchStart={onTouchStart}
       onTouchEnd={onTouchEnd}
     >
@@ -180,12 +180,6 @@ function App() {
           </span>
         )}
       </button>
-
-      {currentTab !== 'goals' && currentTab !== 'tasks' && currentTab !== 'more' && currentTab !== 'rituals' && (
-        <h1 className="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-purple-400 mb-8">
-          Pinboard
-        </h1>
-      )}
       
       {currentTab === 'dashboard' && <Dashboard setCurrentTab={handleSetCurrentTab} />}
       {currentTab === 'tasks' && <ToldToSection />}

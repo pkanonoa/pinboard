@@ -118,19 +118,20 @@ export default function ToldToSection() {
   const completedTasks = tasks.filter(t => t.done).sort((a, b) => b.id - a.id);
 
   return (
-    <div className="w-full max-w-md z-10 flex flex-col gap-6">
-      <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold text-white">Tasks</h2>
-        {!isAdding && (
-          <button 
-            onClick={() => setIsAdding(true)}
-            className="flex items-center gap-1.5 bg-indigo-500/20 text-indigo-400 hover:bg-indigo-500/30 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors"
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4"></path></svg>
-            Task
-          </button>
-        )}
+    <div className="w-full max-w-md z-10 flex flex-col gap-4">
+      <div className="flex justify-between items-center pr-14">
+        <h1 className="text-2xl font-bold text-white">Tasks</h1>
       </div>
+
+      {!isAdding && (
+        <button 
+          onClick={() => setIsAdding(true)}
+          className="flex items-center justify-center gap-1.5 w-full bg-[#1e1e28] text-indigo-300 hover:bg-gray-800 py-3 rounded-xl text-sm font-medium transition-colors border border-gray-800/60 active:scale-95 shadow-sm"
+        >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4"></path></svg>
+          Task
+        </button>
+      )}
 
       {isAdding && (
         <form onSubmit={handleSubmit} className="flex flex-col gap-3">

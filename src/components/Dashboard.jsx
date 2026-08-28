@@ -128,7 +128,7 @@ export default function Dashboard({ setCurrentTab }) {
     <div className="w-full max-w-md flex flex-col gap-6 z-10 pb-8">
       
       {/* Header Section */}
-      <div className="flex flex-col mb-2">
+      <div className="flex flex-col mb-2 pr-14">
         <div className="flex justify-between items-end mb-1">
           <h1 className="text-2xl font-bold text-white">{greeting}!</h1>
           <div className="flex items-center gap-1.5 bg-indigo-500/20 px-2.5 py-1 rounded-full border border-indigo-500/30">
