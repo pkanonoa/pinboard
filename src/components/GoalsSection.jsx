@@ -22,25 +22,32 @@ export default function GoalsSection() {
       } catch (e) {}
     }
 
-    // Load goals
-    const saved = localStorage.getItem('pinboard_goals');
-    if (saved) {
-      try {
-        setGoals(JSON.parse(saved));
-      } catch(e) {}
-    } else {
-      // Migration from old monthly goals if they exist but new ones don't
-      const oldSaved = localStorage.getItem('pinboard_monthly_goals');
-      if (oldSaved) {
+    const loadGoals = () => {
+      const saved = localStorage.getItem('pinboard_goals');
+      if (saved) {
         try {
-          const parsed = JSON.parse(oldSaved);
-          if (parsed && parsed.goals) {
-            setGoals(parsed.goals);
-            localStorage.setItem('pinboard_goals', JSON.stringify(parsed.goals));
-          }
+          setGoals(JSON.parse(saved));
         } catch(e) {}
+      } else {
+        // Migration from old monthly goals
+        const oldSaved = localStorage.getItem('pinboard_monthly_goals');
+        if (oldSaved) {
+          try {
+            const parsed = JSON.parse(oldSaved);
+            if (parsed && parsed.goals) {
+              setGoals(parsed.goals);
+              localStorage.setItem('pinboard_goals', JSON.stringify(parsed.goals));
+            }
+          } catch(e) {}
+        }
       }
-    }
+    };
+    
+    loadGoals();
+    
+    const handleGoalsUpdated = () => loadGoals();
+    window.addEventListener('pinboard_goals_updated', handleGoalsUpdated);
+    return () => window.removeEventListener('pinboard_goals_updated', handleGoalsUpdated);
   }, []);
 
   const saveData = (newGoals) => {
@@ -231,6 +238,26 @@ export default function GoalsSection() {
     saveData(newGoals);
   };
 
+  const handleTogglePause = (id) => {
+    const newGoals = goals.map(g => {
+      if (g.id === id) {
+        const now = Date.now();
+        if (g.paused) {
+          return {
+            ...g,
+            paused: false,
+            pausedAt: null,
+            totalPausedMs: (g.totalPausedMs || 0) + (g.pausedAt ? Math.max(0, now - new Date(g.pausedAt).getTime()) : 0)
+          };
+        } else {
+          return { ...g, paused: true, pausedAt: new Date(now).toISOString() };
+        }
+      }
+      return g;
+    });
+    saveData(newGoals);
+  };
+
   const handleDelete = (id) => {
     saveData(goals.filter(g => g.id !== id));
   };
@@ -394,6 +421,7 @@ export default function GoalsSection() {
               onUndo={handleUndo} 
               onDelete={handleDelete}
               onEdit={handleEdit}
+              onTogglePause={handleTogglePause}
             />
           ))
         )}

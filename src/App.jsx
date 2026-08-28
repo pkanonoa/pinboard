@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Home, Goal, ClipboardList, Repeat, MoreHorizontal } from 'lucide-react';
 import InstallPrompt from './components/InstallPrompt';
 import NotificationManager from './components/NotificationManager';
 import ToldToSection from './components/ToldToSection';
@@ -20,6 +21,48 @@ function App() {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
   const [onboarded, setOnboarded] = useState(true);
+  const [touchStartXY, setTouchStartXY] = useState(null);
+
+  const handleSetCurrentTab = (tab) => {
+    if (tab !== currentTab) {
+      if (tab === 'dashboard') {
+        // Instead of history.back() which is risky if they deep-linked, 
+        // we can just replaceState to dashboard. However, this means back button
+        // might not exit the app immediately if they navigated around.
+        // In PWAs, we can just replaceState to root, and if they press back, it exits if there's no pushState.
+        // Actually, if we just want back button to go to dashboard when on other tabs:
+        // We ensure 'dashboard' is ALWAYS the base.
+        window.history.replaceState({ tab: 'dashboard' }, '', '#dashboard');
+      } else {
+        if (currentTab === 'dashboard') {
+          // Navigating away from dashboard -> push state
+          window.history.pushState({ tab }, '', `#${tab}`);
+        } else {
+          // Navigating between non-dashboard tabs -> replace state
+          window.history.replaceState({ tab }, '', `#${tab}`);
+        }
+      }
+      setCurrentTab(tab);
+    }
+  };
+
+  useEffect(() => {
+    const handlePopState = (e) => {
+      // Whenever they hit back, we force them to dashboard (if they were on a non-dashboard tab)
+      setCurrentTab('dashboard');
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    if (!window.location.hash || window.location.hash === '#dashboard') {
+      window.history.replaceState({ tab: 'dashboard' }, '', '#dashboard');
+    } else {
+      // If deep linked, set it
+      const hash = window.location.hash.replace('#', '');
+      setCurrentTab(hash);
+    }
+    
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
 
   // Initialize theme on load
   useEffect(() => {
@@ -77,13 +120,45 @@ function App() {
     return <OnboardingScreen onComplete={() => setOnboarded(true)} />;
   }
 
+  const onTouchStart = (e) => {
+    setTouchStartXY({ x: e.targetTouches[0].clientX, y: e.targetTouches[0].clientY });
+  };
+
+  const onTouchEnd = (e) => {
+    if (!touchStartXY) return;
+    const touchEndX = e.changedTouches[0].clientX;
+    const touchEndY = e.changedTouches[0].clientY;
+    
+    const dx = touchStartXY.x - touchEndX;
+    const dy = touchStartXY.y - touchEndY;
+    
+    // Swipe needs to be mostly horizontal, and at least 70px
+    if (Math.abs(dx) > Math.abs(dy) * 2 && Math.abs(dx) > 70) {
+      const tabs = ['dashboard', 'goals', 'tasks', 'rituals', 'more'];
+      const currentIndex = tabs.indexOf(currentTab);
+      
+      if (currentIndex !== -1) {
+        if (dx > 0 && currentIndex < tabs.length - 1) {
+          handleSetCurrentTab(tabs[currentIndex + 1]);
+        } else if (dx < 0 && currentIndex > 0) {
+          handleSetCurrentTab(tabs[currentIndex - 1]);
+        }
+      }
+    }
+    setTouchStartXY(null);
+  };
+
   return (
-    <div className="flex flex-col items-center min-h-screen p-4 relative pt-16 pb-24 overflow-x-hidden">
+    <div 
+      className="flex flex-col items-center min-h-screen p-4 relative pt-16 pb-24 overflow-x-hidden"
+      onTouchStart={onTouchStart}
+      onTouchEnd={onTouchEnd}
+    >
       <BadgeCelebration />
       <NotificationDrawer 
         isOpen={isDrawerOpen} 
         onClose={() => setIsDrawerOpen(false)} 
-        setCurrentTab={setCurrentTab} 
+        setCurrentTab={handleSetCurrentTab} 
       />
       
       {/* Bell Icon */}
@@ -102,20 +177,20 @@ function App() {
         )}
       </button>
 
-      {currentTab !== 'goals' && currentTab !== 'more' && (
+      {currentTab !== 'goals' && currentTab !== 'tasks' && currentTab !== 'more' && (
         <h1 className="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-purple-400 mb-8">
           Pinboard
         </h1>
       )}
       
-      {currentTab === 'dashboard' && <Dashboard setCurrentTab={setCurrentTab} />}
+      {currentTab === 'dashboard' && <Dashboard setCurrentTab={handleSetCurrentTab} />}
       {currentTab === 'tasks' && <ToldToSection />}
       {currentTab === 'rituals' && <DailyRitualsSection />}
       {currentTab === 'charts' && <ChartsSection />}
       {currentTab === 'rewards' && <RewardsSection />}
       {currentTab === 'settings' && <SettingsSection />}
       {currentTab === 'goals' && <GoalsSection />}
-      {currentTab === 'more' && <MoreSection setCurrentTab={setCurrentTab} />}
+      {currentTab === 'more' && <MoreSection setCurrentTab={handleSetCurrentTab} />}
 
       {/* PWA Install Prompt */}
       <InstallPrompt />
@@ -123,46 +198,38 @@ function App() {
       {/* Bottom Navigation */}
       <div className="fixed bottom-0 left-0 right-0 h-16 bg-gray-900 border-t border-gray-800 flex items-center justify-around z-50 px-2 pb-safe">
         <button 
-          onClick={() => setCurrentTab('dashboard')}
+          onClick={() => handleSetCurrentTab('dashboard')}
           className={`flex flex-col items-center justify-center w-full h-full space-y-1 transition-colors active:scale-95 ${currentTab === 'dashboard' ? 'text-blue-400' : 'text-gray-500 hover:text-gray-400'}`}
         >
-          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
-          </svg>
+          <Home className="w-6 h-6" strokeWidth={2} />
           <span className="text-[10px] font-medium">Home</span>
         </button>
         <button 
-          onClick={() => setCurrentTab('goals')}
-          className={`flex flex-col items-center justify-center w-full h-full space-y-1 transition-colors active:scale-95 ${currentTab === 'goals' ? 'text-cyan-400' : 'text-gray-500 hover:text-gray-400'}`}
+          onClick={() => handleSetCurrentTab('goals')}
+          className={`flex flex-col items-center justify-center w-full h-full space-y-1 transition-colors active:scale-95 ${currentTab === 'goals' ? 'text-indigo-400' : 'text-gray-500 hover:text-gray-400'}`}
         >
-          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+          <Goal className="w-6 h-6" strokeWidth={2} />
           <span className="text-[10px] font-medium">Goals</span>
         </button>
         <button 
-          onClick={() => setCurrentTab('tasks')}
+          onClick={() => handleSetCurrentTab('tasks')}
           className={`flex flex-col items-center justify-center w-full h-full space-y-1 transition-colors active:scale-95 ${currentTab === 'tasks' ? 'text-indigo-400' : 'text-gray-500 hover:text-gray-400'}`}
         >
-          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path>
-          </svg>
+          <ClipboardList className="w-6 h-6" strokeWidth={2} />
           <span className="text-[10px] font-medium">Tasks</span>
         </button>
         <button 
-          onClick={() => setCurrentTab('rituals')}
+          onClick={() => handleSetCurrentTab('rituals')}
           className={`flex flex-col items-center justify-center w-full h-full space-y-1 transition-colors active:scale-95 ${currentTab === 'rituals' ? 'text-emerald-400' : 'text-gray-500 hover:text-gray-400'}`}
         >
-          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-          </svg>
+          <Repeat className="w-6 h-6" strokeWidth={2} />
           <span className="text-[10px] font-medium">Rituals</span>
         </button>
         <button 
-          onClick={() => setCurrentTab('more')}
+          onClick={() => handleSetCurrentTab('more')}
           className={`flex flex-col items-center justify-center w-full h-full space-y-1 transition-colors active:scale-95 ${currentTab === 'more' ? 'text-white' : 'text-gray-500 hover:text-gray-400'}`}
         >
-          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 12h.01M12 12h.01M19 12h.01M6 12a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0z"></path>
-          </svg>
+          <MoreHorizontal className="w-6 h-6" strokeWidth={2} />
           <span className="text-[10px] font-medium">More</span>
         </button>
       </div>

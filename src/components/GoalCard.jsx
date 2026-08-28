@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
 import { ResponsiveContainer, LineChart, Line, YAxis } from 'recharts';
 
-export default function GoalCard({ goal, onLog, onComplete, onUndo, onDelete, onEdit }) {
+export default function GoalCard({ goal, onLog, onComplete, onUndo, onDelete, onEdit, onTogglePause }) {
   const [logValue, setLogValue] = useState('');
   const [isExpanded, setIsExpanded] = useState(false);
 
   // Status Calculation
   const getStatus = () => {
     if (goal.isCompleted) return { label: 'Completed', color: 'text-emerald-400 bg-emerald-900/30' };
+    if (goal.paused) return { label: 'Paused', color: 'text-gray-400 bg-gray-800' };
     
     if (goal.dueDate) {
       const today = new Date();
@@ -25,8 +26,15 @@ export default function GoalCard({ goal, onLog, onComplete, onUndo, onDelete, on
         const created = new Date(goal.createdAt);
         created.setHours(0,0,0,0);
         
+        const totalPausedMs = goal.totalPausedMs || 0;
+        let currentPausedMs = 0;
+        if (goal.paused && goal.pausedAt) {
+          currentPausedMs = Math.max(0, today - new Date(goal.pausedAt));
+        }
+        
+        const activeDurationMs = Math.max(0, (today - created) - totalPausedMs - currentPausedMs);
+        const daysPassed = activeDurationMs / (1000 * 60 * 60 * 24);
         const totalDays = Math.max(1, (due - created) / (1000 * 60 * 60 * 24));
-        const daysPassed = Math.max(0, (today - created) / (1000 * 60 * 60 * 24));
         
         const expectedProgress = (goal.target / totalDays) * daysPassed;
         if (goal.progress >= expectedProgress) return { label: 'On track', color: 'text-emerald-400 bg-emerald-900/30' };
@@ -100,6 +108,15 @@ export default function GoalCard({ goal, onLog, onComplete, onUndo, onDelete, on
             </span>
             
             <div className="flex gap-2">
+              {onTogglePause && (
+                <button onClick={(e) => { e.stopPropagation(); onTogglePause(goal.id); }} className={`p-1.5 rounded-md transition-colors ${goal.paused ? 'text-amber-400 bg-amber-900/20 hover:bg-amber-900/40' : 'text-gray-400 bg-gray-800 hover:text-amber-400'}`} title={goal.paused ? "Resume" : "Pause"}>
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    {goal.paused 
+                      ? <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"></path>
+                      : <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 9v6m4-6v6M5 12h.01M19 12h.01M6 12a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0z"></path>}
+                  </svg>
+                </button>
+              )}
               <button onClick={(e) => { e.stopPropagation(); onEdit(goal); }} className="p-1.5 text-gray-400 hover:text-indigo-400 bg-gray-800 rounded-md transition-colors" title="Edit">
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
               </button>

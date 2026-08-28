@@ -130,12 +130,14 @@ export default function DailyRitualsSection() {
       setHabits(current => {
         let changed = false;
         let unpausedCount = 0;
+        let unpausedHabitIds = [];
         const next = current.map(h => {
           if (h.paused && h.resumeDate) {
             const todayStr = getLocalYMD();
             if (todayStr >= h.resumeDate) {
               changed = true;
               unpausedCount++;
+              unpausedHabitIds.push(h.id);
               return { ...h, paused: false, pausedAt: null, resumeDate: null };
             }
           }
@@ -150,6 +152,33 @@ export default function DailyRitualsSection() {
         });
         if (unpausedCount > 0) {
           window.dispatchEvent(new CustomEvent('neo-bounce'));
+          
+          try {
+            const savedGoals = localStorage.getItem('pinboard_goals');
+            if (savedGoals) {
+              const goals = JSON.parse(savedGoals);
+              let goalsChanged = false;
+              const updatedGoals = goals.map(g => {
+                const isLinked = unpausedHabitIds.some(id => g.linkedHabitIds?.includes(id));
+                if (isLinked && g.paused) {
+                  goalsChanged = true;
+                  const now = Date.now();
+                  const pauseStart = g.pausedAt ? new Date(g.pausedAt).getTime() : now;
+                  return {
+                    ...g,
+                    paused: false,
+                    pausedAt: null,
+                    totalPausedMs: (g.totalPausedMs || 0) + Math.max(0, now - pauseStart)
+                  };
+                }
+                return g;
+              });
+              if (goalsChanged) {
+                localStorage.setItem('pinboard_goals', JSON.stringify(updatedGoals));
+                window.dispatchEvent(new Event('pinboard_goals_updated'));
+              }
+            }
+          } catch(e) {}
         }
         return changed ? next : current;
       });
@@ -304,6 +333,30 @@ export default function DailyRitualsSection() {
       });
       return newHabits;
     });
+
+    try {
+      const savedGoals = localStorage.getItem('pinboard_goals');
+      if (savedGoals) {
+        const goals = JSON.parse(savedGoals);
+        let changed = false;
+        const updatedGoals = goals.map(g => {
+          if (g.linkedHabitIds?.includes(pauseModalId) && !g.paused) {
+            changed = true;
+            return {
+              ...g,
+              paused: true,
+              pausedAt: new Date().toISOString()
+            };
+          }
+          return g;
+        });
+        if (changed) {
+          localStorage.setItem('pinboard_goals', JSON.stringify(updatedGoals));
+          window.dispatchEvent(new Event('pinboard_goals_updated'));
+        }
+      }
+    } catch(e) {}
+
     setPauseModalId(null);
   };
 

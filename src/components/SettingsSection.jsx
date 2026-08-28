@@ -316,6 +316,33 @@ export default function SettingsSection() {
                     );
                     saveHabits(newHabits);
                     window.dispatchEvent(new CustomEvent('neo-bounce'));
+                    
+                    // Unpause linked goals
+                    try {
+                      const savedGoals = localStorage.getItem('pinboard_goals');
+                      if (savedGoals) {
+                        const goals = JSON.parse(savedGoals);
+                        let goalsChanged = false;
+                        const updatedGoals = goals.map(g => {
+                          if (g.linkedHabitIds?.includes(habit.id) && g.paused) {
+                            goalsChanged = true;
+                            const now = Date.now();
+                            const pauseStart = g.pausedAt ? new Date(g.pausedAt).getTime() : now;
+                            return {
+                              ...g,
+                              paused: false,
+                              pausedAt: null,
+                              totalPausedMs: (g.totalPausedMs || 0) + Math.max(0, now - pauseStart)
+                            };
+                          }
+                          return g;
+                        });
+                        if (goalsChanged) {
+                          localStorage.setItem('pinboard_goals', JSON.stringify(updatedGoals));
+                          window.dispatchEvent(new Event('pinboard_goals_updated'));
+                        }
+                      }
+                    } catch(e) {}
                   }}
                   className="text-xs bg-teal-500 hover:bg-teal-400 text-teal-950 font-bold px-3 py-1.5 rounded-lg transition-colors"
                 >

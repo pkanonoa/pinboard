@@ -51,17 +51,15 @@ export default function Dashboard({ setCurrentTab }) {
     
     setStats(getUserStats());
 
-    // Load monthly goals for chips
-    const d = new Date();
-    const monthKey = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-    const savedMonthly = localStorage.getItem('pinboard_monthly_goals');
-    if (savedMonthly) {
+    // Load goals for chips
+    const savedGoals = localStorage.getItem('pinboard_goals');
+    if (savedGoals) {
       try {
-        const parsed = JSON.parse(savedMonthly);
-        if (parsed.currentMonth === monthKey) {
-          setMonthlyGoals(parsed.goals || []);
+        const parsed = JSON.parse(savedGoals);
+        if (Array.isArray(parsed)) {
+          setMonthlyGoals(parsed);
         }
-      } catch (e) {}
+      } catch(e) {}
     }
   }, []);
 
