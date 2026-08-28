@@ -319,7 +319,7 @@ export default function SettingsSection() {
         <div className="w-12 h-12 rounded-xl bg-gray-800 border border-gray-700 flex items-center justify-center">
           <img src="/logo.jpg" alt="Logo" className="w-8 h-8 rounded-lg" />
         </div>
-        <p className="text-sm font-bold text-white">Pinboard <span className="font-normal text-gray-400">v1.0.0</span></p>
+        <p className="text-sm font-bold text-white">Pinboard <span className="font-normal text-gray-400">v1.2.0</span></p>
         <p className="text-xs text-gray-500">Made for you 🌱</p>
       </section>
 
