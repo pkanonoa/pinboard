@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Reorder } from 'framer-motion';
 import { syncStateToBackend } from '../utils';
+import { saveNotification } from '../db';
 
 export default function SettingsSection() {
   const [theme, setTheme] = useState(localStorage.getItem('pinboard_theme') || 'darker');
@@ -75,14 +76,31 @@ export default function SettingsSection() {
     if (Notification.permission === 'granted') {
       try {
         const reg = await navigator.serviceWorker.ready;
-        reg.showNotification('Test Notification', {
-          body: 'This is a test notification from Pinboard Settings!',
+        const title = 'Test Notification';
+        const body = 'This is a test notification from Pinboard Settings!';
+        
+        reg.showNotification(title, {
+          body: body,
           icon: '/logo.jpg',
           vibrate: [200, 100, 200]
         });
+
+        // Save it to the in-app drawer
+        await saveNotification({
+          id: Date.now().toString() + Math.random().toString(36).substring(2, 9),
+          title: title,
+          body: body,
+          type: 'summary',
+          timestamp: Date.now(),
+          read: false
+        });
+        
+        // Notify App to update the bell
+        window.dispatchEvent(new Event('notifications_read'));
+        
       } catch (e) {
         console.error(e);
-        alert('Push notifications not ready or blocked.');
+        alert('Error: ' + e.message);
       }
     } else {
       alert('Please enable notifications first.');

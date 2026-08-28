@@ -24,7 +24,6 @@ self.addEventListener('activate', event => {
           }
         })
       );
-      );
     })
     .then(() => cleanOldNotificationsFromDB())
     .then(() => self.clients.claim())
@@ -69,7 +68,7 @@ self.addEventListener('fetch', event => {
 // Simple IndexedDB helper for the service worker
 function saveNotificationToDB(notification) {
   return new Promise((resolve, reject) => {
-    const request = indexedDB.open('PinboardDB', 1);
+    const request = indexedDB.open('PinboardDB', 2);
     request.onupgradeneeded = (e) => {
       const db = e.target.result;
       if (!db.objectStoreNames.contains('notifications')) {
@@ -89,7 +88,7 @@ function saveNotificationToDB(notification) {
 
 function cleanOldNotificationsFromDB() {
   return new Promise((resolve, reject) => {
-    const request = indexedDB.open('PinboardDB', 1);
+    const request = indexedDB.open('PinboardDB', 2);
     request.onsuccess = () => {
       const db = request.result;
       if (!db.objectStoreNames.contains('notifications')) {
@@ -151,7 +150,13 @@ self.addEventListener('push', function(event) {
 
   event.waitUntil(
     Promise.all([
-      saveNotificationToDB(notificationObj),
+      saveNotificationToDB(notificationObj).then(() => {
+        return self.clients.matchAll({ type: 'window' }).then(windowClients => {
+          for (let client of windowClients) {
+            client.postMessage({ type: 'NEW_NOTIFICATION' });
+          }
+        });
+      }),
       self.registration.showNotification(payload.title, options)
     ])
   );

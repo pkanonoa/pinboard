@@ -28,9 +28,21 @@ function App() {
     
     window.addEventListener('focus', checkUnread);
     window.addEventListener('notifications_read', checkUnread);
+    const swMessageListener = (event) => {
+      if (event.data && event.data.type === 'NEW_NOTIFICATION') {
+        checkUnread();
+      }
+    };
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.addEventListener('message', swMessageListener);
+    }
+    
     return () => {
       window.removeEventListener('focus', checkUnread);
       window.removeEventListener('notifications_read', checkUnread);
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.removeEventListener('message', swMessageListener);
+      }
     };
   }, []);
 

@@ -4,10 +4,10 @@ import { checkAndUnlockBadges } from '../utils/badgeUtils';
 import confetti from 'canvas-confetti';
 
 const DEFAULT_HABITS = [
-  { id: 'h1', name: 'Drink Water', goal: 8, unit: 'glasses', count: 0, streak: 0, lastCompletedDate: null, reminderMode: 'off', reminderSettings: {} },
-  { id: 'h2', name: 'Exercise', goal: 1, unit: 'session', count: 0, streak: 0, lastCompletedDate: null, reminderMode: 'off', reminderSettings: {} },
-  { id: 'h3', name: 'Sleep Early', goal: 1, unit: 'time', count: 0, streak: 0, lastCompletedDate: null, reminderMode: 'off', reminderSettings: {} },
-  { id: 'h4', name: 'Wake up Early', goal: 1, unit: 'time', count: 0, streak: 0, lastCompletedDate: null, reminderMode: 'fixed', reminderSettings: { hours: 2, times: ['05:30'] } }
+  { id: 'h1', name: 'Drink Water', goal: 8, unit: 'glasses', count: 0, streak: 0, lastCompletedDate: null, reminderEnabled: false, reminderTime: '09:00' },
+  { id: 'h2', name: 'Exercise', goal: 1, unit: 'session', count: 0, streak: 0, lastCompletedDate: null, reminderEnabled: false, reminderTime: '09:00' },
+  { id: 'h3', name: 'Sleep Early', goal: 1, unit: 'time', count: 0, streak: 0, lastCompletedDate: null, reminderEnabled: false, reminderTime: '22:00' },
+  { id: 'h4', name: 'Wake up Early', goal: 1, unit: 'time', count: 0, streak: 0, lastCompletedDate: null, reminderEnabled: true, reminderTime: '05:30' }
 ];
 
 const getLocalYMD = () => {
@@ -37,7 +37,7 @@ export default function DailyRitualsSection() {
   const [newHabit, setNewHabit] = useState({ name: '', goal: '', unit: '' });
   
   const [editingHabitId, setEditingHabitId] = useState(null);
-  const [editHabitData, setEditHabitData] = useState({ name: '', goal: '', unit: '', reminderMode: 'off', reminderHours: 2, reminderTimes: ['09:00'] });
+  const [editHabitData, setEditHabitData] = useState({ name: '', goal: '', unit: '', reminderEnabled: false, reminderTime: '09:00' });
   const [expandedHabitId, setExpandedHabitId] = useState(null);
 
   // Load from local storage and handle daily reset
@@ -158,8 +158,8 @@ export default function DailyRitualsSection() {
       count: 0,
       streak: 0,
       lastCompletedDate: null,
-      reminderMode: 'off',
-      reminderSettings: {}
+      reminderEnabled: false,
+      reminderTime: '09:00'
     };
 
     setHabits([...habits, habit]);
@@ -177,9 +177,8 @@ export default function DailyRitualsSection() {
       name: habit.name, 
       goal: habit.goal, 
       unit: habit.unit,
-      reminderMode: habit.reminderMode || 'off',
-      reminderHours: habit.reminderSettings?.hours || 2,
-      reminderTimes: habit.reminderSettings?.times || ['09:00']
+      reminderEnabled: habit.reminderEnabled || false,
+      reminderTime: habit.reminderTime || '09:00'
     });
   };
 
@@ -193,8 +192,8 @@ export default function DailyRitualsSection() {
             name: editHabitData.name, 
             goal: parseInt(editHabitData.goal, 10), 
             unit: editHabitData.unit,
-            reminderMode: editHabitData.reminderMode,
-            reminderSettings: { hours: editHabitData.reminderHours, times: editHabitData.reminderTimes }
+            reminderEnabled: editHabitData.reminderEnabled,
+            reminderTime: editHabitData.reminderTime
           } 
         : h
     ));
@@ -300,43 +299,26 @@ export default function DailyRitualsSection() {
                     />
                   </div>
 
-                  <div className="mb-3 p-3 bg-gray-800/50 rounded-lg border border-gray-700">
-                    <label className="block text-xs font-bold text-gray-400 mb-1 uppercase tracking-wider">Reminder Mode</label>
-                    <select
-                      value={editHabitData.reminderMode}
-                      onChange={e => setEditHabitData({...editHabitData, reminderMode: e.target.value})}
-                      className="w-full bg-gray-900 border border-gray-600 rounded px-3 py-2 text-white text-sm focus:outline-none focus:border-emerald-500 mb-2"
-                    >
-                      <option value="off">Off</option>
-                      <option value="interval">Interval (Every X hours)</option>
-                      <option value="smart">Smart (If inactive for X hours)</option>
-                      <option value="fixed">Fixed Time</option>
-                    </select>
+                  <div className="mb-3 p-3 bg-gray-800/50 rounded-lg border border-gray-700 flex flex-col gap-3">
+                    <div className="flex items-center justify-between">
+                      <label className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-0">Enable Reminder</label>
+                      <button 
+                        type="button"
+                        onClick={() => setEditHabitData({...editHabitData, reminderEnabled: !editHabitData.reminderEnabled})}
+                        className={`w-10 h-5 rounded-full transition-colors relative ${editHabitData.reminderEnabled ? 'bg-emerald-500' : 'bg-gray-700'}`}
+                      >
+                        <div className={`w-3 h-3 bg-white rounded-full absolute top-1 transition-transform ${editHabitData.reminderEnabled ? 'translate-x-6' : 'translate-x-1'}`}></div>
+                      </button>
+                    </div>
 
-                    {(editHabitData.reminderMode === 'interval' || editHabitData.reminderMode === 'smart') && (
-                      <div className="animate-fade-in-down">
-                        <label className="block text-xs font-bold text-gray-400 mb-1 uppercase tracking-wider">
-                          {editHabitData.reminderMode === 'interval' ? 'Remind every (hours)' : 'Remind if inactive for (hours)'}
-                        </label>
-                        <input 
-                          type="number" 
-                          min="1"
-                          max="24"
-                          value={editHabitData.reminderHours}
-                          onChange={e => setEditHabitData({...editHabitData, reminderHours: parseInt(e.target.value, 10) || 1})}
-                          className="w-full bg-gray-900 border border-gray-600 rounded px-3 py-2 text-white text-sm focus:outline-none focus:border-emerald-500"
-                        />
-                      </div>
-                    )}
-
-                    {editHabitData.reminderMode === 'fixed' && (
-                      <div className="animate-fade-in-down">
-                        <label className="block text-xs font-bold text-gray-400 mb-1 uppercase tracking-wider">Time</label>
+                    {editHabitData.reminderEnabled && (
+                      <div className="animate-fade-in-down flex items-center justify-between pt-1">
+                        <label className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-0">Time</label>
                         <input 
                           type="time" 
-                          value={editHabitData.reminderTimes[0]}
-                          onChange={e => setEditHabitData({...editHabitData, reminderTimes: [e.target.value]})}
-                          className="w-full bg-gray-900 border border-gray-600 rounded px-3 py-2 text-white text-sm focus:outline-none focus:border-emerald-500 [color-scheme:dark]"
+                          value={editHabitData.reminderTime}
+                          onChange={e => setEditHabitData({...editHabitData, reminderTime: e.target.value})}
+                          className="bg-gray-900 border border-gray-600 rounded px-3 py-1 text-white text-sm focus:outline-none focus:border-emerald-500 [color-scheme:dark]"
                         />
                       </div>
                     )}
@@ -364,12 +346,9 @@ export default function DailyRitualsSection() {
                       
                       <p className="text-xs text-gray-400 mt-1 flex items-center gap-2">
                         <span>{habit.count} / {habit.goal} {habit.unit}</span>
-                        {habit.reminderMode && habit.reminderMode !== 'off' && (
+                        {habit.reminderEnabled && habit.reminderTime && (
                           <span className="text-emerald-500/70 text-[10px] bg-emerald-900/30 px-1.5 py-0.5 rounded" title="Reminder Active">
-                            {habit.reminderMode === 'interval' ? `Every ${habit.reminderSettings?.hours}h` : 
-                             habit.reminderMode === 'smart' ? `Smart (${habit.reminderSettings?.hours}h)` : 
-                             habit.reminderMode === 'fixed' && habit.reminderSettings?.times?.[0] ? `@${formatTime12h(habit.reminderSettings.times[0])}` : 
-                             ''}
+                            @{formatTime12h(habit.reminderTime)}
                           </span>
                         )}
                       </p>

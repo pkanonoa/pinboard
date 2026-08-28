@@ -45,120 +45,45 @@ export default async function handler(req, res) {
         for (const habit of habits) {
           if (habit.count >= habit.goal && habit.lastCompletedDate === todayStr) continue;
 
-          const mode = habit.reminderMode;
-          if (!mode || mode === 'off') continue;
+          if (habit.reminderEnabled && habit.reminderTime) {
+            const [th, tm] = habit.reminderTime.split(':').map(Number);
+            const diff = (localHour * 60 + localMin) - (th * 60 + tm);
+            
+            if (diff >= 0 && diff < 15) {
+               let title = `⏰ Time for ${habit.name}`;
+               let body = `You haven't completed this yet today.`;
 
-          let shouldSend = false;
-          let tone = 'friendly'; 
-
-          if (localHour < 12) tone = 'friendly';
-          else if (localHour >= 12 && localHour < 19) tone = 'firm';
-          else tone = 'urgent';
-
-          if (mode === 'fixed') {
-            const targetTimes = habit.reminderSettings?.times || [];
-            for (const t of targetTimes) {
-               if (!t) continue;
-               const [th, tm] = t.split(':').map(Number);
-               const diff = (localHour * 60 + localMin) - (th * 60 + tm);
-               if (diff >= 0 && diff < 15) {
-                 shouldSend = true;
-                 break;
+               const lowerName = habit.name.toLowerCase();
+               if (lowerName.includes('wake up') || lowerName.includes('wakeup')) {
+                 title = '⏰ Time to wakeup!';
+                 body = 'Rise and shine, it is time to start your day!';
                }
-            }
-          } 
-          else if (mode === 'interval') {
-            const intervalHrs = habit.reminderSettings?.hours || 2;
-            if (localHour >= 8 && localHour <= 22) {
-              if (localHour % intervalHrs === 0 && localMin < 15) {
-                 shouldSend = true;
-              }
-            }
-          }
-          else if (mode === 'smart') {
-            const intervalHrs = habit.reminderSettings?.hours || 3;
-            const inactiveHrs = (now - state.lastUpdated) / (1000 * 60 * 60);
-            if (localHour >= 9 && localHour <= 21 && inactiveHrs >= intervalHrs) {
-               if (localMin < 15) {
-                 shouldSend = true;
-                 tone = 'firm'; 
-               }
-            }
-          }
 
-          if (shouldSend) {
-             let prefix = tone === 'friendly' ? '☀️ Rise and shine!' : tone === 'firm' ? "👀 Don't forget" : '🚨 Urgent!';
-             let title = `${prefix} ${habit.name}`;
-             let body = `${habit.count}/${habit.goal} ${habit.unit} today. Keep going!`;
-
-             const lowerName = habit.name.toLowerCase();
-             if (lowerName.includes('wake up') || lowerName.includes('wakeup')) {
-               title = '⏰ Time to wakeup!';
-               body = 'Rise and shine, it is time to start your day!';
-             }
-
-             notificationsToSend.push({
-               title,
-               body,
-               type: 'habit'
-             });
+               notificationsToSend.push({ title, body, type: 'habit' });
+            }
           }
         }
       }
 
-      // Tasks processing
-      if (tasks) {
-        for (const task of tasks) {
-           if (task.done) continue;
-           
-           if (task.dueDate) {
-              // task.dueDate is a local string (e.g. "2026-08-27T14:03"). 
-              // Vercel parses this as UTC, so we must add the timezoneOffset to get the true absolute time.
-              const parsedTime = new Date(task.dueDate).getTime();
-              const trueTaskTime = parsedTime + (timezoneOffset * 60000);
-              const diffMins = (trueTaskTime - now) / 60000;
-              
-              if (diffMins > 0 && diffMins <= (24 * 60) && diffMins > (24 * 60 - 15)) {
-                 notificationsToSend.push({ title: 'Task due tomorrow', body: task.name, type: 'task' });
-              }
-              else if (diffMins > 0 && diffMins <= 120 && diffMins > 105) {
-                 notificationsToSend.push({ title: 'Task due in 2 hours', body: task.name, type: 'task' });
-              }
-              else if (diffMins <= 0 && diffMins > -15) {
-                 notificationsToSend.push({ title: 'Task is due right now!', body: task.name, type: 'task' });
-              }
-              else if (diffMins < -15 && localMin < 15) {
-                 notificationsToSend.push({ title: 'Overdue task!', body: task.name, type: 'task' });
-              }
-           }
-        }
-      }
-
+      // Tasks processing (Daily Review Digest)
       if (dailyReviewTime) {
          const [dh, dm] = dailyReviewTime.split(':').map(Number);
          const diff = (localHour * 60 + localMin) - (dh * 60 + dm);
          if (diff >= 0 && diff < 15) {
-            const undatedPending = (tasks || []).filter(t => !t.done && !t.dueDate);
-            if (undatedPending.length > 0) {
+            const pendingTasks = (tasks || []).filter(t => !t.done);
+            if (pendingTasks.length > 0) {
+               let bodyStr = pendingTasks.slice(0, 3).map(t => `• ${t.name}`).join('\n');
+               if (pendingTasks.length > 3) {
+                 bodyStr += `\n...and ${pendingTasks.length - 3} more.`;
+               }
+               
                notificationsToSend.push({
-                 title: 'Daily Task Review',
-                 body: `You have ${undatedPending.length} pending tasks to look at.`,
+                 title: '📋 Daily Task Review',
+                 body: bodyStr,
                  type: 'task'
                });
             }
          }
-      }
-      
-      if (localHour === 22 && localMin < 15) {
-         const allHabits = habits || [];
-         const allTasks = tasks || [];
-         const completedHabits = allHabits.filter(h => h.count >= h.goal && h.lastCompletedDate === todayStr).length;
-         const pendingTasks = allTasks.filter(t => !t.done).length;
-         notificationsToSend.push({
-            title: 'Daily Summary',
-            body: `You finished ${completedHabits}/${allHabits.length} rituals today. ${pendingTasks} tasks pending.`,
-            type: 'summary'
-         });
       }
 
       for (const note of notificationsToSend) {
