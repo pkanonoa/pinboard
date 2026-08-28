@@ -18,7 +18,7 @@ export default function NeoAvatar({ habits = [] }) {
   const totalHabits = activeHabits.length;
   // Based on requirement: count >= goal
   const doneHabits = activeHabits.filter(h => h.count >= h.goal).length;
-  const pct = totalHabits > 0 ? doneHabits / totalHabits : 0;
+  const pct = totalHabits > 0 ? doneHabits / totalHabits : 1;
 
   let state = 1;
   let defaultSpeech = "I miss you… tap something! 🥺";

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { logCompletion, removeCompletionToday, syncStateToBackend, syncMonthlyGoalProgress } from '../utils';
 import { checkAndUnlockBadges } from '../utils/badgeUtils';
 import confetti from 'canvas-confetti';
+import neoImg from '../assets/neo.png';
 
 const DEFAULT_HABITS = [
   { id: 'h1', name: 'Drink Water', goal: 8, unit: 'glasses', count: 0, streak: 0, lastCompletedDate: null, reminderEnabled: false, reminderTime: '09:00', type: 'countable' },
@@ -41,6 +42,29 @@ export default function DailyRitualsSection() {
   const [expandedHabitId, setExpandedHabitId] = useState(null);
   const [bigNumberInputs, setBigNumberInputs] = useState({});
   const [now, setNow] = useState(new Date());
+
+  const [activeMenuId, setActiveMenuId] = useState(null);
+  const [pauseModalId, setPauseModalId] = useState(null);
+  
+  const getDefaultResumeDate = () => {
+    const d = new Date();
+    d.setDate(d.getDate() + 3);
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  };
+  
+  const getMinResumeDate = () => {
+    const d = new Date();
+    d.setDate(d.getDate() + 1);
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  };
+
+  const getMaxResumeDate = () => {
+    const d = new Date();
+    d.setDate(d.getDate() + 30);
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  };
+
+  const [resumeDateInput, setResumeDateInput] = useState(getDefaultResumeDate());
 
   const getWindowBounds = (targetTimeStr, graceMins, baseDate) => {
     const [th, tm] = targetTimeStr.split(':').map(Number);
@@ -105,8 +129,17 @@ export default function DailyRitualsSection() {
 
       setHabits(current => {
         let changed = false;
+        let unpausedCount = 0;
         const next = current.map(h => {
-          if (h.type === 'time_locked') {
+          if (h.paused && h.resumeDate) {
+            const todayStr = getLocalYMD();
+            if (todayStr >= h.resumeDate) {
+              changed = true;
+              unpausedCount++;
+              return { ...h, paused: false, pausedAt: null, resumeDate: null };
+            }
+          }
+          if (h.type === 'time_locked' && !h.paused) {
             const status = getTimeLockedStatus(h, currentNow);
             if (status === 'missed' && h.lastCompletedDate !== todayStr && h.failedDate !== todayStr) {
               changed = true;
@@ -115,11 +148,21 @@ export default function DailyRitualsSection() {
           }
           return h;
         });
+        if (unpausedCount > 0) {
+          window.dispatchEvent(new CustomEvent('neo-bounce'));
+        }
         return changed ? next : current;
       });
     }, 60000);
 
     return () => clearInterval(interval);
+  }, []);
+
+  // Global click listener to close menu
+  useEffect(() => {
+    const handleClickOutside = () => setActiveMenuId(null);
+    document.addEventListener('click', handleClickOutside);
+    return () => document.removeEventListener('click', handleClickOutside);
   }, []);
 
   // Save to local storage whenever habits or reset date changes
@@ -139,7 +182,7 @@ export default function DailyRitualsSection() {
   const handleTap = (id) => {
     const todayStr = getLocalYMD();
     const targetHabit = habits.find(h => h.id === id);
-    if (!targetHabit) return;
+    if (!targetHabit || targetHabit.paused) return;
 
     // Call sync exactly once (avoiding React Strict Mode double-invocation of state updaters)
     syncMonthlyGoalProgress(id, 1);
@@ -173,7 +216,7 @@ export default function DailyRitualsSection() {
   const handleUndo = (id) => {
     const todayStr = getLocalYMD();
     const targetHabit = habits.find(h => h.id === id);
-    if (!targetHabit || targetHabit.count === 0) return;
+    if (!targetHabit || targetHabit.count === 0 || targetHabit.paused) return;
 
     if (targetHabit.type === 'big_number') {
       syncMonthlyGoalProgress(id, -targetHabit.count);
@@ -214,7 +257,7 @@ export default function DailyRitualsSection() {
     if (!val || val <= 0) return;
 
     const targetHabit = habits.find(h => h.id === id);
-    if (!targetHabit) return;
+    if (!targetHabit || targetHabit.paused) return;
 
     syncMonthlyGoalProgress(id, val - targetHabit.count);
 
@@ -242,6 +285,26 @@ export default function DailyRitualsSection() {
       return habit;
     }));
     setBigNumberInputs(prev => ({ ...prev, [id]: '' }));
+  };
+
+  const handlePauseSubmit = () => {
+    if (!pauseModalId || !resumeDateInput) return;
+    
+    setHabits(currentHabits => {
+      const newHabits = currentHabits.map(habit => {
+        if (habit.id === pauseModalId) {
+          return {
+            ...habit,
+            paused: true,
+            pausedAt: new Date().toISOString(),
+            resumeDate: resumeDateInput
+          };
+        }
+        return habit;
+      });
+      return newHabits;
+    });
+    setPauseModalId(null);
   };
 
   const handleAddCustom = (e) => {
@@ -441,7 +504,31 @@ export default function DailyRitualsSection() {
             const isCompleted = habit.count >= habit.goal;
 
             return (
-              <div key={habit.id} className={`p-4 rounded-lg border transition-all duration-300 ${isCompleted ? 'bg-emerald-900/20 border-emerald-800/50' : 'bg-gray-800 border-gray-700'}`}>
+              <div key={habit.id} className={`p-4 rounded-lg border transition-all duration-300 relative ${habit.paused ? 'bg-gray-800 border-gray-700 saturate-[0.35]' : isCompleted ? 'bg-emerald-900/20 border-emerald-800/50' : 'bg-gray-800 border-gray-700'}`}>
+                {/* 3-dot Menu Button */}
+                <button 
+                  onClick={(e) => { e.stopPropagation(); setActiveMenuId(activeMenuId === habit.id ? null : habit.id); }}
+                  className="absolute top-2 right-2 p-2 text-gray-500 hover:text-gray-300 rounded-lg hover:bg-gray-700/50 transition-colors z-10"
+                >
+                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M6 10a2 2 0 11-4 0 2 2 0 014 0zM12 10a2 2 0 11-4 0 2 2 0 014 0zM16 12a2 2 0 100-4 2 2 0 000 4z"></path></svg>
+                </button>
+
+                {/* Action Sheet */}
+                {activeMenuId === habit.id && (
+                  <div className="absolute top-10 right-2 w-36 bg-gray-900 rounded-xl shadow-xl border border-gray-700 overflow-hidden z-20 animate-fade-in-down origin-top-right">
+                    <button onClick={() => { setActiveMenuId(null); startEditHabit(habit); }} className="w-full text-left px-4 py-2.5 text-sm text-gray-200 hover:bg-gray-800 flex items-center gap-2">
+                      <span>✏️</span> Edit
+                    </button>
+                    <button onClick={() => { setActiveMenuId(null); setPauseModalId(habit.id); }} className="w-full text-left px-4 py-2.5 text-sm text-gray-200 hover:bg-gray-800 flex items-center gap-2">
+                      <span>⏸</span> Pause
+                    </button>
+                    <div className="h-px bg-gray-800 my-0.5"></div>
+                    <button onClick={() => { setActiveMenuId(null); handleDeleteHabit(habit.id); }} className="w-full text-left px-4 py-2.5 text-sm text-red-400 hover:bg-red-900/20 flex items-center gap-2">
+                      <span>🗑</span> Delete
+                    </button>
+                  </div>
+                )}
+
                 {editingHabitId === habit.id ? (
                   <form onSubmit={saveEditHabit} className="animate-fade-in-down">
                     <h3 className="text-sm font-medium text-emerald-400 mb-3">Edit Ritual</h3>
@@ -590,12 +677,11 @@ export default function DailyRitualsSection() {
                   <>
                     <div className="flex justify-between items-start mb-2">
                       <div className="flex-1 min-w-0 pr-2">
-                        <button
-                          onClick={() => setExpandedHabitId(expandedHabitId === habit.id ? null : habit.id)}
-                          className={`font-semibold mt-0.5 text-left transition-colors hover:text-emerald-300 focus:outline-none ${isCompleted ? 'text-emerald-400' : 'text-gray-100'}`}
+                        <div
+                          className={`font-semibold mt-0.5 text-left transition-colors ${isCompleted ? 'text-emerald-400' : 'text-gray-100'} pr-8`}
                         >
                           {habit.name}
-                        </button>
+                        </div>
 
                         <p className="text-xs text-gray-400 mt-1 flex items-center gap-2">
                           {habit.type === 'countable' && <span>{habit.count} / {habit.goal} {habit.unit}</span>}
@@ -618,7 +704,13 @@ export default function DailyRitualsSection() {
 
                       <div className="flex flex-col items-end gap-2 flex-shrink-0">
                         <div className="flex gap-2">
-                          {habit.count > 0 && (
+                          {habit.paused ? (
+                            <div className="h-10 px-4 rounded-full flex items-center justify-center font-bold text-sm bg-gray-700 text-gray-400">
+                              😴 Paused
+                            </div>
+                          ) : (
+                            <>
+                              {habit.count > 0 && (
                             <button
                               onClick={() => handleUndo(habit.id)}
                               className="w-10 h-10 rounded-full flex items-center justify-center font-bold text-lg transition-transform active:scale-90 bg-gray-800 text-gray-400 hover:bg-gray-700 border border-gray-700"
@@ -693,10 +785,17 @@ export default function DailyRitualsSection() {
                               );
                             }
                           )()}
+                            </>
+                          )}
                         </div>
                         {habit.streak > 0 && (
                           <span className="text-xs font-bold text-orange-400 flex items-center gap-1" title="Current Streak">
-                            🔥 {habit.streak}
+                            {habit.paused ? '❄️' : '🔥'} {habit.streak} {habit.paused ? '❄️' : ''}
+                          </span>
+                        )}
+                        {habit.paused && habit.resumeDate && (
+                          <span className="text-[10px] text-gray-400 font-medium whitespace-nowrap">
+                            Resumes in {Math.max(0, Math.ceil((new Date(habit.resumeDate) - new Date()) / (1000 * 60 * 60 * 24)))} days
                           </span>
                         )}
                       </div>
@@ -719,26 +818,7 @@ export default function DailyRitualsSection() {
                       </form>
                     )}
 
-                    {/* Action Buttons when Expanded */}
-                    {expandedHabitId === habit.id && (
-                      <div className="flex items-center gap-2 mt-3 mb-2 animate-fade-in-down border-t border-gray-700/50 pt-3">
-                        <button
-                          onClick={() => startEditHabit(habit)}
-                          className="flex items-center gap-1.5 px-3 py-1.5 text-gray-300 bg-gray-700/50 hover:bg-gray-700 hover:text-gray-100 rounded text-xs transition-colors"
-                        >
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
-                          Edit
-                        </button>
 
-                        <button
-                          onClick={() => handleDeleteHabit(habit.id)}
-                          className="flex items-center gap-1.5 px-3 py-1.5 text-gray-400 bg-gray-700/50 hover:bg-red-900/40 hover:text-red-400 rounded text-xs transition-colors"
-                        >
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-                          Delete
-                        </button>
-                      </div>
-                    )}
 
                     {/* Progress Bar for Countable and Big Number */}
                     {(habit.type === 'countable' || habit.type === 'big_number') && (
@@ -756,6 +836,49 @@ export default function DailyRitualsSection() {
           })
         )}
       </div>
+
+      {/* Pause Modal */}
+      {pauseModalId && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
+          <div className="bg-gray-900 border border-gray-700 rounded-2xl w-full max-w-sm p-6 shadow-2xl relative flex flex-col items-center text-center animate-fade-in-up">
+            <img 
+              src={neoImg} 
+              alt="Sleepy Neo" 
+              className="w-[100px] mb-4 filter grayscale-[60%] opacity-80 neo-gentle-rock"
+            />
+            <h3 className="text-xl font-bold text-white mb-2">Pause {habits.find(h => h.id === pauseModalId)?.name}?</h3>
+            <p className="text-sm text-teal-400/80 mb-6 font-medium">Life happens. Neo holds your streak while you rest.</p>
+            
+            <div className="w-full text-left mb-6">
+              <label className="text-xs font-bold text-gray-400 uppercase tracking-wider block mb-2">Resume on</label>
+              <input
+                type="date"
+                min={getMinResumeDate()}
+                max={getMaxResumeDate()}
+                value={resumeDateInput}
+                onChange={(e) => setResumeDateInput(e.target.value)}
+                className="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-teal-500 [color-scheme:dark]"
+              />
+            </div>
+            
+            <div className="flex w-full gap-3">
+              <button 
+                onClick={() => setPauseModalId(null)} 
+                className="flex-1 py-3 px-4 bg-transparent hover:bg-gray-800 text-gray-300 font-bold rounded-xl transition-colors"
+              >
+                Cancel
+              </button>
+              <button 
+                onClick={handlePauseSubmit} 
+                className="flex-1 py-3 px-4 bg-teal-600 hover:bg-teal-500 text-white font-bold rounded-xl transition-colors shadow-lg shadow-teal-900/50"
+              >
+                ⏸ Pause it
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }

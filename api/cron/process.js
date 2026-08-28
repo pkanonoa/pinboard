@@ -49,6 +49,29 @@ export default async function handler(req, res) {
       // Habits processing
       if (habits) {
         for (const habit of habits) {
+          // Check for auto-resume notification first
+          if (habit.paused && habit.resumeDate) {
+            const resumeDateStr = habit.resumeDate; // YYYY-MM-DD
+            if (todayStr >= resumeDateStr) {
+              const resumeKey = `resumed_${habit.id}_${resumeDateStr}`;
+              const alreadySentResume = await kv.get(resumeKey);
+              if (!alreadySentResume) {
+                try {
+                  await webpush.sendNotification(subscription, JSON.stringify({ 
+                    title: `Neo's back! 🧅`, 
+                    body: `${habit.name} resumes today. Let's keep that streak alive!`, 
+                    type: 'habit' 
+                  }));
+                  await kv.set(resumeKey, true, { ex: 86400 });
+                  sentCount++;
+                } catch (e) {
+                  console.error('Error sending resume push', e);
+                }
+              }
+            }
+            continue; // Skip normal reminder processing if paused
+          }
+
           if (habit.count >= habit.goal && habit.lastCompletedDate === todayStr) continue;
 
           if (habit.reminderEnabled) {

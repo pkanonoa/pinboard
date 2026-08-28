@@ -292,6 +292,41 @@ export default function SettingsSection() {
         )}
       </section>
 
+      {/* Paused Habits Section */}
+      {habits.some(h => h.paused) && (
+        <section className="bg-gray-900 border border-gray-800 rounded-xl p-5 shadow-lg">
+          <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-4">Paused Rituals</h3>
+          <div className="flex flex-col gap-3">
+            {habits.filter(h => h.paused).map(habit => (
+              <div key={`paused_${habit.id}`} className="bg-gray-800 border border-gray-700 rounded-lg p-3 flex justify-between items-center">
+                <div>
+                  <div className="text-white font-medium flex items-center gap-2">
+                    <span className="text-xl">😴</span> {habit.name}
+                  </div>
+                  <div className="text-xs text-gray-400 mt-1">
+                    Resumes: {habit.resumeDate || 'Unknown'}
+                  </div>
+                </div>
+                <button
+                  onClick={() => {
+                    const newHabits = habits.map(h => 
+                      h.id === habit.id 
+                        ? { ...h, paused: false, pausedAt: null, resumeDate: null } 
+                        : h
+                    );
+                    saveHabits(newHabits);
+                    window.dispatchEvent(new CustomEvent('neo-bounce'));
+                  }}
+                  className="text-xs bg-teal-500 hover:bg-teal-400 text-teal-950 font-bold px-3 py-1.5 rounded-lg transition-colors"
+                >
+                  Unpause now
+                </button>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
       {/* App Preferences */}
       <section className="bg-gray-900 border border-gray-800 rounded-xl p-5 shadow-lg">
         <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-4">App</h3>

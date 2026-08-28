@@ -68,8 +68,9 @@ export default function Dashboard({ setCurrentTab }) {
   const todayStr = getLocalYMD();
 
   const completedTasksToday = tasks.filter(t => t.done && t.completedDate === todayStr).length;
-  const habitsDoneToday = habits.filter(h => h.count >= h.goal && h.lastCompletedDate === todayStr).length;
+  const habitsDoneToday = habits.filter(h => h.count >= h.goal && h.lastCompletedDate === todayStr && !h.paused).length;
   const bestStreak = habits.length > 0 ? Math.max(...habits.map(h => h.streak || 0)) : 0;
+  const pausedCount = habits.filter(h => h.paused).length;
 
   const pendingTasks = tasks.filter(t => !t.done);
   
@@ -153,6 +154,15 @@ export default function Dashboard({ setCurrentTab }) {
             <span className="text-[10px] text-gray-400 uppercase tracking-wider font-semibold">Best Streak</span>
           </div>
         </div>
+        
+        {pausedCount > 0 && (
+          <div className="text-center mt-3 animate-fade-in">
+            <span className="text-[11px] text-gray-500 font-medium bg-gray-900/50 px-3 py-1 rounded-full border border-gray-800/50 inline-flex items-center gap-1.5">
+              <span>😴</span> {pausedCount} habit{pausedCount !== 1 ? 's' : ''} resting
+            </span>
+          </div>
+        )}
+
         {/* Monthly Goal Chips */}
         {monthlyGoals.length > 0 && (
           <div className="flex flex-wrap gap-2 mt-4 justify-center animate-fade-in-up delay-200">
