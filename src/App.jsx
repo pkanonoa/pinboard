@@ -25,20 +25,16 @@ function App() {
 
   const handleSetCurrentTab = (tab) => {
     if (tab !== currentTab) {
+      const subTabs = ['charts', 'rewards', 'settings'];
+      
       if (tab === 'dashboard') {
-        // Instead of history.back() which is risky if they deep-linked, 
-        // we can just replaceState to dashboard. However, this means back button
-        // might not exit the app immediately if they navigated around.
-        // In PWAs, we can just replaceState to root, and if they press back, it exits if there's no pushState.
-        // Actually, if we just want back button to go to dashboard when on other tabs:
-        // We ensure 'dashboard' is ALWAYS the base.
         window.history.replaceState({ tab: 'dashboard' }, '', '#dashboard');
+      } else if (subTabs.includes(tab)) {
+        window.history.pushState({ tab }, '', `#${tab}`);
       } else {
         if (currentTab === 'dashboard') {
-          // Navigating away from dashboard -> push state
           window.history.pushState({ tab }, '', `#${tab}`);
         } else {
-          // Navigating between non-dashboard tabs -> replace state
           window.history.replaceState({ tab }, '', `#${tab}`);
         }
       }
@@ -48,8 +44,16 @@ function App() {
 
   useEffect(() => {
     const handlePopState = (e) => {
-      // Whenever they hit back, we force them to dashboard (if they were on a non-dashboard tab)
-      setCurrentTab('dashboard');
+      if (e.state && e.state.tab) {
+        setCurrentTab(e.state.tab);
+      } else {
+        const hash = window.location.hash.replace('#', '');
+        if (['dashboard', 'goals', 'tasks', 'rituals', 'more', 'charts', 'rewards', 'settings'].includes(hash)) {
+          setCurrentTab(hash);
+        } else {
+          setCurrentTab('dashboard');
+        }
+      }
     };
 
     window.addEventListener('popstate', handlePopState);

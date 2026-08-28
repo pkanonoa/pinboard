@@ -13,6 +13,8 @@ export default function ToldToSection() {
   const [dueDate, setDueDate] = useState('');
   const [isScheduling, setIsScheduling] = useState(false);
   const [isAdding, setIsAdding] = useState(false);
+  const [longPressTimer, setLongPressTimer] = useState(null);
+  const [showDeleteMenuId, setShowDeleteMenuId] = useState(null);
   const [dailyReviewTime, setDailyReviewTime] = useState(() => {
     return localStorage.getItem('pinboard_daily_review_time') || '20:00';
   });
@@ -21,6 +23,14 @@ export default function ToldToSection() {
   useEffect(() => {
     localStorage.setItem('pinboard_daily_review_time', dailyReviewTime);
   }, [dailyReviewTime]);
+
+  useEffect(() => {
+    if (showDeleteMenuId) {
+      const handleClickOutside = () => setShowDeleteMenuId(null);
+      document.addEventListener('pointerdown', handleClickOutside);
+      return () => document.removeEventListener('pointerdown', handleClickOutside);
+    }
+  }, [showDeleteMenuId]);
 
   // Save to local storage whenever tasks change
   useEffect(() => {
@@ -85,6 +95,23 @@ export default function ToldToSection() {
 
   const clearCompleted = () => {
     setTasks(tasks.filter(t => !t.done));
+  };
+
+  const startLongPress = (taskId) => {
+    const timer = setTimeout(() => {
+      setShowDeleteMenuId(taskId);
+      if (window.navigator && window.navigator.vibrate) {
+        window.navigator.vibrate(50);
+      }
+    }, 600);
+    setLongPressTimer(timer);
+  };
+
+  const clearLongPress = () => {
+    if (longPressTimer) {
+      clearTimeout(longPressTimer);
+      setLongPressTimer(null);
+    }
   };
 
   const pendingTasks = tasks.filter(t => !t.done).sort((a, b) => b.id - a.id);
@@ -191,26 +218,36 @@ export default function ToldToSection() {
         {/* COMPLETED SECTION */}
         {completedTasks.length > 0 && (
           <div className="flex flex-col gap-3 mb-4">
-            <div className="flex justify-between items-center mb-1">
-              <h3 className="text-xs font-semibold text-gray-500 tracking-wider uppercase">Completed</h3>
-              <button onClick={clearCompleted} className="text-xs text-red-400/70 hover:text-red-400 transition-colors">
-                Clear all
-              </button>
-            </div>
+            <h3 className="text-xs font-semibold text-gray-500 tracking-wider uppercase mb-1">Completed</h3>
             {completedTasks.map(task => (
               <div 
                 key={task.id} 
-                className="flex items-center gap-4 p-4 bg-[#16161f] rounded-xl transition-all duration-300 ease-in-out"
+                className="flex items-center gap-4 p-4 bg-[#16161f] rounded-xl transition-all duration-300 ease-in-out cursor-pointer select-none active:scale-[0.98]"
+                onTouchStart={() => startLongPress(task.id)}
+                onTouchEnd={clearLongPress}
+                onMouseDown={() => startLongPress(task.id)}
+                onMouseUp={clearLongPress}
+                onMouseLeave={clearLongPress}
               >
                 <div 
                   className="w-[22px] h-[22px] rounded-md border-2 border-emerald-400 bg-emerald-400/20 flex items-center justify-center cursor-pointer flex-shrink-0"
-                  onClick={() => handleToggleDone(task.id)}
+                  onClick={(e) => { e.stopPropagation(); handleToggleDone(task.id); }}
                 >
                   <svg className="w-3.5 h-3.5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7"></path></svg>
                 </div>
                 <div className="flex-1 min-w-0 flex flex-col justify-center">
                   <p className="font-medium text-gray-500 text-base break-words leading-tight line-through">{task.name}</p>
                 </div>
+                {showDeleteMenuId === task.id && (
+                  <button 
+                    onClick={(e) => { e.stopPropagation(); handleDeleteTask(task.id); }}
+                    onPointerDown={(e) => e.stopPropagation()}
+                    className="text-red-400 p-2 rounded-md hover:bg-gray-800 transition-colors flex-shrink-0 animate-fade-in"
+                    aria-label="Delete task"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                  </button>
+                )}
               </div>
             ))}
           </div>
