@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Target, Repeat, ClipboardList } from 'lucide-react';
 import { getLocalYMD, getUserStats, logCompletion } from '../utils';
+import { checkAndUnlockBadges } from '../utils/badgeUtils';
 import NeoAvatar from './NeoAvatar';
 
 const DEFAULT_SAMPLE_HABITS = [
@@ -151,6 +152,7 @@ export default function Dashboard({ setCurrentTab }) {
 
     logCompletion('habit', habitId);
     window.dispatchEvent(new CustomEvent('neo_celebration'));
+    checkAndUnlockBadges();
     setStats(getUserStats());
   };
 
@@ -168,6 +170,7 @@ export default function Dashboard({ setCurrentTab }) {
 
     logCompletion('task', taskId);
     window.dispatchEvent(new CustomEvent('neo_celebration'));
+    checkAndUnlockBadges();
     setStats(getUserStats());
   };
 

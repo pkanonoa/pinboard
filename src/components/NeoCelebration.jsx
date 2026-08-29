@@ -17,14 +17,11 @@ const QUOTES = [
 export default function NeoCelebration() {
   const [visible, setVisible] = useState(false);
   const [quote, setQuote] = useState("");
-  const [hasBadge, setHasBadge] = useState(false);
-  const pendingBadgesRef = useRef([]);
-  const visibleRef = useRef(false);
-
-  visibleRef.current = visible;
 
   useEffect(() => {
     const handleCompletion = () => {
+      // Mark celebration active immediately so BadgeCelebration queues any badge
+      window.__neoCelebrationActive = true;
       const q = QUOTES[Math.floor(Math.random() * QUOTES.length)];
       setQuote(q);
       setVisible(true);
@@ -32,70 +29,56 @@ export default function NeoCelebration() {
 
     window.addEventListener("neo_celebration", handleCompletion);
 
-    const captureBadge = (e) => {
-      if (visibleRef.current) {
-        e.stopImmediatePropagation();
-        pendingBadgesRef.current.push(e.detail);
-        setHasBadge(true);
-      }
-    };
-    window.addEventListener("badgeUnlocked", captureBadge, true);
-
     return () => {
       window.removeEventListener("neo_celebration", handleCompletion);
-      window.removeEventListener("badgeUnlocked", captureBadge, true);
     };
   }, []);
 
   const handleDismiss = () => {
     setVisible(false);
-    setHasBadge(false);
-    const badges = [...pendingBadgesRef.current];
-    pendingBadgesRef.current = [];
-    badges.forEach((badge, i) => {
+    window.__neoCelebrationActive = false;
+
+    // After NeoCelebration closes, if any badges were unlocked, show them!
+    if (window.__pendingBadges && window.__pendingBadges.length > 0) {
+      const nextBadge = window.__pendingBadges.shift();
       setTimeout(() => {
-        window.dispatchEvent(new CustomEvent("badgeUnlocked", { detail: badge }));
-      }, 350 + i * 150);
-    });
+        window.dispatchEvent(new CustomEvent("showBadgeModal", { detail: nextBadge }));
+      }, 350);
+    }
   };
 
   if (!visible) return null;
 
   return (
     <div
-      className="fixed inset-0 z-[900] flex items-center justify-center p-6"
+      className="fixed inset-0 z-[1100] flex items-center justify-center p-6"
       onClick={handleDismiss}
     >
       <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
 
       <div
-        className="relative w-full max-w-sm bg-[#13131a] rounded-3xl shadow-2xl overflow-hidden"
+        className="relative w-full max-w-sm bg-[#13131a] rounded-3xl shadow-2xl overflow-hidden border border-gray-800/80"
         style={{ animation: "slideUpFade 0.45s cubic-bezier(0.34,1.56,0.64,1) both" }}
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-end gap-4 p-5 pb-4">
+        <div className="flex items-center gap-4 p-6 pb-4">
           <img
             src={neoHappy}
             alt="Neo is happy"
-            className="w-28 h-28 object-contain flex-shrink-0"
+            className="w-24 h-24 object-contain flex-shrink-0"
             style={{ filter: "drop-shadow(0 0 20px rgba(99,102,241,0.6))" }}
           />
-          <div className="flex-1 min-w-0 pb-1">
-            <p className="text-white font-semibold text-[15px] leading-snug">{quote}</p>
-            {hasBadge && (
-              <p className="text-amber-400 text-xs mt-2.5 font-medium">
-                🏅 Badge waiting — tap to reveal!
-              </p>
-            )}
+          <div className="flex-1 min-w-0">
+            <p className="text-white font-bold text-base leading-snug">{quote}</p>
           </div>
         </div>
 
         <button
-          className="w-full flex items-center justify-center py-3 hover:bg-gray-800/30 active:bg-gray-800/50 transition-colors"
+          className="w-full flex items-center justify-center py-3.5 hover:bg-gray-800/30 active:bg-gray-800/50 transition-colors border-t border-gray-800/40"
           onClick={handleDismiss}
         >
-          <span className="text-gray-500 text-xs font-medium tracking-widest uppercase">
-            {hasBadge ? "🏅 Tap to claim badge" : "Tap to continue"}
+          <span className="text-gray-500 text-xs font-semibold tracking-widest uppercase">
+            Tap to continue
           </span>
         </button>
       </div>
