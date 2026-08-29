@@ -76,8 +76,56 @@ export default async function handler(req, res) {
 
           if (habit.reminderEnabled) {
             const isInterval = habit.reminderType === 'interval';
+            const isGoalProgress = habit.reminderType === 'goal_progress';
             
-            if (!isInterval && habit.reminderTime) {
+            if (isGoalProgress) {
+              const checkInTimes = Array.isArray(habit.checkInTimes) && habit.checkInTimes.length > 0
+                ? habit.checkInTimes
+                : (habit.reminderTime ? [habit.reminderTime] : ['12:00']);
+
+              for (const checkInTime of checkInTimes) {
+                if (!checkInTime) continue;
+                const [ch, cm] = checkInTime.split(':').map(Number);
+                const checkInDueTime = Date.UTC(userYear, userMonth, userDate, ch, cm, 0) - (timezoneOffset * 60 * 1000);
+
+                if (checkInDueTime > lastCronRun && checkInDueTime <= now) {
+                  const safeTimeKey = checkInTime.replace(':', '');
+                  const checkKey = `notified_${endpointHash}_ritual_${habit.id}_${safeTimeKey}_${todayStr}`;
+                  const alreadyChecked = await kv.get(checkKey);
+
+                  if (!alreadyChecked) {
+                    const currentValue = habit.count || 0;
+                    const targetValue = habit.goal || 1;
+                    const progress = targetValue > 0 ? currentValue / targetValue : 0;
+                    const threshold = habit.alertThreshold !== undefined ? Number(habit.alertThreshold) : 0.5;
+
+                    if (progress < threshold) {
+                      const remainingValue = Math.max(0, targetValue - currentValue);
+                      const unitStr = habit.unit ? ` ${habit.unit}` : '';
+                      const remainingStr = `${remainingValue.toLocaleString()}${unitStr}`;
+                      const percentStr = `${Math.round(progress * 100)}%`;
+                      const template = habit.messageTemplate || "You're {remaining} away from your goal. Let's get moving! 🚶";
+                      const body = template.replace(/{remaining}/g, remainingStr).replace(/{percent}/g, percentStr);
+                      const title = `🎯 ${habit.name} check-in`;
+
+                      try {
+                        await webpush.sendNotification(subscription, JSON.stringify({
+                          title,
+                          body,
+                          type: 'habit'
+                        }));
+                        sentCount++;
+                      } catch (e) {
+                        console.error('Error sending goal progress push', e);
+                      }
+                    }
+
+                    // Mark that specific check-in time as handled for today whether notification was sent or progress was already sufficient
+                    await kv.set(checkKey, true, { ex: 86400 });
+                  }
+                }
+              }
+            } else if (!isInterval && habit.reminderTime) {
               const [th, tm] = habit.reminderTime.split(':').map(Number);
               const dueTime = Date.UTC(userYear, userMonth, userDate, th, tm, 0) - (timezoneOffset * 60 * 1000);
               
