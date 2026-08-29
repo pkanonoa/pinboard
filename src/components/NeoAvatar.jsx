@@ -17,12 +17,21 @@ const INSPIRATIONAL_QUOTES = [
   "Your potential is endless. Show up today! 🌟"
 ];
 
-const getTimeGreeting = (name) => {
-  const hour = new Date().getHours();
-  let greet = "Good evening";
-  if (hour < 12) greet = "Good morning";
-  else if (hour < 17) greet = "Good afternoon";
-  return name && name !== 'friend' ? `${greet}, ${name}!` : `${greet}!`;
+// Returns 'morning' | 'noon' | 'evening' | 'night'
+const getTimePeriod = () => {
+  const h = new Date().getHours();
+  if (h >= 5 && h < 11)  return 'morning';
+  if (h >= 11 && h < 16) return 'noon';
+  if (h >= 16 && h < 21) return 'evening';
+  return 'night';
+};
+
+const getPeriodGreeting = (period, name) => {
+  const n = name && name !== 'friend' ? `, ${name}` : '';
+  if (period === 'morning')  return `Good morning${n}!`;
+  if (period === 'noon')     return `Good afternoon${n}!`;
+  if (period === 'evening')  return `Good evening${n}!`;
+  return                            `Hey there${n}!`;
 };
 
 export default function NeoAvatar({ habits = [], tasks = [], allGoalsOnTrack = false }) {
@@ -66,107 +75,141 @@ export default function NeoAvatar({ habits = [], tasks = [], allGoalsOnTrack = f
     animationClass = "neo-gentle-float";
   }
 
+  // ── Mood-aware full greeting (1st open per period) ────────────────────
+  const buildFullGreeting = (period, currentState, tasks, habits) => {
+    const greet = getPeriodGreeting(period, userName);
+    const pending = tasks.filter(t => !t.done);
+    const overdue = tasks.filter(t => !t.done && t.dueDate && new Date(t.dueDate) < new Date());
+    const activeH = habits.filter(h => !h.paused);
+    const remaining = activeH.filter(h => h.count < h.goal);
+
+    const happy = currentState >= 4; // 4, 5, 6
+    const sad   = currentState === 1;
+
+    if (sad) {
+      // Sad Neo — gentle encouragement
+      if (overdue.length > 0)
+        return `${greet} I see "${overdue[0].name}" is overdue... Let's fix that together 🤝`;
+      if (pending.length > 0)
+        return `${greet} We've got ${pending.length} tasks ahead — slow and steady wins! 🐢`;
+      if (remaining.length > 0)
+        return `${greet} ${remaining.length} ritual${remaining.length > 1 ? 's' : ''} left today. Every small step counts 💛`;
+      return `${greet} Even on slow days, showing up is everything 💛`;
+    }
+
+    if (happy) {
+      // Happy Neo — celebratory & energetic
+      if (period === 'morning')
+        return `${greet} Let's absolutely CRUSH it today! 🚀🔥`;
+      if (period === 'noon')
+        return `${greet} Midday check-in — you're killing it! Keep going! ⚡`;
+      if (period === 'evening')
+        return `${greet} Evening power hour! Finish strong today! 💪✨`;
+      return `${greet} Even at night Neo believes in you! Rest well & grind tomorrow! 🌙`;
+    }
+
+    // Neutral (state 2-3)
+    if (period === 'morning') {
+      if (pending.length > 0)
+        return `${greet} ${pending.length} task${pending.length > 1 ? 's' : ''} and your rituals are waiting. Let's go! 🎯`;
+      return `${greet} Ready to build today's momentum? ✨`;
+    }
+    if (period === 'noon') {
+      if (remaining.length > 0)
+        return `${greet} Still ${remaining.length} ritual${remaining.length > 1 ? 's' : ''} left — afternoon push time! 🏃`;
+      return `${greet} You're halfway through the day — keep the energy up! ⚡`;
+    }
+    if (period === 'evening') {
+      return `${greet} Time to wrap up the day strong! 🌆`;
+    }
+    return `${greet} Night owl mode activated! 🦉 What's left on your list?`;
+  };
+
+  // ── Short hi message (2nd+ open in same period) ───────────────────────
+  const buildShortHi = (currentState, tasks, habits) => {
+    const pending = tasks.filter(t => !t.done);
+    const overdue = tasks.filter(t => !t.done && t.dueDate && new Date(t.dueDate) < new Date());
+    const activeH = habits.filter(h => !h.paused);
+    const remaining = activeH.filter(h => h.count < h.goal);
+
+    const happy = currentState >= 4;
+    const sad   = currentState === 1;
+
+    // Priority: overdue → pending task → habit reminder → quote
+    if (overdue.length > 0) {
+      if (happy) return `Still on fire! Don't forget "${overdue[0].name}" is overdue 🔥`;
+      if (sad)   return `Hey... "${overdue[0].name}" is still waiting. You've got this 💛`;
+      return `Hey! "${overdue[0].name}" is overdue — quick catch-up! ⏰`;
+    }
+    if (pending.length > 0) {
+      const t = pending[Math.floor(Math.random() * pending.length)];
+      if (happy) return `Psst — "${t.name}" is still on the list! Let's blast through it! ⚡`;
+      if (sad)   return `When you're ready, "${t.name}" is waiting 🤍`;
+      return `Reminder: "${t.name}" needs your attention 🎯`;
+    }
+    if (remaining.length > 0) {
+      const h = remaining[Math.floor(Math.random() * remaining.length)];
+      if (happy) return `Nearly there! "${h.name}" is all that's left 💪🔥`;
+      if (sad)   return `Take it easy — "${h.name}" is still left for today 🌿`;
+      return `Don't forget your "${h.name}" ritual! 💧`;
+    }
+    // Fallback: quote (mood-tinted)
+    const quotes = happy
+      ? ["You're absolutely on FIRE today! 🔥🏆", "Max productivity unlocked! 🚀", "Neo is proud of you today! ⭐"]
+      : sad
+      ? ["Rest if you must, but don't quit 💛", "Progress > perfection, always 🌿", "Small steps still move you forward 🤝"]
+      : INSPIRATIONAL_QUOTES;
+    return quotes[Math.floor(Math.random() * quotes.length)];
+  };
+
   // Trigger contextual speech: task reminders, habit checks, or inspiration
   const triggerNotification = () => {
     const currentTasks = tasksRef.current || [];
     const currentHabits = habitsRef.current || [];
-    const activeHabitsList = currentHabits.filter(h => !h.paused);
-    const pendingTasks = currentTasks.filter(t => !t.done);
-    const overdueTasks = currentTasks.filter(t => !t.done && t.dueDate && new Date(t.dueDate) < new Date());
-    const remainingHabits = activeHabitsList.filter(h => h.count < h.goal);
-    const doneCount = activeHabitsList.filter(h => h.count >= h.goal).length;
-    const totalCount = activeHabitsList.length;
-    const bestStreakCount = currentHabits.length > 0 ? Math.max(...currentHabits.map(h => h.streak || 0)) : 0;
-
-    const options = [];
-
-    // 1. Task Reminders & Overdue Alerts (Highest Priority)
-    if (overdueTasks.length > 0) {
-      options.push(`Reminder: "${overdueTasks[0].name}" is overdue! Let's tackle it 💪`);
-      options.push(`Heads up! "${overdueTasks[0].name}" needs your attention! ⏰`);
-    }
-    if (pendingTasks.length > 0) {
-      const randomTask = pendingTasks[Math.floor(Math.random() * pendingTasks.length)];
-      options.push(`Reminder: "${randomTask.name}" is waiting for you! 🎯`);
-      options.push(`Next goal: "${randomTask.name}"! You've got this! ✨`);
-      options.push(`${pendingTasks.length} ${pendingTasks.length === 1 ? 'task' : 'tasks'} remaining today. One victory at a time! 📋`);
-    }
-
-    // 2. Habit Tracking
-    if (remainingHabits.length > 0) {
-      const randomHabit = remainingHabits[Math.floor(Math.random() * remainingHabits.length)];
-      options.push(`Don't forget your "${randomHabit.name}" ritual today! 💧`);
-      options.push(`${doneCount}/${totalCount} rituals done. Keep the momentum going! ⚡`);
-    } else if (totalCount > 0 && doneCount === totalCount) {
-      options.push(`All rituals completed! You're operating at your peak! 🌟`);
-    }
-
-    // 3. Streak Tracking
-    if (bestStreakCount >= 2) {
-      options.push(`You're on a ${bestStreakCount}-day streak! Consistency is your superpower! 🏆`);
-    }
-
-    // 4. Inspirational Quotes
-    options.push(...INSPIRATIONAL_QUOTES);
-
-    const chosen = options[Math.floor(Math.random() * options.length)];
-    setSpeech(chosen);
-
-    // Friendly bounce animation to signal an automatic reminder
+    const msg = buildShortHi(state, currentTasks, currentHabits);
+    setSpeech(msg);
     setBounce(true);
     setTimeout(() => setBounce(false), 380);
-
     if (speechTimeoutRef.current) clearTimeout(speechTimeoutRef.current);
-    speechTimeoutRef.current = setTimeout(() => {
-      setSpeech(null);
-    }, 5500);
+    speechTimeoutRef.current = setTimeout(() => setSpeech(null), 5500);
   };
 
   // Welcome greeting on mount + automatic recurring reminders
   useEffect(() => {
-    const greeting = getTimeGreeting(userName);
+    const today = new Date().toISOString().slice(0, 10);
+    const period = getTimePeriod();
+    const periodKey = `neo_greeted_${today}_${period}`;
+    const hasGreetedThisPeriod = localStorage.getItem(periodKey);
+
     const currentTasks = tasksRef.current || [];
     const currentHabits = habitsRef.current || [];
-    const activeHabitsList = currentHabits.filter(h => !h.paused);
-    const pendingTasks = currentTasks.filter(t => !t.done);
-    const overdueTasks = currentTasks.filter(t => !t.done && t.dueDate && new Date(t.dueDate) < new Date());
-    const remainingHabits = activeHabitsList.filter(h => h.count < h.goal);
 
-    let welcomeMsg = `${greeting} Ready to conquer your day? ✨`;
-    if (overdueTasks.length > 0) {
-      welcomeMsg = `${greeting} Heads up: "${overdueTasks[0].name}" is overdue! Let's get it done 💪`;
-    } else if (pendingTasks.length > 0 && activeHabitsList.length > 0) {
-      welcomeMsg = `${greeting} You have ${pendingTasks.length} ${pendingTasks.length === 1 ? 'task' : 'tasks'} and rituals waiting today! 🚀`;
-    } else if (pendingTasks.length > 0) {
-      welcomeMsg = `${greeting} Ready to crush ${pendingTasks.length} ${pendingTasks.length === 1 ? 'task' : 'tasks'} today? 📋`;
-    } else if (remainingHabits.length > 0) {
-      welcomeMsg = `${greeting} Let's check off your daily rituals and build that streak! 🔥`;
-    } else if (activeHabitsList.length > 0 && remainingHabits.length === 0 && pendingTasks.length === 0) {
-      welcomeMsg = `${greeting} Everything is crushed today! You're unstoppable! 🌟`;
+    let msg;
+    if (!hasGreetedThisPeriod) {
+      // 1st open of this time period → full mood-aware greeting
+      localStorage.setItem(periodKey, '1');
+      msg = buildFullGreeting(period, state, currentTasks, currentHabits);
+    } else {
+      // 2nd+ open → short hi + task/quote
+      msg = buildShortHi(state, currentTasks, currentHabits);
     }
 
-    // Only show the welcome greeting once per session (not on every tab switch)
-    const hasGreetedThisSession = sessionStorage.getItem('neo_greeted');
-    if (!hasGreetedThisSession) {
-      sessionStorage.setItem('neo_greeted', '1');
-      setSpeech(welcomeMsg);
-      if (speechTimeoutRef.current) clearTimeout(speechTimeoutRef.current);
-      speechTimeoutRef.current = setTimeout(() => {
-        setSpeech(null);
-      }, 5500);
-    }
+    setSpeech(msg);
+    if (speechTimeoutRef.current) clearTimeout(speechTimeoutRef.current);
+    speechTimeoutRef.current = setTimeout(() => setSpeech(null), 5500);
 
-    // Automatic motivational quote timer: fires every 15 minutes (900,000 ms)
-    const FIFTEEN_MINUTES_MS = 15 * 60 * 1000;
+    // Automatic motivational quote timer: fires every 15 minutes
     const autoInterval = setInterval(() => {
       triggerNotification();
-    }, FIFTEEN_MINUTES_MS);
+    }, 15 * 60 * 1000);
 
     return () => {
       if (speechTimeoutRef.current) clearTimeout(speechTimeoutRef.current);
       clearInterval(autoInterval);
     };
   }, []);
+
+
 
   // Confetti on reaching 100% habits
   const prevPctRef = useRef(pct);
