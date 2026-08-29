@@ -49,7 +49,7 @@ export default function NeoAvatar({ habits = [], tasks = [], allGoalsOnTrack = f
   const activeHabits = habits.filter(h => !h.paused);
   const totalHabits = activeHabits.length;
   const doneHabits = activeHabits.filter(h => h.count >= h.goal).length;
-  const pct = totalHabits > 0 ? doneHabits / totalHabits : 1;
+  const pct = totalHabits > 0 ? doneHabits / totalHabits : 0;
 
   const userName = localStorage.getItem('pinboard_user_name') || 'friend';
 
@@ -184,19 +184,23 @@ export default function NeoAvatar({ habits = [], tasks = [], allGoalsOnTrack = f
     const currentTasks = tasksRef.current || [];
     const currentHabits = habitsRef.current || [];
 
-    let msg;
-    if (!hasGreetedThisPeriod) {
-      // 1st open of this time period → full mood-aware greeting
-      localStorage.setItem(periodKey, '1');
-      msg = buildFullGreeting(period, state, currentTasks, currentHabits);
-    } else {
-      // 2nd+ open → short hi + task/quote
-      msg = buildShortHi(state, currentTasks, currentHabits);
-    }
+    // Delay greeting by 400ms so props (habits/tasks) have time to load from parent's useEffect
+    const greetingTimer = setTimeout(() => {
+      const currentTasks = tasksRef.current || [];
+      const currentHabits = habitsRef.current || [];
 
-    setSpeech(msg);
-    if (speechTimeoutRef.current) clearTimeout(speechTimeoutRef.current);
-    speechTimeoutRef.current = setTimeout(() => setSpeech(null), 5500);
+      let msg;
+      if (!hasGreetedThisPeriod) {
+        localStorage.setItem(periodKey, '1');
+        msg = buildFullGreeting(period, state, currentTasks, currentHabits);
+      } else {
+        msg = buildShortHi(state, currentTasks, currentHabits);
+      }
+
+      setSpeech(msg);
+      if (speechTimeoutRef.current) clearTimeout(speechTimeoutRef.current);
+      speechTimeoutRef.current = setTimeout(() => setSpeech(null), 5500);
+    }, 400);
 
     // Automatic motivational quote timer: fires every 15 minutes
     const autoInterval = setInterval(() => {
@@ -204,6 +208,7 @@ export default function NeoAvatar({ habits = [], tasks = [], allGoalsOnTrack = f
     }, 15 * 60 * 1000);
 
     return () => {
+      clearTimeout(greetingTimer);
       if (speechTimeoutRef.current) clearTimeout(speechTimeoutRef.current);
       clearInterval(autoInterval);
     };
