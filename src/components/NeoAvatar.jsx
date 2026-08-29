@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import confetti from 'canvas-confetti';
 import neoImg from '../assets/neo.png';
+import neoSadImg from '../assets/neo-sad.png';
 import neoProgressbarImg from '../assets/neo-progressbar.png';
 
 const INSPIRATIONAL_QUOTES = [
@@ -225,10 +226,9 @@ export default function NeoAvatar({ habits = [], tasks = [], allGoalsOnTrack = f
         <div className={`${animationClass} w-full h-full relative`}>
           <div className={`w-full h-full transition-transform duration-600 ${bounce ? 'neo-bounce-once' : ''}`}>
             
-            {/* Glow for State 5 */}
-            {/* State 6: Progressbar Neo (all habits done + all goals on track) */}
+            {/* State 1: Sad Neo, State 5: Glow Neo, State 6: Progressbar Neo */}
             <img
-              src={state === 6 ? neoProgressbarImg : neoImg}
+              src={state === 6 ? neoProgressbarImg : state === 1 ? neoSadImg : neoImg}
               alt="Neo"
               draggable="false"
               className={`w-full h-full object-contain ${
@@ -289,23 +289,7 @@ export default function NeoAvatar({ habits = [], tasks = [], allGoalsOnTrack = f
               </div>
             )}
             
-            {/* Streak Accessories */}
-            {bestStreak >= 3 && (
-              <span className="absolute bottom-2 left-1/2 transform -translate-x-1/2 text-[14px] z-20" title="3 Day Streak!">👟</span>
-            )}
-            
-            {bestStreak >= 7 && (
-              <svg className="absolute top-[10px] left-[55%] transform -translate-x-1/2 w-[28px] h-[28px] text-pink-500 z-20" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M12 2L3 19h18L12 2zm0 4.5l5.5 10.5h-11L12 6.5z"/>
-                <circle cx="12" cy="2" r="2" fill="currentColor" />
-              </svg>
-            )}
-            
-            {bestStreak >= 30 && (
-              <svg className="absolute -top-[15px] left-[55%] transform -translate-x-1/2 w-[32px] h-[32px] text-yellow-400 neo-slow-shimmer z-30" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M4 22h16v-2H4v2zm16-4V7l-4 3-4-6-4 6-4-3v11h16z"/>
-              </svg>
-            )}
+
           </div>
         </div>
       </div>
