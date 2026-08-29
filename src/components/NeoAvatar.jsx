@@ -238,16 +238,8 @@ export default function NeoAvatar({ habits = [], tasks = [], allGoalsOnTrack = f
               }`}
             />
 
-            {/* State 1: Cloud & Tears */}
-            {state === 1 && (
-              <>
-                <svg className="absolute -top-[30px] left-1/2 transform -translate-x-1/2 w-10 h-10 text-gray-500 neo-cloud-drift" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M17.5 19c-2.485 0-4.5-2.015-4.5-4.5 0-.15.01-.297.028-.442A5.495 5.495 0 008.5 9c-3.038 0-5.5 2.462-5.5 5.5S5.462 20 8.5 20h9a4.5 4.5 0 000-9h-.335a4.498 4.498 0 00-.036.63c0 2.404 1.948 4.353 4.35 4.368L22 16v3h-4.5z"/>
-                </svg>
-                <div className="absolute top-[48%] left-[28%] w-[8px] h-[12px] bg-blue-400 opacity-70 rounded-[50%_50%_50%_0] neo-tear-drop" style={{ animationDelay: '0s' }} />
-                <div className="absolute top-[48%] right-[28%] w-[8px] h-[12px] bg-blue-400 opacity-70 rounded-[50%_50%_50%_0] neo-tear-drop" style={{ animationDelay: '1s' }} />
-              </>
-            )}
+
+
 
             {/* State 3: 6 Sparkles */}
             {state === 3 && (
