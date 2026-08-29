@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import confetti from 'canvas-confetti';
 import neoImg from '../assets/neo.png';
+import neoProgressbarImg from '../assets/neo-progressbar.png';
 
 const INSPIRATIONAL_QUOTES = [
   "Small daily wins create massive yearly results! 🏆",
@@ -23,7 +24,7 @@ const getTimeGreeting = (name) => {
   return name && name !== 'friend' ? `${greet}, ${name}!` : `${greet}!`;
 };
 
-export default function NeoAvatar({ habits = [], tasks = [] }) {
+export default function NeoAvatar({ habits = [], tasks = [], allGoalsOnTrack = false }) {
   const [speech, setSpeech] = useState(null);
   const [bounce, setBounce] = useState(false);
   const speechTimeoutRef = useRef(null);
@@ -46,7 +47,11 @@ export default function NeoAvatar({ habits = [], tasks = [] }) {
   let state = 1;
   let animationClass = "neo-gentle-rock";
 
-  if (pct === 1 && totalHabits > 0) {
+  // State 6: All habits done + all goals on track → progressbar neo
+  if (pct === 1 && totalHabits > 0 && allGoalsOnTrack) {
+    state = 6;
+    animationClass = "neo-proud-pulse";
+  } else if (pct === 1 && totalHabits > 0) {
     state = 5;
     animationClass = "neo-proud-pulse";
   } else if (pct >= 0.7) {
@@ -221,11 +226,16 @@ export default function NeoAvatar({ habits = [], tasks = [] }) {
           <div className={`w-full h-full transition-transform duration-600 ${bounce ? 'neo-bounce-once' : ''}`}>
             
             {/* Glow for State 5 */}
-            <img 
-              src={neoImg} 
-              alt="Neo" 
+            {/* State 6: Progressbar Neo (all habits done + all goals on track) */}
+            <img
+              src={state === 6 ? neoProgressbarImg : neoImg}
+              alt="Neo"
               draggable="false"
-              className={`w-full h-full object-contain ${state === 5 ? 'drop-shadow-[0_0_18px_#f5c518]' : ''}`}
+              className={`w-full h-full object-contain ${
+                state === 5 ? 'drop-shadow-[0_0_18px_#f5c518]'
+                : state === 6 ? 'drop-shadow-[0_0_22px_#34d399]'
+                : ''
+              }`}
             />
 
             {/* State 1: Cloud & Tears */}
@@ -277,6 +287,13 @@ export default function NeoAvatar({ habits = [], tasks = [] }) {
             {state === 5 && (
               <div className="absolute top-[20%] -right-6 neo-slow-spin text-2xl z-40 drop-shadow-md">
                 ⭐
+              </div>
+            )}
+
+            {/* State 6: 📈 Badge overlay */}
+            {state === 6 && (
+              <div className="absolute top-[10%] -right-6 text-2xl z-40 drop-shadow-md animate-bounce">
+                📈
               </div>
             )}
             

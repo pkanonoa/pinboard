@@ -5,7 +5,7 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const { subscription, habits, tasks, dailyReviewTime, timezoneOffset } = req.body;
+  const { subscription, habits, tasks, monthlyGoals, dailyReviewTime, timezoneOffset } = req.body;
 
   if (!subscription || !subscription.endpoint) {
     return res.status(400).json({ error: 'Missing push subscription' });
@@ -19,6 +19,7 @@ export default async function handler(req, res) {
       subscription,
       habits: habits || [],
       tasks: tasks || [],
+      monthlyGoals: monthlyGoals || [],
       dailyReviewTime: dailyReviewTime || '20:00',
       timezoneOffset: timezoneOffset || 0,
       lastUpdated: Date.now()

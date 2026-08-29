@@ -195,6 +195,14 @@ export const syncStateToBackend = async () => {
       }
     } catch(e) {}
 
+    let monthlyGoals = [];
+    try {
+      const savedGoals = localStorage.getItem('pinboard_goals');
+      if (savedGoals) {
+        monthlyGoals = JSON.parse(savedGoals);
+      }
+    } catch(e) {}
+
     const dailyReviewTime = localStorage.getItem('pinboard_daily_review_time') || '20:00';
     const timezoneOffset = new Date().getTimezoneOffset() * -1;
     console.log('Sending timezoneOffset:', timezoneOffset);
@@ -202,7 +210,7 @@ export const syncStateToBackend = async () => {
     await fetch('/api/sync-state', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ subscription, habits, tasks, dailyReviewTime, timezoneOffset })
+      body: JSON.stringify({ subscription, habits, tasks, monthlyGoals, dailyReviewTime, timezoneOffset })
     });
   } catch (e) {
     console.error('Error syncing state to backend', e);

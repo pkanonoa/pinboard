@@ -1,20 +1,26 @@
 import React, { useState, useEffect } from 'react';
-import { getLocalYMD, getUserStats } from '../utils';
-import { getClosestBadgeProgress } from '../utils/badgeUtils';
-
+import { Target, Repeat, ClipboardList } from 'lucide-react';
+import { getLocalYMD, getUserStats, logCompletion } from '../utils';
 import NeoAvatar from './NeoAvatar';
+
+const DEFAULT_SAMPLE_HABITS = [
+  { id: 'h4', name: 'Wake up early', goal: 1, unit: 'session', count: 0, streak: 0, failedDate: getLocalYMD(), type: 'time_locked' },
+  { id: 'h1', name: 'Drink water', goal: 8, unit: 'glasses', count: 0, streak: 0, type: 'counter' },
+  { id: 'h2', name: 'Exercise', goal: 1, unit: 'session', count: 0, streak: 0, type: 'one_time' }
+];
 
 export default function Dashboard({ setCurrentTab }) {
   const [tasks, setTasks] = useState([]);
   const [habits, setHabits] = useState([]);
-  const [completionLog, setCompletionLog] = useState([]);
   const [monthlyGoals, setMonthlyGoals] = useState([]);
   const [stats, setStats] = useState(() => getUserStats());
 
-  useEffect(() => {
+  const loadAllData = () => {
     const savedTasks = localStorage.getItem('pinboard_tasks');
     if (savedTasks) {
-      setTasks(JSON.parse(savedTasks));
+      try {
+        setTasks(JSON.parse(savedTasks));
+      } catch (e) {}
     }
 
     const savedRitualsStr = localStorage.getItem('pinboard_rituals_data');
@@ -22,301 +28,308 @@ export default function Dashboard({ setCurrentTab }) {
       try {
         const savedData = JSON.parse(savedRitualsStr);
         setHabits(savedData.habits || []);
-      } catch (e) {
-        // ignore
-      }
+      } catch (e) {}
     }
 
-    const logStr = localStorage.getItem('pinboard_completion_log');
-    if (logStr) {
+    const savedGoals = localStorage.getItem('pinboard_goals');
+    if (savedGoals) {
       try {
-        setCompletionLog(JSON.parse(logStr));
-      } catch (e) {
-        // ignore
-      }
+        const parsed = JSON.parse(savedGoals);
+        if (Array.isArray(parsed)) {
+          setMonthlyGoals(parsed);
+        }
+      } catch (e) {}
     }
-    
+
     setStats(getUserStats());
+  };
 
-    // Load goals for chips
-    const loadGoals = () => {
-      const savedGoals = localStorage.getItem('pinboard_goals');
-      if (savedGoals) {
-        try {
-          const parsed = JSON.parse(savedGoals);
-          if (Array.isArray(parsed)) {
-            setMonthlyGoals(parsed);
-          }
-        } catch(e) {}
-      }
-    };
-    loadGoals();
+  useEffect(() => {
+    loadAllData();
 
-    window.addEventListener('pinboard_goals_updated', loadGoals);
-    return () => window.removeEventListener('pinboard_goals_updated', loadGoals);
+    window.addEventListener('pinboard_goals_updated', loadAllData);
+    return () => window.removeEventListener('pinboard_goals_updated', loadAllData);
   }, []);
 
   const todayStr = getLocalYMD();
 
+  // Metrics
   const completedTasksToday = tasks.filter(t => t.done && t.completedDate === todayStr).length;
   const habitsDoneToday = habits.filter(h => h.count >= h.goal && h.lastCompletedDate === todayStr && !h.paused).length;
   const bestStreak = habits.length > 0 ? Math.max(...habits.map(h => h.streak || 0)) : 0;
-  const pausedCount = habits.filter(h => h.paused).length;
 
-  const pendingTasks = tasks.filter(t => !t.done);
-  
-  const sortedPendingTasks = [...pendingTasks].sort((a, b) => {
-    if (a.dueDate && b.dueDate) {
-      return new Date(a.dueDate) - new Date(b.dueDate);
-    }
-    if (a.dueDate) return -1;
-    if (b.dueDate) return 1;
-    return 0;
+  // Goal pace calculation (client-side)
+  const goalPaceList = monthlyGoals.filter(g => !g.isCompleted).map(g => {
+    const now = new Date();
+    const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+    const daysPassed = now.getDate();
+    const progress = g.progress || 0;
+    const target = g.target || 1;
+    const progressPct = progress / target;
+    const expectedPct = daysPassed / daysInMonth;
+    const pace = expectedPct > 0 ? progressPct / expectedPct : (progressPct > 0 ? 999 : 0);
+    let status = 'on_track';
+    if (pace < 0.6) status = 'behind';
+    else if (pace < 0.9) status = 'at_risk';
+    return { ...g, status };
   });
-  
-  const displayTasks = sortedPendingTasks.slice(0, 3);
-  const displayHabits = habits.slice(0, 3);
+  const allGoalsOnTrack = goalPaceList.length > 0 && goalPaceList.every(g => g.status === 'on_track');
 
-  const getWeekDays = () => {
-    const d = new Date();
-    const day = d.getDay();
-    const diff = d.getDate() - day + (day === 0 ? -6 : 1); 
-    const monday = new Date(d.setDate(diff));
-    
-    const days = [];
-    for (let i = 0; i < 7; i++) {
-      const current = new Date(monday);
-      current.setDate(monday.getDate() + i);
-      days.push(current);
+  // Header date & greeting
+  const formattedDate = new Intl.DateTimeFormat('en-US', {
+    weekday: 'long',
+    month: 'short',
+    day: 'numeric'
+  }).format(new Date());
+
+  const currentHour = new Date().getHours();
+  let greeting = 'Good afternoon';
+  if (currentHour < 12) greeting = 'Good morning';
+  else if (currentHour >= 17) greeting = 'Good evening';
+
+  // Level & Points calculation
+  const points = stats.points || 0;
+  const currentLevelName = stats.currentLevel?.name || 'Beginner';
+  const pointsToNextLevel = stats.currentLevel?.max
+    ? Math.max(0, stats.currentLevel.max + 1 - points)
+    : 101;
+
+  // Active Goal calculation
+  const activeGoal = monthlyGoals.find(g => !g.isCompleted) || monthlyGoals[0];
+  let goalName = activeGoal ? activeGoal.name : 'Run a 10k under 55 min';
+  let goalProgressPct = 62;
+  if (activeGoal) {
+    if (activeGoal.target > 0) {
+      goalProgressPct = Math.min(100, Math.round(((activeGoal.progress || 0) / activeGoal.target) * 100));
+    } else {
+      goalProgressPct = activeGoal.isCompleted ? 100 : 0;
     }
-    return days;
+  }
+
+  // Today's Rituals list
+  const displayHabits = habits.length > 0 ? habits.slice(0, 3) : DEFAULT_SAMPLE_HABITS;
+
+  // Up Next Task calculation
+  const pendingTasks = tasks.filter(t => !t.done);
+  const upNextTask = pendingTasks.length > 0 ? pendingTasks[0] : null;
+
+  const formatTaskTime = (task) => {
+    if (!task) return '4:00 PM';
+    if (task.time) return task.time;
+    if (task.dueDate) {
+      try {
+        const d = new Date(task.dueDate);
+        if (!isNaN(d.getTime())) {
+          return d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+        }
+      } catch (e) {}
+    }
+    return '4:00 PM';
   };
 
-  const weekDays = getWeekDays();
-  const dayNames = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
+  // Quick mark habit done from Home
+  const handleQuickMarkDone = (habitId) => {
+    const updated = habits.map(h => {
+      if (h.id === habitId) {
+        return {
+          ...h,
+          count: h.goal || 1,
+          lastCompletedDate: todayStr,
+          streak: (h.streak || 0) + 1
+        };
+      }
+      return h;
+    });
 
-  const badgeProgress = getClosestBadgeProgress();
+    setHabits(updated);
+    try {
+      const savedDataStr = localStorage.getItem('pinboard_rituals_data');
+      const savedData = savedDataStr ? JSON.parse(savedDataStr) : {};
+      savedData.habits = updated;
+      localStorage.setItem('pinboard_rituals_data', JSON.stringify(savedData));
+    } catch (e) {}
+
+    logCompletion('habit', habitId);
+    window.dispatchEvent(new CustomEvent('neo_celebration'));
+    setStats(getUserStats());
+  };
+
+  // Quick mark task complete from Home
+  const handleQuickCompleteTask = (taskId) => {
+    const updated = tasks.map(t => {
+      if (t.id === taskId) {
+        return { ...t, done: true, completedDate: todayStr };
+      }
+      return t;
+    });
+
+    setTasks(updated);
+    localStorage.setItem('pinboard_tasks', JSON.stringify(updated));
+
+    logCompletion('task', taskId);
+    window.dispatchEvent(new CustomEvent('neo_celebration'));
+    setStats(getUserStats());
+  };
 
   return (
-    <div className="w-full max-w-md flex flex-col gap-6 z-10 pb-8">
+    <div className="w-full max-w-md flex flex-col gap-3.5 z-10 pb-8 animate-fade-in">
       
-      {/* Header Section */}
-      <div className="flex justify-between items-center mb-2 pr-14">
-        <h1 className="text-2xl font-bold text-white">Home</h1>
-        <div className="flex items-center gap-1.5 bg-indigo-500/20 px-3 py-1.5 rounded-full border border-indigo-500/30">
-          <span className="text-[10px] font-bold text-indigo-300 uppercase tracking-wider">{stats.currentLevel.name}</span>
-          <span className="w-1 h-1 rounded-full bg-indigo-400"></span>
-          <span className="text-[10px] font-bold text-amber-400">{stats.points} pts</span>
+      {/* Top Header */}
+      <div className="flex flex-col pr-14 pt-1">
+        <span className="text-sm text-gray-400 font-medium tracking-wide">
+          {formattedDate}
+        </span>
+        <h1 className="text-[28px] font-bold text-white tracking-tight mt-0.5 leading-tight">
+          {greeting}
+        </h1>
+
+        {/* Level badge & points line */}
+        <div className="flex items-center gap-2 mt-3 flex-wrap">
+          <span className="bg-indigo-950/50 border border-indigo-500/30 text-indigo-300 text-xs font-semibold px-3 py-1 rounded-full shadow-sm tracking-wide">
+            {currentLevelName}
+          </span>
+          <div className="flex items-center gap-1.5 bg-[#171926] border border-gray-800/80 px-3 py-1 rounded-full text-xs shadow-sm">
+            <span className="text-amber-400 font-bold">{points} pts</span>
+            <span className="text-gray-600 font-bold">·</span>
+            <span className="text-gray-300 font-medium">{pointsToNextLevel} to next level</span>
+          </div>
         </div>
       </div>
 
-      <NeoAvatar habits={habits} tasks={tasks} />
-      
-      {/* Summary Cards */}
-      <div className="flex flex-col">
-        <div className="grid grid-cols-3 gap-3">
-          <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 flex flex-col items-center justify-center text-center shadow-lg">
-            <span className="text-3xl font-bold text-indigo-400 mb-1">{completedTasksToday}</span>
-            <span className="text-[10px] text-gray-400 uppercase tracking-wider font-semibold">Tasks Done</span>
-          </div>
-          <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 flex flex-col items-center justify-center text-center shadow-lg">
-            <span className="text-3xl font-bold text-emerald-400 mb-1">{habitsDoneToday}</span>
-            <span className="text-[10px] text-gray-400 uppercase tracking-wider font-semibold">Rituals Done</span>
-          </div>
-          <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 flex flex-col items-center justify-center text-center shadow-lg">
-            <span className="text-3xl font-bold text-amber-400 mb-1">{bestStreak}</span>
-            <span className="text-[10px] text-gray-400 uppercase tracking-wider font-semibold">Best Streak</span>
-          </div>
-        </div>
-        
-        {pausedCount > 0 && (
-          <div className="text-center mt-3 animate-fade-in">
-            <span className="text-[11px] text-gray-500 font-medium bg-gray-900/50 px-3 py-1 rounded-full border border-gray-800/50 inline-flex items-center gap-1.5">
-              <span>😴</span> {pausedCount} habit{pausedCount !== 1 ? 's' : ''} resting
-            </span>
-          </div>
-        )}
+      {/* Floating Neo */}
+      <NeoAvatar habits={habits} tasks={tasks} allGoalsOnTrack={allGoalsOnTrack} />
 
-        {/* Monthly Goal Chips */}
-        {monthlyGoals.length > 0 && (
-          <div className="flex flex-wrap gap-2 mt-4 justify-center animate-fade-in-up delay-200">
-            {monthlyGoals.map(mg => {
-              let statusColor = 'bg-gray-700 text-gray-300';
-              let dotColor = 'bg-gray-400';
-              if (mg.trackingType === 'binary' || mg.isCompleted) {
-                if (mg.isCompleted) {
-                  statusColor = 'bg-emerald-900/30 text-emerald-400 border border-emerald-800/50';
-                  dotColor = 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)]';
-                }
-              } else {
-                const now = new Date();
-                const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
-                const expected = (mg.target / daysInMonth) * now.getDate();
-                if (mg.progress >= expected) {
-                  statusColor = 'bg-emerald-900/30 text-emerald-400 border border-emerald-800/50';
-                  dotColor = 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)]';
-                } else if (mg.progress >= expected * 0.8) {
-                  statusColor = 'bg-yellow-900/30 text-yellow-400 border border-yellow-800/50';
-                  dotColor = 'bg-yellow-500 shadow-[0_0_8px_rgba(234,179,8,0.8)]';
-                } else {
-                  statusColor = 'bg-red-900/30 text-red-400 border border-red-800/50';
-                  dotColor = 'bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.8)]';
-                }
-              }
-              return (
-                <div key={mg.id} onClick={() => setCurrentTab('goals')} className={`cursor-pointer flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-medium transition-all ${statusColor}`}>
-                  <span className={`w-1.5 h-1.5 rounded-full ${dotColor}`}></span>
-                  {mg.name}
-                </div>
-              );
-            })}
-          </div>
-        )}
+      {/* Stat Tiles */}
+      <div className="grid grid-cols-3 gap-3 mt-1">
+        <div className="bg-[#141522] border border-gray-800/60 rounded-2xl py-3.5 px-2 flex flex-col items-center justify-center text-center shadow-sm">
+          <span className="text-2xl font-bold text-indigo-400 leading-none">{completedTasksToday}</span>
+          <span className="text-xs text-gray-400 font-medium mt-1.5">tasks</span>
+        </div>
+        <div className="bg-[#141522] border border-gray-800/60 rounded-2xl py-3.5 px-2 flex flex-col items-center justify-center text-center shadow-sm">
+          <span className="text-2xl font-bold text-emerald-400 leading-none">{habitsDoneToday}</span>
+          <span className="text-xs text-gray-400 font-medium mt-1.5">rituals</span>
+        </div>
+        <div className="bg-[#141522] border border-gray-800/60 rounded-2xl py-3.5 px-2 flex flex-col items-center justify-center text-center shadow-sm">
+          <span className="text-2xl font-bold text-amber-400 leading-none">{bestStreak}</span>
+          <span className="text-xs text-gray-400 font-medium mt-1.5">streak</span>
+        </div>
       </div>
 
-      {/* Today's Badge Progress */}
-      {badgeProgress && (
-        <div className="bg-gradient-to-r from-gray-900 to-gray-800 border border-gray-700 rounded-xl shadow-lg p-5">
-          <h2 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Next Badge in Sight</h2>
-          <div className="flex items-center gap-4">
-            <div className="text-4xl bg-gray-900 w-16 h-16 rounded-full flex items-center justify-center border border-gray-700 shadow-inner flex-shrink-0">
-              {badgeProgress.badge.icon}
-            </div>
-            <div className="flex-1 min-w-0">
-              <div className="flex justify-between items-end mb-1">
-                <h3 className="text-white font-bold truncate">{badgeProgress.badge.name}</h3>
-                <span className="text-xs text-amber-500 font-bold whitespace-nowrap ml-2">
-                  {badgeProgress.current} / {badgeProgress.goal}
-                </span>
-              </div>
-              <div className="w-full bg-gray-900 rounded-full h-2 mb-1 border border-gray-800">
-                <div 
-                  className="bg-gradient-to-r from-amber-500 to-orange-400 h-2 rounded-full transition-all duration-1000 ease-out" 
-                  style={{ width: `${Math.min(100, (badgeProgress.current / badgeProgress.goal) * 100)}%` }}
-                ></div>
-              </div>
-              <p className="text-[10px] text-gray-500 truncate">{badgeProgress.unit} remaining</p>
-            </div>
+      {/* Active Goal Card */}
+      <div className="bg-[#141522] border border-gray-800/60 rounded-2xl p-4 shadow-sm">
+        <div className="flex justify-between items-center mb-2">
+          <div className="flex items-center gap-2">
+            <Target className="w-4 h-4 text-indigo-400" />
+            <span className="text-sm font-semibold text-gray-200">Active goal</span>
           </div>
+          <button 
+            onClick={() => setCurrentTab('goals')}
+            className="text-xs text-indigo-400 hover:text-indigo-300 font-medium transition-colors"
+          >
+            View all
+          </button>
         </div>
-      )}
 
-      {/* This Week Section */}
-      <div className="bg-gray-900 border border-gray-800 rounded-xl shadow-lg p-5">
-        <h2 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
-          <svg className="w-5 h-5 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-          </svg>
-          This Week
-        </h2>
-        
-        <div className="flex justify-between items-center">
-          {weekDays.map((date, i) => {
-            const dateYMD = getLocalYMD(date);
-            
-            // Check completions for this date
-            const dateLogs = completionLog.filter(log => {
-              const logDate = new Date(log.timestamp);
-              return getLocalYMD(logDate) === dateYMD;
-            });
-            
-            const hasTask = dateLogs.some(log => log.type === 'task');
-            const hasHabit = dateLogs.some(log => log.type === 'habit');
-            const isCompleted = hasTask && hasHabit;
-            const isToday = dateYMD === todayStr;
+        <div className="text-[15px] font-semibold text-white mt-1.5 mb-2.5 truncate">
+          {goalName}
+        </div>
+
+        <div className="flex items-center gap-3">
+          <div className="flex-1 bg-gray-800/90 rounded-full h-1.5 overflow-hidden">
+            <div 
+              className="bg-emerald-400 h-full rounded-full transition-all duration-500"
+              style={{ width: `${goalProgressPct}%` }}
+            />
+          </div>
+          <span className="text-xs font-bold text-emerald-400 shrink-0">
+            {goalProgressPct}%
+          </span>
+        </div>
+      </div>
+
+      {/* Today's Rituals Card */}
+      <div className="bg-[#141522] border border-gray-800/60 rounded-2xl p-4 shadow-sm">
+        <div className="flex justify-between items-center mb-3">
+          <div className="flex items-center gap-2">
+            <Repeat className="w-4 h-4 text-emerald-400" />
+            <span className="text-sm font-semibold text-gray-200">Today's rituals</span>
+          </div>
+          <button 
+            onClick={() => setCurrentTab('rituals')}
+            className="text-xs text-indigo-400 hover:text-indigo-300 font-medium transition-colors"
+          >
+            View all
+          </button>
+        </div>
+
+        <div className="flex flex-col divide-y divide-gray-800/50">
+          {displayHabits.map((ritual) => {
+            const isMissed = ritual.failedDate === todayStr;
+            const isDone = (ritual.count >= ritual.goal || ritual.lastCompletedDate === todayStr) && !isMissed;
 
             return (
-              <div key={i} className="flex flex-col items-center gap-2">
-                <span className={`text-[10px] font-semibold ${isToday ? 'text-indigo-400' : 'text-gray-500'}`}>
-                  {dayNames[i]}
+              <div key={ritual.id} className="py-2.5 first:pt-0 last:pb-0 flex items-center justify-between">
+                <span className={`text-sm font-medium ${isDone ? 'text-gray-400 line-through' : 'text-white'}`}>
+                  {ritual.name}
                 </span>
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center border-2 transition-all ${
-                  isCompleted 
-                    ? 'bg-amber-400 border-amber-400 text-gray-900 shadow-[0_0_10px_rgba(251,191,36,0.3)]' 
-                    : isToday 
-                      ? 'border-indigo-400 bg-gray-800'
-                      : 'border-gray-700 bg-gray-800'
-                }`}>
-                  {isCompleted && (
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7"></path>
-                    </svg>
-                  )}
-                </div>
+
+                {isMissed ? (
+                  <span className="bg-red-950/40 border border-red-800/40 text-red-400 text-xs px-2.5 py-0.5 rounded-lg font-medium">
+                    Missed
+                  </span>
+                ) : isDone ? (
+                  <span className="bg-emerald-950/40 border border-emerald-800/40 text-emerald-400 text-xs px-2.5 py-0.5 rounded-lg font-medium">
+                    Done
+                  </span>
+                ) : ritual.type === 'counter' || ritual.goal > 1 ? (
+                  <span className="text-xs text-gray-400 font-medium">
+                    {ritual.count || 0} / {ritual.goal}
+                  </span>
+                ) : (
+                  <button
+                    onClick={() => handleQuickMarkDone(ritual.id)}
+                    className="bg-emerald-950/40 hover:bg-emerald-900/60 border border-emerald-800/40 text-emerald-400 text-xs px-3 py-1 rounded-lg font-medium transition-colors active:scale-95"
+                  >
+                    Mark done
+                  </button>
+                )}
               </div>
             );
           })}
         </div>
       </div>
 
-      {/* Today's Rituals Section */}
-      <div className="bg-gray-900 border border-gray-800 rounded-xl shadow-lg p-5">
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-lg font-bold text-white flex items-center gap-2">
-            <svg className="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-            </svg>
-            Today's Rituals
-          </h2>
-          <button onClick={() => setCurrentTab('rituals')} className="text-xs text-indigo-400 hover:text-indigo-300 font-medium">View All</button>
-        </div>
-        
-        <div className="flex flex-col gap-3">
-          {displayHabits.length === 0 ? (
-            <p className="text-sm text-gray-500 italic text-center py-2">No rituals added yet.</p>
-          ) : (
-            displayHabits.map(habit => {
-              const isDone = habit.count >= habit.goal && habit.lastCompletedDate === todayStr;
-              const progress = isDone ? 100 : Math.min(100, Math.round((habit.count / habit.goal) * 100));
-              
-              return (
-                <div key={habit.id} onClick={() => setCurrentTab('rituals')} className="bg-gray-800 rounded-lg p-3 cursor-pointer hover:bg-gray-750 transition-colors">
-                  <div className="flex justify-between items-center mb-2">
-                    <span className={`font-medium ${isDone ? 'text-gray-400 line-through' : 'text-white'}`}>{habit.name}</span>
-                    <span className="text-xs text-gray-400 font-medium">{habit.count} / {habit.goal} {habit.unit}</span>
-                  </div>
-                  <div className="w-full bg-gray-700 rounded-full h-1.5">
-                    <div className={`h-1.5 rounded-full transition-all duration-500 ${isDone ? 'bg-emerald-500' : 'bg-indigo-500'}`} style={{ width: `${progress}%` }}></div>
-                  </div>
-                </div>
-              );
-            })
-          )}
-        </div>
-      </div>
-
-      {/* Pending Tasks Section */}
-      <div className="bg-gray-900 border border-gray-800 rounded-xl shadow-lg p-5">
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-lg font-bold text-white flex items-center gap-2">
-            <svg className="w-5 h-5 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path>
-            </svg>
-            Pending Tasks
-          </h2>
-          <button onClick={() => setCurrentTab('tasks')} className="text-xs text-indigo-400 hover:text-indigo-300 font-medium">View All</button>
+      {/* Up Next Task Card */}
+      <div className="bg-[#141522] border border-gray-800/60 rounded-2xl p-4 shadow-sm">
+        <div className="flex items-center gap-2 mb-3">
+          <ClipboardList className="w-4 h-4 text-indigo-400" />
+          <span className="text-sm font-semibold text-gray-200">Up next</span>
         </div>
 
-        <div className="flex flex-col gap-2">
-          {displayTasks.length === 0 ? (
-            <p className="text-sm text-gray-500 italic text-center py-2">No pending tasks. You're caught up!</p>
-          ) : (
-            displayTasks.map(task => (
-              <div key={task.id} onClick={() => setCurrentTab('tasks')} className="flex items-start gap-3 p-3 bg-gray-800 rounded-lg cursor-pointer hover:bg-gray-750 transition-colors">
-                <div className="w-4 h-4 mt-0.5 rounded border border-gray-500 flex-shrink-0"></div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-white text-sm font-medium break-words leading-tight">{task.name}</p>
-                  {task.dueDate && (
-                    <p className="text-xs text-gray-400 mt-1 flex items-center gap-1">
-                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                      {new Date(task.dueDate).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' })}
-                    </p>
-                  )}
-                </div>
-              </div>
-            ))
-          )}
-        </div>
+        {upNextTask ? (
+          <div className="flex items-center justify-between py-1">
+            <div className="flex items-center gap-3 flex-1 min-w-0">
+              <button 
+                onClick={() => handleQuickCompleteTask(upNextTask.id)}
+                className="w-5 h-5 rounded-md border border-gray-600 hover:border-indigo-400 flex items-center justify-center transition-colors shrink-0 active:scale-90"
+              />
+              <span className="text-sm font-medium text-white truncate">
+                {upNextTask.name}
+              </span>
+            </div>
+            <span className="text-xs text-gray-400 shrink-0 ml-3 font-normal">
+              {formatTaskTime(upNextTask)}
+            </span>
+          </div>
+        ) : (
+          <div className="flex items-center justify-between py-1">
+            <div className="flex items-center gap-3 flex-1 min-w-0">
+              <div className="w-5 h-5 rounded-md border border-gray-600 shrink-0" />
+              <span className="text-sm font-medium text-white truncate">Laundry</span>
+            </div>
+            <span className="text-xs text-gray-400 shrink-0 ml-3 font-normal">4:00 PM</span>
+          </div>
+        )}
       </div>
 
     </div>

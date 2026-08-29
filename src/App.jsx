@@ -170,14 +170,13 @@ function App() {
       {/* Bell Icon */}
       <button 
         onClick={() => setIsDrawerOpen(true)}
-        className="fixed top-4 right-4 z-[35] w-9 h-9 flex items-center justify-center bg-gray-800/80 backdrop-blur-md rounded-full shadow-md border border-gray-700/50 hover:bg-gray-700 active:scale-95 transition-all"
+        className="fixed top-4 right-4 z-[35] w-9 h-9 flex items-center justify-center bg-[#1a1b26] rounded-full shadow-md border border-gray-800 hover:bg-gray-800 active:scale-95 transition-all"
         title="Notifications"
       >
-        <Bell className="w-4.5 h-4.5 text-indigo-400" strokeWidth={2} />
+        <Bell className="w-4.5 h-4.5 text-indigo-300" strokeWidth={2} />
         {unreadCount > 0 && (
-          <span className="absolute top-1.5 right-1.5 flex h-2 w-2">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-            <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500 border border-gray-900"></span>
+          <span className="absolute top-2 right-2 flex h-2 w-2">
+            <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-400"></span>
           </span>
         )}
       </button>

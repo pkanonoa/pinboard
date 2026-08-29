@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import GoalCard from './GoalCard';
 import confetti from 'canvas-confetti';
-import { getLocalYMD } from '../utils';
+import { getLocalYMD, syncStateToBackend } from '../utils';
 
 export default function GoalsSection() {
   const [goals, setGoals] = useState([]);
@@ -53,6 +53,8 @@ export default function GoalsSection() {
   const saveData = (newGoals) => {
     setGoals(newGoals);
     localStorage.setItem('pinboard_goals', JSON.stringify(newGoals));
+    window.dispatchEvent(new Event('pinboard_goals_updated'));
+    syncStateToBackend();
   };
 
   const handleAddGoal = (e) => {
@@ -161,9 +163,11 @@ export default function GoalsSection() {
         ...g,
         progress: newProgress,
         history: newHistory.slice(-30),
-        isCompleted: completed
+        isCompleted: completed,
+        lastLoggedDate: todayStr
       };
     });
+    window.dispatchEvent(new CustomEvent('neo-bounce'));
     saveData(newGoals);
   };
 
@@ -172,10 +176,12 @@ export default function GoalsSection() {
     const newGoals = goals.map(g => {
       if (g.id === id) {
         triggerConfetti();
+        window.dispatchEvent(new CustomEvent('neo-bounce'));
         return {
           ...g,
           progress: g.target || 1,
           isCompleted: true,
+          lastLoggedDate: todayStr,
           history: [...g.history, { date: todayStr, value: g.target || 1 }].slice(-30)
         };
       }

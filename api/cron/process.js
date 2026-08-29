@@ -197,7 +197,125 @@ export default async function handler(req, res) {
               }
            }
         }
+      // ── Monthly Goals evaluation ──────────────────────────────────────
+      const { monthlyGoals } = state;
+      if (monthlyGoals && monthlyGoals.length > 0) {
+        const daysInMonth = new Date(userYear, userMonth + 1, 0).getUTCDate();
+        const daysPassed = userDate;
+        const daysRemaining = daysInMonth - daysPassed;
+        const isLastDay = daysRemaining === 0;
+
+        // End-of-month summary (8pm local on last day)
+        if (isLastDay) {
+          const eomSummaryKey = `monthly_summary_${userYear}-${String(userMonth+1).padStart(2,'0')}`;
+          const eomAlreadySent = await kv.get(eomSummaryKey);
+          const eomTime = Date.UTC(userYear, userMonth, userDate, 20, 0, 0) - (timezoneOffset * 60 * 1000);
+          if (!eomAlreadySent && eomTime > lastCronRun && eomTime <= now) {
+            const summaryLines = monthlyGoals.slice(0, 3).map(g => {
+              const done = g.isCompleted || (g.progress >= g.target);
+              return `${done ? '✅' : '❌'} ${g.name}`;
+            });
+            try {
+              await webpush.sendNotification(subscription, JSON.stringify({
+                title: '📅 Month wrap-up',
+                body: summaryLines.join('\n'),
+                type: 'goal'
+              }));
+              await kv.set(eomSummaryKey, true, { ex: 86400 });
+              sentCount++;
+            } catch(e) { console.error('Error sending month summary', e); }
+          }
+        }
+
+        // Per-goal evaluations
+        for (const goal of monthlyGoals) {
+          if (!goal.id || !goal.target) continue;
+          const progress = goal.progress || 0;
+          const target = goal.target;
+          const progressPct = target > 0 ? progress / target : 0;
+          const expectedPct = daysInMonth > 0 ? daysPassed / daysInMonth : 1;
+          const pace = expectedPct > 0 ? progressPct / expectedPct : (progressPct > 0 ? 999 : 0);
+          const goalYMD = todayStr;
+          const goalMonthKey = `${userYear}-${String(userMonth+1).padStart(2,'0')}`;
+
+          // Completed detection (fire immediately via cron tick)
+          if (progress >= target) {
+            const doneKey = `monthly_done_${goal.id}_${goalMonthKey}`;
+            const alreadyDone = await kv.get(doneKey);
+            if (!alreadyDone) {
+              const secsToEndOfMonth = daysRemaining * 86400;
+              try {
+                await webpush.sendNotification(subscription, JSON.stringify({
+                  title: '🏆 Monthly goal crushed!',
+                  body: `${goal.name} — done for the month! Neo is proud. 🧅`,
+                  type: 'goal'
+                }));
+                await kv.set(doneKey, true, { ex: Math.max(secsToEndOfMonth, 3600) });
+                sentCount++;
+              } catch(e) { console.error('Error sending goal done notif', e); }
+            }
+            continue; // No pace notifications if already done
+          }
+
+          // Pace-based daily notification at dailyReviewTime
+          if (dailyReviewTime) {
+            const [dh, dm] = dailyReviewTime.split(':').map(Number);
+            const reviewTime = Date.UTC(userYear, userMonth, userDate, dh, dm, 0) - (timezoneOffset * 60 * 1000);
+
+            if (reviewTime > lastCronRun && reviewTime <= now) {
+              let paceStatus = 'on_track';
+              if (pace < 0.6) paceStatus = 'behind';
+              else if (pace < 0.9) paceStatus = 'at_risk';
+
+              const dailyKey = `monthly_notif_${goal.id}_${goalYMD}`;
+              const alreadySentDaily = await kv.get(dailyKey);
+
+              if (!alreadySentDaily) {
+                let title, body;
+                if (paceStatus === 'on_track' && progressPct > 0) {
+                  title = `📈 ${goal.name}`;
+                  body = `You're on pace! ${progress} of ${target} ${goal.unit || ''} this month.`.trim();
+                } else if (paceStatus === 'at_risk') {
+                  title = `⚠️ ${goal.name} needs attention`;
+                  body = `A little behind — ${progress}/${target} ${goal.unit || ''}. ${daysRemaining} days left, you've got this.`.trim();
+                } else if (paceStatus === 'behind') {
+                  title = `🔴 ${goal.name} is falling behind`;
+                  body = `Only ${progress}/${target} ${goal.unit || ''} logged. ${daysRemaining} days to catch up — start today.`.trim();
+                }
+
+                if (title) {
+                  try {
+                    await webpush.sendNotification(subscription, JSON.stringify({ title, body, type: 'goal' }));
+                    await kv.set(dailyKey, true, { ex: 86400 });
+                    sentCount++;
+                  } catch(e) { console.error('Error sending goal pace notif', e); }
+                }
+              }
+            }
+
+            // 8pm follow-up for "behind" goals
+            if (pace < 0.6) {
+              const eveningTime = Date.UTC(userYear, userMonth, userDate, 20, 0, 0) - (timezoneOffset * 60 * 1000);
+              if (eveningTime > lastCronRun && eveningTime <= now) {
+                const eveningKey = `monthly_evening_${goal.id}_${goalYMD}`;
+                const alreadySentEvening = await kv.get(eveningKey);
+                if (!alreadySentEvening) {
+                  try {
+                    await webpush.sendNotification(subscription, JSON.stringify({
+                      title: `🔴 ${goal.name} is falling behind`,
+                      body: `Only ${progress}/${target} ${goal.unit || ''} logged. ${daysRemaining} days to catch up — start today.`.trim(),
+                      type: 'goal'
+                    }));
+                    await kv.set(eveningKey, true, { ex: 86400 });
+                    sentCount++;
+                  } catch(e) { console.error('Error sending goal evening notif', e); }
+                }
+              }
+            }
+          }
+        }
       }
+      // ─────────────────────────────────────────────────────────────────
     }
 
     return res.status(200).json({ success: true, sent: sentCount });
