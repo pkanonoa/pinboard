@@ -602,29 +602,29 @@ export default function NeoAvatar({
   };
 
   return (
-    <div className="fixed bottom-[80px] right-2 flex flex-col items-end justify-end select-none z-45 pointer-events-none">
+    <div className="relative flex flex-col items-center justify-center select-none z-40 pointer-events-none w-full my-4">
       {/* Speech Bubble (Glassmorphism) */}
       <div
-        className={`relative mb-2 px-4 py-2.5 rounded-2xl text-xs font-semibold shadow-2xl max-w-[210px] text-center transition-all duration-300 pointer-events-none leading-snug border origin-bottom-right ${speech ? "opacity-100 scale-100" : "opacity-0 scale-95"} ${
+        className={`absolute bottom-full mb-2 px-4 py-2.5 rounded-2xl text-xs font-semibold shadow-2xl max-w-[210px] text-center transition-all duration-300 pointer-events-none leading-snug border origin-bottom ${speech ? "opacity-100 scale-100" : "opacity-0 scale-95"} ${
           speechType === "success"
-            ? "bg-emerald-500/20 text-emerald-100 border-emerald-500/30 backdrop-blur-md"
+            ? "bg-emerald-950/95 text-emerald-100 border-emerald-500/40 backdrop-blur-md"
             : speechType === "fail"
-              ? "bg-red-500/20 text-red-100 border-red-500/30 backdrop-blur-md"
+              ? "bg-red-950/95 text-red-100 border-red-500/40 backdrop-blur-md"
               : speechType === "listening"
-                ? "bg-red-500/30 text-red-100 border-red-500/50 backdrop-blur-md animate-pulse"
+                ? "bg-red-950/95 text-red-100 border-red-500/60 backdrop-blur-md animate-pulse"
                 : "toast-glass text-[var(--text-primary)] border-[var(--border)]"
         }`}
       >
         {speech}
         <div
-          className={`absolute right-6 bottom-0 transform translate-y-[95%] w-0 h-0 border-l-[6px] border-r-[6px] border-t-[8px] border-l-transparent border-r-transparent ${
+          className={`absolute left-1/2 bottom-0 transform -translate-x-1/2 translate-y-[95%] w-0 h-0 border-l-[6px] border-r-[6px] border-t-[8px] border-l-transparent border-r-transparent ${
             speechType === "success"
-              ? "border-t-emerald-500/30"
+              ? "border-t-emerald-950/95"
               : speechType === "fail"
-                ? "border-t-red-500/30"
+                ? "border-t-red-950/95"
                 : speechType === "listening"
-                  ? "border-t-red-500/50"
-                  : "border-t-[var(--bg-card)] opacity-85"
+                  ? "border-t-red-950/95"
+                  : "border-t-[var(--bg-card)]"
           }`}
         ></div>
       </div>

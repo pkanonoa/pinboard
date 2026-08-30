@@ -311,9 +311,9 @@
   position: absolute;
   inset: 0;
   background-color: var(--bg-card);
-  opacity: 0.85;
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  opacity: 0.96;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
   border-radius: inherit;
   z-index: -1;
 }
