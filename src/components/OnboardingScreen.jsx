@@ -23,11 +23,17 @@ export default function OnboardingScreen({ onComplete }) {
   const [neoBounce, setNeoBounce] = useState(false);
   const nameInputRef = useRef(null);
 
+  // Goal Onboarding states
+  const [goalName, setGoalName] = useState('');
+  const [goalTarget, setGoalTarget] = useState('15');
+  const [goalUnit, setGoalUnit] = useState('times');
+  const [createdGoal, setCreatedGoal] = useState(null);
+
   useEffect(() => {
     if (step === 2 && nameInputRef.current) {
       setTimeout(() => nameInputRef.current.focus(), 100);
     }
-    if (step === 6) {
+    if (step === 7) {
       confetti({ particleCount: 150, spread: 80, origin: { y: 0.6 } });
     }
   }, [step]);
@@ -78,6 +84,30 @@ export default function OnboardingScreen({ onComplete }) {
     handleNext();
   };
 
+  const handleSaveGoal = () => {
+    const targetVal = parseFloat(goalTarget) || 1;
+    setCreatedGoal({
+      id: `g_${Date.now()}`,
+      name: goalName.trim(),
+      category: 'Body',
+      target: targetVal,
+      unit: goalUnit.trim() || 'times',
+      trackingType: 'count_toward',
+      linkedHabitIds: [],
+      dueDate: null,
+      progress: 0,
+      history: [],
+      isCompleted: false,
+      createdAt: new Date().toISOString()
+    });
+    handleNext();
+  };
+
+  const handleSkipGoal = () => {
+    setCreatedGoal(null);
+    handleNext();
+  };
+
   const finishOnboarding = () => {
     localStorage.setItem('pinboard_onboarded', 'true');
     localStorage.setItem('pinboard_user_name', name);
@@ -118,6 +148,12 @@ export default function OnboardingScreen({ onComplete }) {
       lastResetDate: new Date().toISOString().split('T')[0]
     }));
 
+    if (createdGoal) {
+      localStorage.setItem('pinboard_goals', JSON.stringify([createdGoal]));
+    } else {
+      localStorage.removeItem('pinboard_goals');
+    }
+
     syncStateToBackend();
     onComplete();
   };
@@ -127,7 +163,7 @@ export default function OnboardingScreen({ onComplete }) {
       
       {/* Progress Dots */}
       <div className="absolute top-8 left-0 right-0 flex justify-center gap-2">
-        {[1, 2, 3, 4, 5, 6].map(i => (
+        {[1, 2, 3, 4, 5, 6, 7].map(i => (
           <div 
             key={i} 
             className={`h-1.5 rounded-full transition-all duration-300 ${
@@ -289,8 +325,76 @@ export default function OnboardingScreen({ onComplete }) {
         </div>
       )}
 
-      {/* NOTIFICATIONS POPUP (Overlay over Step 4) */}
+      {/* STEP 5: MONTHLY GOAL */}
       {step === 5 && (
+        <div className="flex flex-col items-center animate-fade-in text-center w-full max-w-sm">
+          <div className="flex w-full justify-between items-center mb-8">
+            <h2 className="text-3xl font-bold text-left leading-tight w-2/3">Set a monthly goal</h2>
+            <img src={neoImg} alt="Neo" className="w-[110px] neo-float" />
+          </div>
+
+          <div className="w-full flex flex-col gap-4 text-left mb-8">
+            <div className="bg-gray-900/80 p-4.5 rounded-2xl border border-gray-800">
+              <label className="text-xs text-gray-400 font-bold uppercase tracking-wider block mb-2">Goal Name</label>
+              <input
+                type="text"
+                placeholder="e.g. Gym visits, Book reading..."
+                value={goalName}
+                onChange={e => setGoalName(e.target.value)}
+                className="w-full bg-[#12131c] border-none rounded-xl px-4 py-3 text-white text-base outline-none focus:ring-2 focus:ring-teal-500 placeholder-gray-600"
+              />
+            </div>
+
+            <div className="flex gap-4">
+              <div className="flex-1 bg-gray-900/80 p-4.5 rounded-2xl border border-gray-800">
+                <label className="text-xs text-gray-400 font-bold uppercase tracking-wider block mb-2">Target</label>
+                <input
+                  type="number"
+                  placeholder="15"
+                  min="1"
+                  value={goalTarget}
+                  onChange={e => setGoalTarget(e.target.value)}
+                  className="w-full bg-[#12131c] border-none rounded-xl px-4 py-3 text-white text-base outline-none focus:ring-2 focus:ring-teal-500"
+                />
+              </div>
+
+              <div className="flex-1 bg-gray-900/80 p-4.5 rounded-2xl border border-gray-800">
+                <label className="text-xs text-gray-400 font-bold uppercase tracking-wider block mb-2">Unit</label>
+                <input
+                  type="text"
+                  placeholder="e.g. sessions, pages"
+                  value={goalUnit}
+                  onChange={e => setGoalUnit(e.target.value)}
+                  className="w-full bg-[#12131c] border-none rounded-xl px-4 py-3 text-white text-base outline-none focus:ring-2 focus:ring-teal-500 placeholder-gray-600"
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="flex flex-col w-full gap-3">
+            <button
+              onClick={handleSaveGoal}
+              disabled={!goalName.trim()}
+              className={`w-full font-bold text-lg py-4 rounded-2xl transition-all duration-300 active:scale-95 ${
+                goalName.trim()
+                  ? 'bg-teal-500 text-teal-950 shadow-[0_0_20px_rgba(20,184,166,0.3)]'
+                  : 'bg-gray-800 text-gray-500 cursor-not-allowed'
+              }`}
+            >
+              Set Goal & Continue
+            </button>
+            <button
+              onClick={handleSkipGoal}
+              className="w-full bg-transparent border border-gray-850 hover:border-gray-700 text-gray-400 hover:text-gray-300 font-bold py-3.5 rounded-2xl transition-colors"
+            >
+              Skip for now
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* NOTIFICATIONS POPUP */}
+      {step === 6 && (
         <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 animate-fade-in">
           <div className="bg-gray-900 border border-gray-800 rounded-3xl p-6 w-full max-w-sm flex flex-col items-center text-center shadow-2xl relative overflow-hidden">
             <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-teal-500 to-indigo-500"></div>
@@ -317,8 +421,8 @@ export default function OnboardingScreen({ onComplete }) {
         </div>
       )}
 
-      {/* STEP 6: ALL DONE */}
-      {step === 6 && (
+      {/* STEP 7: ALL DONE */}
+      {step === 7 && (
         <div className="flex flex-col items-center justify-center animate-fade-in text-center w-full max-w-sm h-full">
           <img src={neoImg} alt="Neo" className="w-[200px] mb-8 neo-celebrate drop-shadow-[0_0_30px_rgba(251,191,36,0.3)]" />
           
