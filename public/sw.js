@@ -1,4 +1,4 @@
-const CACHE_NAME = 'pinboard-cache-v10';
+const CACHE_NAME = 'pinboard-cache-v9';
 const urlsToCache = [
   '/',
   '/index.html'

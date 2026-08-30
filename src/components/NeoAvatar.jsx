@@ -1,10 +1,7 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import confetti from 'canvas-confetti';
-import { Mic } from 'lucide-react';
-import { useVoiceLogger } from '../hooks/useVoiceLogger';
-import { updateHabitInStorage, syncMonthlyGoalProgress, syncStateToBackend } from '../utils';
 import neoImg from '../assets/neo.png';
 import neoSadImg from '../assets/neo-sad.png';
 import neoProgressbarImg from '../assets/neo-progressbar.png';
@@ -41,90 +38,9 @@ const getPeriodGreeting = (period, name) => {
 
 export default function NeoAvatar({ habits = [], tasks = [], allGoalsOnTrack = false, suggestions = [], onSuggestionAction = () => {}, onDismissSuggestion = () => {} }) {
   const [speech, setSpeech] = useState(null);
-  const [speechType, setSpeechType] = useState('default'); // 'default' | 'success' | 'fail'
   const [bounce, setBounce] = useState(false);
-  const [wiggle, setWiggle] = useState(false);
   const [isSuggestionsOpen, setIsSuggestionsOpen] = useState(false);
   const speechTimeoutRef = useRef(null);
-
-  // Voice feature
-  const [micDenied, setMicDenied] = useState(() => localStorage.getItem('pinboard_mic_denied') === 'true');
-  const [isVoiceSupported, setIsVoiceSupported] = useState(true);
-
-  useEffect(() => {
-    setIsVoiceSupported('SpeechRecognition' in window || 'webkitSpeechRecognition' in window);
-  }, []);
-
-  const handleVoiceLog = useCallback((parsed) => {
-    const { habitId, action, value, feedback } = parsed;
-    
-    if (action === 'increment') syncMonthlyGoalProgress(habitId, value ?? 1);
-    else if (action === 'set') {
-      const habit = habitsRef.current.find(h => h.id === habitId);
-      if (habit) syncMonthlyGoalProgress(habitId, (value ?? 0) - habit.count);
-    } else if (action === 'complete') {
-      const habit = habitsRef.current.find(h => h.id === habitId);
-      if (habit && habit.count < habit.goal) {
-        syncMonthlyGoalProgress(habitId, habit.goal - habit.count);
-      }
-    }
-
-    updateHabitInStorage(habitId, action, value);
-
-    setSpeech(feedback || 'Got it!');
-    setSpeechType('success');
-    setBounce(true);
-    setTimeout(() => setBounce(false), 400);
-    if (speechTimeoutRef.current) clearTimeout(speechTimeoutRef.current);
-    speechTimeoutRef.current = setTimeout(() => {
-      setSpeech(null);
-      setSpeechType('default');
-    }, 4000);
-
-    window.dispatchEvent(new CustomEvent('neo-bounce'));
-    window.dispatchEvent(new CustomEvent('neo_celebration'));
-    syncStateToBackend();
-  }, []);
-
-  const { startListening, stopListening, listening, result } = useVoiceLogger(habits, handleVoiceLog);
-  
-  useEffect(() => {
-    if (result && !result.success) {
-      if (result.message.includes('not-allowed') || result.message.includes('denied')) {
-        setSpeech("Microphone access needed 🎙");
-        setSpeechType('default');
-        setMicDenied(true);
-        localStorage.setItem('pinboard_mic_denied', 'true');
-      } else {
-        setSpeech("Hmm, didn't catch that. Try again?");
-        setSpeechType('fail');
-        setWiggle(true);
-        setTimeout(() => setWiggle(false), 400);
-      }
-      if (speechTimeoutRef.current) clearTimeout(speechTimeoutRef.current);
-      speechTimeoutRef.current = setTimeout(() => {
-        setSpeech(null);
-        setSpeechType('default');
-      }, 3000);
-    }
-  }, [result]);
-
-  const handleMicTap = (e) => {
-    e.stopPropagation();
-    if (micDenied) {
-      setSpeech("Enable microphone in your browser settings, then refresh the app.");
-      setSpeechType('default');
-      if (speechTimeoutRef.current) clearTimeout(speechTimeoutRef.current);
-      speechTimeoutRef.current = setTimeout(() => setSpeech(null), 4000);
-      return;
-    }
-    
-    if (listening) {
-      stopListening();
-    } else {
-      startListening();
-    }
-  };
 
   // Keep fresh references for intervals and timers
   const tasksRef = useRef(tasks);
@@ -507,23 +423,22 @@ export default function NeoAvatar({ habits = [], tasks = [], allGoalsOnTrack = f
   };
 
   return (
-    <>
-    <div className="flex flex-col items-center gap-2 select-none z-45 mb-2 mt-4 pointer-events-auto relative">
+    <div className="fixed bottom-[80px] right-2 flex flex-col items-end justify-end select-none z-45 pointer-events-none">
 
       {/* Speech Bubble */}
       <div
-        className={`absolute bottom-[160px] bg-white px-3.5 py-2 rounded-2xl text-[13px] font-semibold shadow-xl max-w-[220px] text-center transition-all duration-300 pointer-events-none leading-snug ${speech ? 'opacity-100 scale-100' : 'opacity-0 scale-95'} ${speechType === 'success' ? '!bg-[rgba(34,197,94,0.15)] !text-emerald-100' : speechType === 'fail' ? '!bg-[rgba(239,68,68,0.12)] !text-red-200' : 'text-gray-900'}`}
+        className={`absolute bottom-full right-2 mb-2 bg-white text-gray-900 px-3.5 py-2 rounded-2xl text-xs font-semibold shadow-xl max-w-[210px] text-center transition-all duration-300 pointer-events-none leading-snug ${speech ? 'opacity-100 scale-100' : 'opacity-0 scale-95'}`}
       >
         {speech}
-        <div className={`absolute left-1/2 bottom-0 transform -translate-x-1/2 translate-y-[90%] w-0 h-0 border-l-[6px] border-r-[6px] border-t-[8px] border-l-transparent border-r-transparent ${speechType === 'success' ? 'border-t-[rgba(34,197,94,0.15)]' : speechType === 'fail' ? 'border-t-[rgba(239,68,68,0.12)]' : 'border-t-white'}`}></div>
+        <div className="absolute right-6 bottom-0 transform translate-y-[90%] w-0 h-0 border-l-[6px] border-r-[6px] border-t-[8px] border-l-transparent border-r-transparent border-t-white"></div>
       </div>
 
       {/* Main Avatar Container */}
       <div
         id="neo-avatar-container"
-        className={`relative cursor-pointer transition-transform duration-400 ${wiggle ? 'neo-wiggle-once' : ''}`}
+        className="relative cursor-pointer mt-2 pointer-events-auto"
         onClick={handleTap}
-        style={{ width: '130px', height: '130px' }}
+        style={{ width: '96px', height: '96px' }}
       >
         {/* Glowing Suggestions Badge Dot */}
         {suggestions && suggestions.length > 0 && (
@@ -543,7 +458,7 @@ export default function NeoAvatar({ habits = [], tasks = [], allGoalsOnTrack = f
               src={state === 6 ? neoProgressbarImg : state === 1 ? neoSadImg : neoImg}
               alt="Neo"
               draggable="false"
-              className={`w-full h-full object-contain filter drop-shadow-[0_8px_20px_rgba(245,197,24,0.25)] ${state === 5 ? 'drop-shadow-[0_0_18px_#f5c518]'
+              className={`w-full h-full object-contain ${state === 5 ? 'drop-shadow-[0_0_18px_#f5c518]'
                   : state === 6 ? 'drop-shadow-[0_0_22px_#34d399]'
                     : ''
                 }`}
@@ -601,29 +516,7 @@ export default function NeoAvatar({ habits = [], tasks = [], allGoalsOnTrack = f
         </div>
       </div>
 
-      {/* Mic Pill BELOW Neo */}
-      {isVoiceSupported ? (
-        <button
-          onClick={handleMicTap}
-          className={`flex items-center justify-center gap-[7px] rounded-full px-5 py-2 text-[13px] font-semibold transition-all shadow-none border-none pointer-events-auto active:scale-95 ${
-            micDenied
-              ? 'bg-gray-800 text-gray-400'
-              : listening
-              ? 'bg-red-500 text-white shadow-[0_0_0_8px_rgba(239,68,68,0.3)]'
-              : 'bg-teal-400 text-[#0a0f1a]'
-          }`}
-          style={{ animation: listening ? 'pulse-ring 1.2s ease infinite' : 'none' }}
-          aria-label="Tap to log with voice"
-        >
-          <Mic className="w-[18px] h-[18px]" strokeWidth={2.5} />
-          {micDenied ? 'Enable mic in settings' : listening ? 'Listening...' : 'Tap to log with voice'}
-        </button>
-      ) : (
-        <p className="text-[12px] text-gray-500 mt-1">Tap habits above to log</p>
-      )}
-
+      {renderSuggestionsDrawer()}
     </div>
-    {renderSuggestionsDrawer()}
-    </>
   );
 }

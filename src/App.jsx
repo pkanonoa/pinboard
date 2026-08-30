@@ -19,6 +19,7 @@ import { getNotifications, cleanOldNotifications } from './db';
 import { syncStateToBackend } from './utils';
 import { maybeResetDismissals } from './utils/smartSuggestions';
 import LocalTaskNotifier from './components/LocalTaskNotifier';
+import VoiceMic from './components/VoiceMic';
 
 function App() {
   const [currentTab, setCurrentTab] = useState('dashboard');
@@ -177,6 +178,7 @@ function App() {
       <BadgeCelebration />
       <NeoCelebration />
       <LocalTaskNotifier />
+      <VoiceMic />
 
       {/* Weekly Review overlay */}
       {showWeeklyReview && (
