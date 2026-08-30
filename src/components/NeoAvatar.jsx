@@ -3,6 +3,7 @@ import confetti from 'canvas-confetti';
 import neoImg from '../assets/neo.png';
 import neoSadImg from '../assets/neo-sad.png';
 import neoProgressbarImg from '../assets/neo-progressbar.png';
+import { getLocalYMD } from '../utils';
 
 const INSPIRATIONAL_QUOTES = [
   "Small daily wins create massive yearly results! 🏆",
@@ -53,9 +54,13 @@ export default function NeoAvatar({ habits = [], tasks = [], allGoalsOnTrack = f
 
   const userName = localStorage.getItem('pinboard_user_name') || 'friend';
 
-  // Compute state & animation based on habit progress
-  let state = 1;
-  let animationClass = "neo-gentle-rock";
+  const todayStr = getLocalYMD();
+  const currentHour = new Date().getHours();
+  const hasFailedHabits = activeHabits.some(h => h.failedDate === todayStr);
+
+  // Compute state & animation based on habit progress and time of day
+  let state = 2; // Default to neutral/smiling state 2 instead of sad state 1
+  let animationClass = "neo-gentle-float";
 
   // State 6: All habits done + all goals on track → progressbar neo
   if (pct === 1 && totalHabits > 0 && allGoalsOnTrack) {
@@ -73,7 +78,23 @@ export default function NeoAvatar({ habits = [], tasks = [], allGoalsOnTrack = f
   } else if (pct > 0) {
     state = 2;
     animationClass = "neo-gentle-float";
+  } else {
+    // pct is 0 (or totalHabits is 0)
+    // Sad Neo (state 1) only triggers if we have active habits AND:
+    // (a) they failed a time-locked habit today, OR
+    // (b) it's late in the day (after 4pm / 16:00) and they haven't done any rituals.
+    const isLate = currentHour >= 16;
+    if (totalHabits > 0 && (hasFailedHabits || isLate)) {
+      state = 1;
+      animationClass = "neo-gentle-rock";
+    } else {
+      state = 2;
+      animationClass = "neo-gentle-float";
+    }
   }
+
+  const stateRef = useRef(state);
+  stateRef.current = state;
 
   // ── Mood-aware full greeting (1st open per period) ────────────────────
   const buildFullGreeting = (period, currentState, tasks, habits) => {
@@ -166,7 +187,7 @@ export default function NeoAvatar({ habits = [], tasks = [], allGoalsOnTrack = f
   const triggerNotification = () => {
     const currentTasks = tasksRef.current || [];
     const currentHabits = habitsRef.current || [];
-    const msg = buildShortHi(state, currentTasks, currentHabits);
+    const msg = buildShortHi(stateRef.current, currentTasks, currentHabits);
     setSpeech(msg);
     setBounce(true);
     setTimeout(() => setBounce(false), 380);
@@ -192,9 +213,9 @@ export default function NeoAvatar({ habits = [], tasks = [], allGoalsOnTrack = f
       let msg;
       if (!hasGreetedThisPeriod) {
         localStorage.setItem(periodKey, '1');
-        msg = buildFullGreeting(period, state, currentTasks, currentHabits);
+        msg = buildFullGreeting(period, stateRef.current, currentTasks, currentHabits);
       } else {
-        msg = buildShortHi(state, currentTasks, currentHabits);
+        msg = buildShortHi(stateRef.current, currentTasks, currentHabits);
       }
 
       setSpeech(msg);
