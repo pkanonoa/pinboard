@@ -619,7 +619,7 @@ export default function SettingsSection() {
         <p className="text-sm font-bold text-[var(--text-primary)]">
           Pinboard{" "}
           <span className="font-normal text-[var(--text-secondary)]">
-            v1.2.0
+            v1.3.0
           </span>
         </p>
         <p className="text-xs text-[var(--text-muted)]">Made for you 🌱</p>

@@ -488,7 +488,7 @@ export default function NeoAvatar({
           animate={{ y: 0, opacity: 1 }}
           exit={{ y: "100%", opacity: 0 }}
           transition={{ type: "spring", damping: 25, stiffness: 200 }}
-          className="fixed bottom-0 left-0 right-0 z-[110] bg-[var(--bg-card)] border-t border-[var(--border)] shadow-2xl rounded-t-3xl max-h-[80vh] flex flex-col p-5 pb-safe pointer-events-auto"
+          className="toast-glass fixed bottom-0 left-0 right-0 z-[110] border-t border-[var(--border)] shadow-2xl rounded-t-3xl max-h-[80vh] flex flex-col p-5 pb-safe pointer-events-auto"
         >
           <div className="flex items-center justify-between pb-4 border-b border-[var(--border)]/80 mb-4">
             <h2 className="text-lg font-bold text-[var(--text-primary)] flex items-center gap-2">
@@ -612,9 +612,7 @@ export default function NeoAvatar({
               ? "bg-red-500/20 text-red-100 border-red-500/30 backdrop-blur-md"
               : speechType === "listening"
                 ? "bg-red-500/30 text-red-100 border-red-500/50 backdrop-blur-md animate-pulse"
-                : theme === "light"
-                  ? "bg-[var(--bg-card)] text-[var(--text-primary)] border-[var(--border)]"
-                  : "bg-white/10 text-[var(--text-primary)] border-white/20 backdrop-blur-md drop-shadow-lg"
+                : "toast-glass text-[var(--text-primary)] border-[var(--border)]"
         }`}
       >
         {speech}
@@ -626,9 +624,7 @@ export default function NeoAvatar({
                 ? "border-t-red-500/30"
                 : speechType === "listening"
                   ? "border-t-red-500/50"
-                  : theme === "light"
-                    ? "border-t-[var(--bg-card)]"
-                    : "border-t-white/20"
+                  : "border-t-[var(--bg-card)] opacity-85"
           }`}
         ></div>
       </div>

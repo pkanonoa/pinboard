@@ -174,58 +174,69 @@ export default function MoreSection({ setCurrentTab, onOpenWeeklyReview }) {
             Debug Tools
           </h3>
           <button
-          onClick={() => {
-            if (!("Notification" in window)) {
-              alert("Notifications not supported in this browser.");
-              return;
-            }
-            if (Notification.permission !== "granted") {
-              Notification.requestPermission().then((p) => {
-                if (p === "granted") fireTestNotif();
-                else alert("Permission denied");
-              });
-            } else {
-              fireTestNotif();
-            }
-
-            function fireTestNotif() {
-              const title = "Test OS Notification!";
-              const options = {
-                body: "If you see this, native notifications are working!",
-                icon: "/pwa-192x192.png",
-              };
-              try {
-                if (
-                  "serviceWorker" in navigator &&
-                  navigator.serviceWorker.controller
-                ) {
-                  navigator.serviceWorker.ready.then((r) => {
-                    r.showNotification(title, options)
-                      .then(() => alert("Triggered via Service Worker"))
-                      .catch((err) => {
-                        new Notification(title, options);
-                        alert(
-                          "Service Worker failed, triggered via new Notification()",
-                        );
-                      });
-                  });
-                } else {
-                  new Notification(title, options);
-                  alert(
-                    "Triggered via new Notification() (No active Service Worker)",
-                  );
-                }
-              } catch (err) {
-                alert("Error creating notification: " + err.message);
+            onClick={() => {
+              if (!("Notification" in window)) {
+                alert("Notifications not supported in this browser.");
+                return;
               }
-            }
-          }}
-          className="w-full bg-[var(--bg-card)] hover:bg-[var(--bg-card-hover)] text-[var(--text-primary)] py-3 rounded-xl font-medium transition-colors"
-        >
-          Test OS Notification
+              if (Notification.permission !== "granted") {
+                Notification.requestPermission().then((p) => {
+                  if (p === "granted") fireTestNotif();
+                  else alert("Permission denied");
+                });
+              } else {
+                fireTestNotif();
+              }
+
+              function fireTestNotif() {
+                const title = "Test OS Notification!";
+                const options = {
+                  body: "If you see this, native notifications are working!",
+                  icon: "/pwa-192x192.png",
+                };
+                try {
+                  if (
+                    "serviceWorker" in navigator &&
+                    navigator.serviceWorker.controller
+                  ) {
+                    navigator.serviceWorker.ready.then((r) => {
+                      r.showNotification(title, options)
+                        .then(() => alert("Triggered via Service Worker"))
+                        .catch((err) => {
+                          new Notification(title, options);
+                          alert(
+                            "Service Worker failed, triggered via new Notification()",
+                          );
+                        });
+                    });
+                  } else {
+                    new Notification(title, options);
+                    alert(
+                      "Triggered via new Notification() (No active Service Worker)",
+                    );
+                  }
+                } catch (err) {
+                  alert("Error creating notification: " + err.message);
+                }
+              }
+            }}
+            className="w-full bg-[var(--bg-card)] hover:bg-[var(--bg-card-hover)] text-[var(--text-primary)] py-3 rounded-xl font-medium transition-colors"
+          >
+            Test OS Notification
           </button>
         </div>
       )}
+
+      {/* About & Version */}
+      <div className="flex flex-col items-center justify-center py-6 mt-2 gap-1.5 opacity-70">
+        <div className="w-10 h-10 rounded-2xl bg-[var(--bg-card)] border border-[var(--border)] flex items-center justify-center shadow-sm">
+          <img src="/logo.jpg" alt="Logo" className="w-7 h-7 rounded-xl object-cover" />
+        </div>
+        <p className="text-sm font-bold text-[var(--text-primary)]">
+          Pinboard <span className="font-normal text-[var(--text-secondary)]">v1.3.0</span>
+        </p>
+        <p className="text-xs text-[var(--text-muted)]">Made for you 🌱</p>
+      </div>
     </div>
   );
 }
