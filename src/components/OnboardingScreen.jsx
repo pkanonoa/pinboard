@@ -54,6 +54,17 @@ export default function OnboardingScreen({ onComplete }) {
     }
   };
 
+  const handleBack = () => {
+    triggerBounce();
+    
+    if (step === 5) {
+      const needsTime = selectedHabits.includes('h_sleep') || selectedHabits.includes('h_wake');
+      setStep(needsTime ? 4 : 3);
+    } else {
+      setStep(prev => prev - 1);
+    }
+  };
+
   const toggleHabit = (id) => {
     setSelectedHabits(prev => {
       if (prev.includes(id)) {
@@ -172,6 +183,19 @@ export default function OnboardingScreen({ onComplete }) {
           />
         ))}
       </div>
+
+      {/* Back Button */}
+      {step > 1 && step < 7 && (
+        <button
+          onClick={handleBack}
+          className="absolute top-5 left-5 text-gray-400 hover:text-white transition-colors p-2 rounded-full hover:bg-gray-800/40 active:scale-95 z-[60]"
+          title="Back"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+          </svg>
+        </button>
+      )}
 
       <style>{`
         @keyframes floatNeo {
