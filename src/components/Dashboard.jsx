@@ -122,7 +122,7 @@ export default function Dashboard({ setCurrentTab }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [habits, completionLog, dismissedIds]
   );
-  const visibleSuggestions = suggestions.slice(0, 2);
+  const visibleSuggestions = suggestions;
 
   const handleDismissSuggestion = (id) => {
     dismissSuggestion(id);
