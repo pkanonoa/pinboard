@@ -347,7 +347,7 @@ export default function WeeklyReviewScreen({ onClose }) {
   const maxStreak = Math.max(...streakDeltas.map((s) => s.streak), 1);
 
   return (
-    <div className="fixed inset-0 z-[200] flex flex-col bg-[var(--bg-card)] overflow-hidden animate-slide-up">
+    <div className="fixed inset-0 z-[200] bg-[var(--bg-primary)] overflow-hidden animate-slide-up flex flex-col items-center">
       {/* Off-screen rendering container for share card capture */}
       {shareData && (
         <div
@@ -362,33 +362,35 @@ export default function WeeklyReviewScreen({ onClose }) {
         </div>
       )}
 
-      {/* ── Header ── */}
-      <div className="relative flex flex-col items-center pt-10 pb-4 px-5">
-        <button
-          onClick={handleClose}
-          className="absolute top-5 right-5 w-8 h-8 flex items-center justify-center rounded-full bg-[var(--bg-card)] hover:bg-[var(--bg-card-hover)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-all active:scale-90 text-lg"
-          aria-label="Close"
-        >
-          ✕
-        </button>
-        <span className="text-xs text-[var(--text-muted)] font-medium tracking-wide mb-1">
-          {headerLabel}
-        </span>
-        <h1 className="text-2xl font-black text-[var(--text-primary)] mb-4">
-          Your Weekly Recap
-        </h1>
-        <div className={`${neoAnim}`} style={{ width: 120, height: 120 }}>
-          <img
-            src={neoImg}
-            alt="Neo"
-            className="w-full h-full object-contain"
-            draggable={false}
-          />
-        </div>
-      </div>
+      {/* Sticky Close Button */}
+      <button
+        onClick={handleClose}
+        className="fixed top-4 right-4 z-[210] w-9 h-9 flex items-center justify-center rounded-full bg-[var(--bg-card)]/80 hover:bg-[var(--bg-card)] backdrop-blur-md border border-[var(--border)]/80 text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-all active:scale-90 text-sm shadow-md"
+        aria-label="Close"
+      >
+        ✕
+      </button>
 
-      {/* ── Scrollable Content ── */}
-      <div className="flex-1 overflow-y-auto px-4 pb-36 space-y-3">
+      {/* ── Full Scrollable Container ── */}
+      <div className="w-full max-w-md h-full overflow-y-auto px-4 pt-10 pb-40 space-y-3">
+        {/* ── Header ── */}
+        <div className="flex flex-col items-center pb-3 px-2 text-center">
+          <span className="text-xs text-[var(--text-muted)] font-medium tracking-wide mb-1">
+            {headerLabel}
+          </span>
+          <h1 className="text-2xl font-black text-[var(--text-primary)] mb-4">
+            Your Weekly Recap
+          </h1>
+          <div className={`${neoAnim}`} style={{ width: 120, height: 120 }}>
+            <img
+              src={neoImg}
+              alt="Neo"
+              className="w-full h-full object-contain"
+              draggable={false}
+            />
+          </div>
+        </div>
+
         {/* 1. Overall Score */}
         <div className="bg-[var(--bg-card)] border border-[var(--border)]/60 rounded-2xl p-5 flex flex-col items-center gap-3">
           <h2 className="text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider self-start">
@@ -636,17 +638,17 @@ export default function WeeklyReviewScreen({ onClose }) {
       </div>
 
       {/* ── Close Button ── */}
-      <div className="fixed bottom-0 left-0 right-0 p-4 bg-[var(--bg-card)]/95 backdrop-blur-sm border-t border-[var(--border)]/60 flex flex-col gap-2.5">
+      <div className="fixed bottom-0 left-0 right-0 p-4 bg-[var(--bg-primary)]/90 backdrop-blur-md border-t border-[var(--border)]/60 flex flex-col gap-2.5 max-w-md mx-auto z-[210]">
         <button
           onClick={handleShareClick}
           disabled={isGenerating}
-          className="w-full py-3 bg-teal-500 hover:bg-teal-600 disabled:bg-teal-700 text-[var(--text-primary)] font-bold rounded-2xl transition-all active:scale-95 shadow-lg shadow-teal-900/40 text-sm flex items-center justify-center gap-1.5"
+          className="w-full py-3 bg-teal-500 hover:bg-teal-600 disabled:bg-teal-700 text-white font-bold rounded-2xl transition-all active:scale-95 shadow-lg shadow-teal-900/40 text-sm flex items-center justify-center gap-1.5"
         >
           {isGenerating ? "Generating card..." : "📤 Share my week"}
         </button>
         <button
           onClick={handleClose}
-          className="w-full py-3 bg-indigo-500 hover:bg-indigo-600 text-[var(--text-primary)] font-bold rounded-2xl transition-all active:scale-95 shadow-lg shadow-indigo-900/40 text-sm"
+          className="w-full py-3 bg-indigo-500 hover:bg-indigo-600 text-white font-bold rounded-2xl transition-all active:scale-95 shadow-lg shadow-indigo-900/40 text-sm"
         >
           Close review
         </button>

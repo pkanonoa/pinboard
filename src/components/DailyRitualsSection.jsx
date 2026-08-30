@@ -1735,7 +1735,7 @@ export default function DailyRitualsSection() {
                     {/* Progress Bar for Countable and Big Number */}
                     {(habit.type === "countable" ||
                       habit.type === "big_number") && (
-                      <div className="w-full h-1.5 bg-[var(--bg-card-hover)] rounded-full overflow-hidden mt-2 pointer-events-none">
+                      <div className="w-full h-1.5 bg-[var(--border)] rounded-full overflow-hidden mt-2 pointer-events-none">
                         <div
                           className={`h-full transition-all duration-500 ease-out ${isCompleted ? "bg-emerald-400" : "bg-indigo-500"}`}
                           style={{ width: `${progressPercent}%` }}
