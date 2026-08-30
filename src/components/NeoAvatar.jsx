@@ -193,22 +193,65 @@ export default function NeoAvatar({ habits = [], tasks = [], allGoalsOnTrack = f
     const periodKey = `neo_greeted_${today}_${period}`;
     const hasGreetedThisPeriod = localStorage.getItem(periodKey);
 
+    // sessionStorage is wiped every time the browser/tab is fully closed & reopened
+    const isNewSession = !sessionStorage.getItem('neo_session_started');
+
     const currentTasks = tasksRef.current || [];
     const currentHabits = habitsRef.current || [];
 
     let msg;
-    if (!hasGreetedThisPeriod) {
-      // 1st open of this time period → full mood-aware greeting
+    let displayTime = 6000;
+
+    const firstWelcomeShown = localStorage.getItem('neo_first_welcome_shown') === 'true';
+
+    if (!firstWelcomeShown) {
+      // Very first time ever — one-time onboarding welcome
+      localStorage.setItem('neo_first_welcome_shown', 'true');
+      localStorage.setItem(periodKey, '1');
+      sessionStorage.setItem('neo_session_started', '1');
+      msg = `Welcome to Pinboard, ${userName}! 🎉 Neo is so excited to help you build habits and conquer your days! Let's make today your first victory! 🧅✨`;
+      displayTime = 9000;
+    } else if (isNewSession) {
+      // App was fully closed and reopened — always greet warmly
+      sessionStorage.setItem('neo_session_started', '1');
+      localStorage.setItem(periodKey, '1');
+
+      const pending = (tasksRef.current || []).filter(t => !t.done);
+      const activeH = (habitsRef.current || []).filter(h => !h.paused);
+      const remaining = activeH.filter(h => h.count < h.goal);
+
+      const periodWord =
+        period === 'morning' ? 'Good morning' :
+        period === 'noon'    ? 'Good afternoon' :
+        period === 'evening' ? 'Good evening' : 'Welcome back';
+
+      if (state === 1) {
+        // Sad Neo
+        msg = `${periodWord}, ${userName} 💛 Neo missed you. Ready to pick things back up together?`;
+      } else if (state >= 5) {
+        // Happy Neo
+        msg = `${periodWord}, ${userName}! 🎉 Neo is SO happy you're back — let's keep crushing it! 🔥`;
+      } else if (pending.length > 0 && remaining.length > 0) {
+        msg = `${periodWord}, ${userName}! 👋 You've got ${pending.length} task${pending.length > 1 ? 's' : ''} and ${remaining.length} ritual${remaining.length > 1 ? 's' : ''} waiting. Let's go! 💪`;
+      } else if (pending.length > 0) {
+        msg = `${periodWord}, ${userName}! 👋 ${pending.length} task${pending.length > 1 ? 's' : ''} still on the list — Neo believes in you! ✨`;
+      } else if (remaining.length > 0) {
+        msg = `${periodWord}, ${userName}! 👋 ${remaining.length} ritual${remaining.length > 1 ? 's' : ''} left today. You got this 💪`;
+      } else {
+        msg = `${periodWord}, ${userName}! 🧅 Great to have you back. Neo is rooting for you today!`;
+      }
+    } else if (!hasGreetedThisPeriod) {
+      // Same session, new time period → full mood-aware greeting
       localStorage.setItem(periodKey, '1');
       msg = buildFullGreeting(period, state, currentTasks, currentHabits);
     } else {
-      // 2nd+ open → short hi + task/quote
+      // Same session, same period → short reminder
       msg = buildShortHi(state, currentTasks, currentHabits);
     }
 
     setSpeech(msg);
     if (speechTimeoutRef.current) clearTimeout(speechTimeoutRef.current);
-    speechTimeoutRef.current = setTimeout(() => setSpeech(null), 5500);
+    speechTimeoutRef.current = setTimeout(() => setSpeech(null), displayTime);
 
     // Automatic motivational quote timer: fires every 15 minutes
     const autoInterval = setInterval(() => {

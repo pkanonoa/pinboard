@@ -14,6 +14,7 @@ import NotificationDrawer from './components/NotificationDrawer';
 import GoalsSection from './components/GoalsSection';
 import OnboardingScreen from './components/OnboardingScreen';
 import MoreSection from './components/MoreSection';
+import WeeklyReviewScreen from './components/WeeklyReviewScreen';
 import { getNotifications, cleanOldNotifications } from './db';
 import { syncStateToBackend } from './utils';
 
@@ -23,6 +24,7 @@ function App() {
   const [unreadCount, setUnreadCount] = useState(0);
   const [onboarded, setOnboarded] = useState(true);
   const [touchStartXY, setTouchStartXY] = useState(null);
+  const [showWeeklyReview, setShowWeeklyReview] = useState(false);
 
   const handleSetCurrentTab = (tab) => {
     if (tab !== currentTab) {
@@ -99,6 +101,9 @@ function App() {
       if (event.data && event.data.type === 'NEW_NOTIFICATION') {
         checkUnread();
       }
+      if (event.data?.deepLink === '/weekly-review') {
+        setShowWeeklyReview(true);
+      }
     };
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.addEventListener('message', swMessageListener);
@@ -161,6 +166,11 @@ function App() {
     >
       <BadgeCelebration />
       <NeoCelebration />
+
+      {/* Weekly Review overlay */}
+      {showWeeklyReview && (
+        <WeeklyReviewScreen onClose={() => setShowWeeklyReview(false)} />
+      )}
       <NotificationDrawer 
         isOpen={isDrawerOpen} 
         onClose={() => setIsDrawerOpen(false)} 
@@ -188,7 +198,7 @@ function App() {
       {currentTab === 'rewards' && <RewardsSection />}
       {currentTab === 'settings' && <SettingsSection />}
       {currentTab === 'goals' && <GoalsSection />}
-      {currentTab === 'more' && <MoreSection setCurrentTab={handleSetCurrentTab} />}
+      {currentTab === 'more' && <MoreSection setCurrentTab={handleSetCurrentTab} onOpenWeeklyReview={() => setShowWeeklyReview(true)} />}
 
       {/* PWA Install Prompt */}
       <InstallPrompt />

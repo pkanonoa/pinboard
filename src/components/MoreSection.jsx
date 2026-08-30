@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { BarChart2, Award, Bell, Repeat, User, ChevronRight } from 'lucide-react';
+import { BarChart2, Award, Bell, Repeat, User, ChevronRight, CalendarDays } from 'lucide-react';
 import { getUserStats } from '../utils';
 
-export default function MoreSection({ setCurrentTab }) {
+export default function MoreSection({ setCurrentTab, onOpenWeeklyReview }) {
   const [points, setPoints] = useState(0);
 
   useEffect(() => {
@@ -43,6 +43,17 @@ export default function MoreSection({ setCurrentTab }) {
               <span className="text-sm text-gray-400 font-normal">{points} pts</span>
               <ChevronRight className="w-4 h-4 text-gray-500" strokeWidth={2} />
             </div>
+          </button>
+
+          <button
+            onClick={onOpenWeeklyReview}
+            className="flex items-center justify-between w-full px-4 py-4 hover:bg-white/[0.03] transition-colors active:bg-white/[0.05]"
+          >
+            <div className="flex items-center gap-3.5">
+              <CalendarDays className="w-5 h-5 text-violet-400" strokeWidth={2} />
+              <span className="text-[15px] font-medium text-white">Weekly review</span>
+            </div>
+            <ChevronRight className="w-4 h-4 text-gray-500" strokeWidth={2} />
           </button>
         </div>
       </div>

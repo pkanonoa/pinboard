@@ -200,6 +200,37 @@ export default async function handler(req, res) {
       }
     }
 
+    // ── Weekly Review: Sunday 9pm local time ─────────────────────────────────
+    const localDayOfWeek = userLocalNow.getUTCDay(); // 0 = Sunday
+    const localHour = userLocalNow.getUTCHours();
+
+    if (localDayOfWeek === 0 && localHour === 21) {
+      // ISO week number for dedup key
+      const d = new Date(Date.UTC(userYear, userMonth, userDate));
+      d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7));
+      const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+      const isoWeek = Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+      const weeklyKey = `weekly_review_${endpointHash}_${userYear}-W${String(isoWeek).padStart(2, '0')}`;
+      const alreadySentWeekly = await kv.get(weeklyKey);
+
+      if (!alreadySentWeekly) {
+        try {
+          await webpush.sendNotification(subscription, JSON.stringify({
+            title: '📊 Your weekly recap is ready',
+            body: "Neo's been keeping score. Tap to see how your week went.",
+            type: 'summary',
+            deepLink: '/weekly-review'
+          }));
+          await kv.set(weeklyKey, true, { ex: 86400 * 7 });
+          sentCount++;
+        } catch (e) {
+          console.error('Error sending weekly review push', e);
+        }
+      }
+    }
+    // ─────────────────────────────────────────────────────────────────────────
+    }
+
     return res.status(200).json({ success: true, sent: sentCount });
 
     } catch (error) {

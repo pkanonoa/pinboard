@@ -166,8 +166,20 @@ self.addEventListener('push', event => {
 // Handle notification clicks
 self.addEventListener('notificationclick', event => {
   event.notification.close();
+  const deepLink = event.notification.data?.deepLink;
   event.waitUntil(
-    clients.matchAll({ type: 'window' }).then(clientList => {
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then(clientList => {
+      if (deepLink) {
+        // postMessage the deep link to all open clients
+        for (const client of clientList) {
+          client.postMessage({ deepLink });
+        }
+        if (clientList.length > 0) {
+          clientList[0].focus();
+          return;
+        }
+        return clients.openWindow('/' + deepLink.replace(/^\//, ''));
+      }
       if (clientList.length > 0) {
         clientList[0].focus();
       } else {
