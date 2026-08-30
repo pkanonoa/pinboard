@@ -633,14 +633,15 @@ export default function DailyRitualsSection() {
             <p className="text-sm">No rituals found. Start building one!</p>
           </div>
         ) : (
-          habits.map(habit => {
+          habits.map((habit, index) => {
             const progressPercent = Math.min(100, Math.round((habit.count / habit.goal) * 100));
             const isCompleted = habit.count >= habit.goal;
+            const openUpward = habits.length > 2 && index >= habits.length - 2;
 
             return (
               <div
                 key={habit.id}
-                className={`p-4 rounded-2xl flex flex-col gap-3 relative transition-all duration-300 bg-[#1e1e28] select-none ${habit.paused ? 'opacity-50 grayscale' : ''} ${activeMenuId === habit.id ? 'z-50' : 'z-10'}`}
+                className={`p-4 rounded-2xl flex flex-col gap-3 relative transition-all duration-300 bg-[#1e1e28] select-none ${habit.paused ? 'opacity-50 grayscale' : ''} ${activeMenuId === habit.id ? 'z-[60]' : 'z-10'}`}
                 onTouchStart={() => !editingHabitId && startLongPress(habit.id)}
                 onTouchEnd={clearLongPress}
                 onMouseDown={() => !editingHabitId && startLongPress(habit.id)}
@@ -932,7 +933,10 @@ export default function DailyRitualsSection() {
 
                         {/* Action Sheet (Long Press) */}
                         {activeMenuId === habit.id && (
-                          <div className="absolute top-full right-0 mt-2 w-36 bg-[#16161f] border border-gray-700/60 rounded-xl shadow-2xl overflow-hidden z-[60] animate-fade-in-down origin-top-right">
+                          <div className={openUpward
+                            ? "absolute bottom-full right-0 mb-2 w-36 bg-[#16161f] border border-gray-700/60 rounded-xl shadow-2xl overflow-hidden z-[60] animate-fade-in-up origin-bottom-right"
+                            : "absolute top-full right-0 mt-2 w-36 bg-[#16161f] border border-gray-700/60 rounded-xl shadow-2xl overflow-hidden z-[60] animate-fade-in-down origin-top-right"
+                          }>
                             {habit.count > 0 && (
                               <button onClick={(e) => { e.stopPropagation(); setActiveMenuId(null); handleResetHabit(habit.id); }} className="w-full text-left px-4 py-3 text-sm text-amber-400 hover:bg-gray-800 transition-colors flex items-center gap-2">
                                 <span>🔄</span> Reset today
