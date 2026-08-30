@@ -351,162 +351,175 @@ export default function GoalsSection() {
       </button>
 
       {isAdding && (
-        <form
-          onSubmit={handleAddGoal}
-          className="bg-[var(--bg-card)] p-5 rounded-2xl animate-fade-in-down shadow-xl z-20"
-        >
-          <input
-            type="text"
-            placeholder="Goal Name (e.g. Read 500 Pages)"
-            required
-            value={newGoal.name}
-            onChange={(e) => setNewGoal({ ...newGoal, name: e.target.value })}
-            className="w-full bg-[var(--bg-card)] border-none rounded-xl px-4 py-3 text-[15px] text-[var(--text-primary)] mb-4 focus:ring-1 focus:ring-indigo-500 focus:outline-none placeholder-gray-500"
-          />
-
-          <div className="flex gap-3 mb-4">
-            <div className="w-1/2">
-              <label className="text-[11px] text-[var(--text-muted)] font-bold uppercase tracking-wider block mb-1.5 pl-1">
-                Category
-              </label>
-              <select
-                value={newGoal.category}
-                onChange={(e) =>
-                  setNewGoal({ ...newGoal, category: e.target.value })
-                }
-                className="w-full bg-[var(--bg-card)] border-none rounded-xl px-4 py-3 text-[14px] text-[var(--text-primary)] focus:ring-1 focus:ring-indigo-500 focus:outline-none appearance-none"
-              >
-                <option value="Body">Body</option>
-                <option value="Performance">Performance</option>
-                <option value="Learning">Learning</option>
-                <option value="Life">Life</option>
-              </select>
-            </div>
-            <div className="w-1/2">
-              <label className="text-[11px] text-[var(--text-muted)] font-bold uppercase tracking-wider block mb-1.5 pl-1">
-                Due Date
-              </label>
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-md p-4 animate-fade-in overflow-y-auto">
+          <div className="w-full max-w-md bg-[var(--bg-card)]/80 backdrop-blur-xl p-6 rounded-3xl shadow-2xl border border-[var(--border)]/50 animate-fade-in-down my-8">
+            <h3 className="text-lg font-bold text-[var(--text-primary)] mb-5 text-center">
+              {editingGoalId ? "Edit Goal" : "New Goal"}
+            </h3>
+            <form onSubmit={handleAddGoal} className="flex flex-col">
               <input
-                type="date"
-                value={newGoal.dueDate}
-                onChange={(e) =>
-                  setNewGoal({ ...newGoal, dueDate: e.target.value })
-                }
-                className="w-full bg-[var(--bg-card)] border-none rounded-xl px-4 py-3 text-[14px] text-[var(--text-primary)] focus:ring-1 focus:ring-indigo-500 focus:outline-none "
+                type="text"
+                placeholder="Goal Name (e.g. Read 500 Pages)"
+                required
+                value={newGoal.name}
+                onChange={(e) => setNewGoal({ ...newGoal, name: e.target.value })}
+                className="w-full bg-[var(--bg-primary)]/50 border border-[var(--border)]/30 rounded-xl px-4 py-3 text-[15px] text-[var(--text-primary)] mb-4 focus:ring-1 focus:ring-indigo-500 focus:outline-none placeholder-gray-500"
               />
-            </div>
-          </div>
-
-          <div className="mb-4">
-            <label className="text-[11px] text-[var(--text-muted)] font-bold uppercase tracking-wider block mb-1.5 pl-1">
-              Tracking Type
-            </label>
-            <select
-              value={newGoal.trackingType}
-              onChange={(e) =>
-                setNewGoal({ ...newGoal, trackingType: e.target.value })
-              }
-              className="w-full bg-[var(--bg-card)] border-none rounded-xl px-4 py-3 text-[14px] text-[var(--text-primary)] focus:ring-1 focus:ring-indigo-500 focus:outline-none appearance-none"
-            >
-              <option value="count_toward">
-                Number of Times (e.g. 20 gym visits)
-              </option>
-              <option value="cumulative">Total Amount (e.g. 500 pages)</option>
-              <option value="daily_log">Daily Average (e.g. 175 lbs)</option>
-              <option value="binary">
-                Done / Not Done (e.g. Run a marathon)
-              </option>
-            </select>
-          </div>
-
-          {newGoal.trackingType !== "binary" && (
-            <div className="flex gap-3 mb-4">
-              <div className="w-1/2">
-                <label className="text-[11px] text-[var(--text-muted)] font-bold uppercase tracking-wider block mb-1.5 pl-1">
-                  Target
-                </label>
-                <input
-                  type="number"
-                  required
-                  min="1"
-                  step="any"
-                  value={newGoal.target}
-                  onChange={(e) =>
-                    setNewGoal({ ...newGoal, target: e.target.value })
-                  }
-                  className="w-full bg-[var(--bg-card)] border-none rounded-xl px-4 py-3 text-[14px] text-[var(--text-primary)] focus:ring-1 focus:ring-indigo-500 focus:outline-none"
-                />
-              </div>
-              <div className="w-1/2">
-                <label className="text-[11px] text-[var(--text-muted)] font-bold uppercase tracking-wider block mb-1.5 pl-1">
-                  Unit
-                </label>
-                <input
-                  type="text"
-                  required
-                  placeholder="e.g. pages"
-                  value={newGoal.unit}
-                  onChange={(e) =>
-                    setNewGoal({ ...newGoal, unit: e.target.value })
-                  }
-                  className="w-full bg-[var(--bg-card)] border-none rounded-xl px-4 py-3 text-[14px] text-[var(--text-primary)] focus:ring-1 focus:ring-indigo-500 focus:outline-none placeholder-gray-500"
-                />
-              </div>
-            </div>
-          )}
-
-          <div className="mb-6">
-            <label className="text-[11px] text-[var(--text-muted)] font-bold uppercase tracking-wider block mb-2 pl-1">
-              Link to Daily Rituals (Optional)
-            </label>
-            <div className="bg-[var(--bg-card)] rounded-xl p-2 max-h-32 overflow-y-auto flex flex-col gap-1">
-              {availableHabits.length === 0 && (
-                <span className="text-xs text-[var(--text-muted)] p-2">
-                  No rituals found.
-                </span>
-              )}
-              {availableHabits.map((h) => (
-                <label
-                  key={h.id}
-                  className="flex items-center gap-3 text-[14px] text-[var(--text-secondary)] p-2 cursor-pointer hover:bg-[var(--bg-card)] rounded-lg transition-colors"
-                >
+    
+              <div className="flex gap-3 mb-4">
+                <div className="w-1/2">
+                  <label className="text-[11px] text-[var(--text-muted)] font-bold uppercase tracking-wider block mb-1.5 pl-1">
+                    Category
+                  </label>
+                  <select
+                    value={newGoal.category}
+                    onChange={(e) =>
+                      setNewGoal({ ...newGoal, category: e.target.value })
+                    }
+                    className="w-full bg-[var(--bg-primary)]/50 border border-[var(--border)]/30 rounded-xl px-4 py-3 text-[14px] text-[var(--text-primary)] focus:ring-1 focus:ring-indigo-500 focus:outline-none appearance-none"
+                  >
+                    <option value="Body">Body</option>
+                    <option value="Performance">Performance</option>
+                    <option value="Learning">Learning</option>
+                    <option value="Life">Life</option>
+                  </select>
+                </div>
+                <div className="w-1/2">
+                  <label className="text-[11px] text-[var(--text-muted)] font-bold uppercase tracking-wider block mb-1.5 pl-1">
+                    Due Date
+                  </label>
                   <input
-                    type="checkbox"
-                    checked={newGoal.linkedHabitIds.includes(h.id)}
-                    onChange={(e) => {
-                      if (e.target.checked) {
-                        setNewGoal({
-                          ...newGoal,
-                          linkedHabitIds: [...newGoal.linkedHabitIds, h.id],
-                        });
-                      } else {
-                        setNewGoal({
-                          ...newGoal,
-                          linkedHabitIds: newGoal.linkedHabitIds.filter(
-                            (id) => id !== h.id,
-                          ),
-                        });
-                      }
-                    }}
-                    className="accent-indigo-500 rounded-sm w-4 h-4 focus:ring-indigo-500 bg-[var(--bg-primary)] border-[var(--border)]"
+                    type="date"
+                    value={newGoal.dueDate}
+                    onChange={(e) =>
+                      setNewGoal({ ...newGoal, dueDate: e.target.value })
+                    }
+                    className="w-full bg-[var(--bg-primary)]/50 border border-[var(--border)]/30 rounded-xl px-4 py-3 text-[14px] text-[var(--text-primary)] focus:ring-1 focus:ring-indigo-500 focus:outline-none"
                   />
-                  <span>{h.name}</span>
+                </div>
+              </div>
+    
+              <div className="mb-4">
+                <label className="text-[11px] text-[var(--text-muted)] font-bold uppercase tracking-wider block mb-1.5 pl-1">
+                  Tracking Type
                 </label>
-              ))}
-            </div>
-            <p className="text-[10px] text-[var(--text-muted)] mt-2 leading-tight pl-1">
-              If linked, completing any of the selected rituals will
-              automatically log progress here.
-            </p>
+                <select
+                  value={newGoal.trackingType}
+                  onChange={(e) =>
+                    setNewGoal({ ...newGoal, trackingType: e.target.value })
+                  }
+                  className="w-full bg-[var(--bg-primary)]/50 border border-[var(--border)]/30 rounded-xl px-4 py-3 text-[14px] text-[var(--text-primary)] focus:ring-1 focus:ring-indigo-500 focus:outline-none appearance-none"
+                >
+                  <option value="count_toward">
+                    Number of Times (e.g. 20 gym visits)
+                  </option>
+                  <option value="cumulative">Total Amount (e.g. 500 pages)</option>
+                  <option value="daily_log">Daily Average (e.g. 175 lbs)</option>
+                  <option value="binary">
+                    Done / Not Done (e.g. Run a marathon)
+                  </option>
+                </select>
+              </div>
+    
+              {newGoal.trackingType !== "binary" && (
+                <div className="flex gap-3 mb-4">
+                  <div className="w-1/2">
+                    <label className="text-[11px] text-[var(--text-muted)] font-bold uppercase tracking-wider block mb-1.5 pl-1">
+                      Target
+                    </label>
+                    <input
+                      type="number"
+                      required
+                      min="1"
+                      step="any"
+                      value={newGoal.target}
+                      onChange={(e) =>
+                        setNewGoal({ ...newGoal, target: e.target.value })
+                      }
+                      className="w-full bg-[var(--bg-primary)]/50 border border-[var(--border)]/30 rounded-xl px-4 py-3 text-[14px] text-[var(--text-primary)] focus:ring-1 focus:ring-indigo-500 focus:outline-none"
+                    />
+                  </div>
+                  <div className="w-1/2">
+                    <label className="text-[11px] text-[var(--text-muted)] font-bold uppercase tracking-wider block mb-1.5 pl-1">
+                      Unit
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="e.g. pages"
+                      value={newGoal.unit}
+                      onChange={(e) =>
+                        setNewGoal({ ...newGoal, unit: e.target.value })
+                      }
+                      className="w-full bg-[var(--bg-primary)]/50 border border-[var(--border)]/30 rounded-xl px-4 py-3 text-[14px] text-[var(--text-primary)] focus:ring-1 focus:ring-indigo-500 focus:outline-none placeholder-gray-500"
+                    />
+                  </div>
+                </div>
+              )}
+    
+              <div className="mb-6">
+                <label className="text-[11px] text-[var(--text-muted)] font-bold uppercase tracking-wider block mb-2 pl-1">
+                  Link to Daily Rituals (Optional)
+                </label>
+                <div className="bg-[var(--bg-primary)]/50 border border-[var(--border)]/30 rounded-xl p-2 max-h-32 overflow-y-auto flex flex-col gap-1">
+                  {availableHabits.length === 0 && (
+                    <span className="text-xs text-[var(--text-muted)] p-2">
+                      No rituals found.
+                    </span>
+                  )}
+                  {availableHabits.map((h) => (
+                    <label
+                      key={h.id}
+                      className="flex items-center gap-3 text-[14px] text-[var(--text-secondary)] p-2 cursor-pointer hover:bg-[var(--bg-card)]/50 rounded-lg transition-colors"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={newGoal.linkedHabitIds.includes(h.id)}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setNewGoal({
+                              ...newGoal,
+                              linkedHabitIds: [...newGoal.linkedHabitIds, h.id],
+                            });
+                          } else {
+                            setNewGoal({
+                              ...newGoal,
+                              linkedHabitIds: newGoal.linkedHabitIds.filter(
+                                (id) => id !== h.id,
+                              ),
+                            });
+                          }
+                        }}
+                        className="accent-indigo-500 rounded-sm w-4 h-4 focus:ring-indigo-500 bg-[var(--bg-primary)] border-[var(--border)]"
+                      />
+                      <span>{h.name}</span>
+                    </label>
+                  ))}
+                </div>
+                <p className="text-[10px] text-[var(--text-muted)] mt-2 leading-tight pl-1">
+                  If linked, completing any of the selected rituals will
+                  automatically log progress here.
+                </p>
+              </div>
+    
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => setIsAdding(false)}
+                  className="w-1/3 bg-[var(--bg-card)] border border-[var(--border)] hover:bg-[var(--bg-card-hover)] text-[var(--text-primary)] font-medium py-3.5 rounded-xl transition-all active:scale-95 flex justify-center items-center"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="w-2/3 bg-indigo-500/90 hover:bg-indigo-600 text-white font-bold py-3.5 rounded-xl text-[15px] transition-all active:scale-95 shadow-lg"
+                >
+                  {editingGoalId ? "Save Changes" : "Create Goal"}
+                </button>
+              </div>
+            </form>
           </div>
-
-          <button
-            type="submit"
-            className="w-full bg-indigo-500 hover:bg-indigo-600 text-white py-3.5 rounded-xl text-[15px] font-bold transition-all active:scale-95"
-          >
-            {editingGoalId ? "Save Changes" : "Create Goal"}
-          </button>
-        </form>
+        </div>
       )}
 
       <div className="flex flex-col gap-3">

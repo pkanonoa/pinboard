@@ -73,15 +73,26 @@ export async function cleanOldNotifications() {
     const transaction = db.transaction(STORE_NAME, "readwrite");
     const store = transaction.objectStore(STORE_NAME);
     const now = Date.now();
-    const ONE_DAY_MS = 24 * 60 * 60 * 1000;
+    const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
 
     notifications.forEach((n) => {
-      if (now - n.timestamp > ONE_DAY_MS) {
+      if (now - n.timestamp > SEVEN_DAYS_MS) {
         store.delete(n.id);
       }
     });
 
     transaction.oncomplete = () => resolve();
     transaction.onerror = () => reject(transaction.error);
+  });
+}
+
+export async function clearAllNotifications() {
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const transaction = db.transaction(STORE_NAME, "readwrite");
+    const store = transaction.objectStore(STORE_NAME);
+    const request = store.clear();
+    request.onsuccess = () => resolve();
+    request.onerror = () => reject(request.error);
   });
 }

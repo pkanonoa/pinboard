@@ -793,102 +793,111 @@ export default function DailyRitualsSection() {
       </button>
 
       {isAdding && (
-        <form
-          onSubmit={handleAddCustom}
-          className="mb-6 bg-[var(--bg-card)] p-4 rounded-lg border border-[var(--border)] animate-fade-in-down"
-        >
-          <h3 className="text-sm font-medium text-[var(--text-secondary)] mb-3">
-            Add Custom Ritual
-          </h3>
-
-          <select
-            value={newHabit.type}
-            onChange={(e) => setNewHabit({ ...newHabit, type: e.target.value })}
-            className="w-full bg-[var(--bg-primary)] border border-[var(--border)] rounded px-3 py-2 text-sm text-[var(--text-primary)] mb-2 focus:border-emerald-500 focus:outline-none"
-          >
-            <option value="countable">+1 (water, pages)</option>
-            <option value="one_time">Mark Done (exercise, shower)</option>
-            <option value="time_locked">Window only (sleep, wake up)</option>
-            <option value="big_number">Single log (steps, calories)</option>
-          </select>
-
-          <input
-            type="text"
-            placeholder="Ritual Name"
-            required
-            value={newHabit.name}
-            onChange={(e) => setNewHabit({ ...newHabit, name: e.target.value })}
-            className="w-full bg-[var(--bg-primary)] border border-[var(--border)] rounded px-3 py-2 text-sm text-[var(--text-primary)] mb-2 focus:border-emerald-500 focus:outline-none"
-          />
-
-          {(newHabit.type === "countable" ||
-            newHabit.type === "big_number") && (
-            <div className="flex gap-2 mb-3">
-              <input
-                type="number"
-                placeholder="Goal (e.g. 20)"
-                required
-                min="1"
-                value={newHabit.goal}
-                onChange={(e) =>
-                  setNewHabit({ ...newHabit, goal: e.target.value })
-                }
-                className="w-1/3 bg-[var(--bg-primary)] border border-[var(--border)] rounded px-3 py-2 text-sm text-[var(--text-primary)] focus:border-emerald-500 focus:outline-none"
-              />
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-md p-4 animate-fade-in">
+          <div className="w-full max-w-md bg-[var(--bg-card)]/80 backdrop-blur-xl p-6 rounded-3xl shadow-2xl border border-[var(--border)]/50 animate-fade-in-down">
+            <h3 className="text-lg font-bold text-[var(--text-primary)] mb-5 text-center">
+              New Ritual
+            </h3>
+            <form onSubmit={handleAddCustom} className="flex flex-col gap-2">
+              <select
+                value={newHabit.type}
+                onChange={(e) => setNewHabit({ ...newHabit, type: e.target.value })}
+                className="w-full bg-[var(--bg-primary)]/50 border border-[var(--border)]/30 rounded-xl px-4 py-3 text-sm text-[var(--text-primary)] mb-2 focus:border-emerald-500 focus:outline-none"
+              >
+                <option value="countable">+1 (water, pages)</option>
+                <option value="one_time">Mark Done (exercise, shower)</option>
+                <option value="time_locked">Window only (sleep, wake up)</option>
+                <option value="big_number">Single log (steps, calories)</option>
+              </select>
+    
               <input
                 type="text"
-                placeholder="Unit (e.g. pages)"
+                placeholder="Ritual Name"
                 required
-                value={newHabit.unit}
-                onChange={(e) =>
-                  setNewHabit({ ...newHabit, unit: e.target.value })
-                }
-                className="w-2/3 bg-[var(--bg-primary)] border border-[var(--border)] rounded px-3 py-2 text-sm text-[var(--text-primary)] focus:border-emerald-500 focus:outline-none"
+                value={newHabit.name}
+                onChange={(e) => setNewHabit({ ...newHabit, name: e.target.value })}
+                className="w-full bg-[var(--bg-primary)]/50 border border-[var(--border)]/30 rounded-xl px-4 py-3 text-sm text-[var(--text-primary)] mb-2 focus:border-emerald-500 focus:outline-none"
               />
-            </div>
-          )}
-
-          {newHabit.type === "time_locked" && (
-            <div className="flex gap-2 mb-3">
-              <div className="w-1/2">
-                <label className="text-[10px] text-[var(--text-secondary)] uppercase tracking-wider block mb-1">
-                  Target Time
-                </label>
-                <input
-                  type="time"
-                  required
-                  value={newHabit.targetTime}
-                  onChange={(e) =>
-                    setNewHabit({ ...newHabit, targetTime: e.target.value })
-                  }
-                  className="w-full bg-[var(--bg-primary)] border border-[var(--border)] rounded px-3 py-2 text-sm text-[var(--text-primary)] focus:border-emerald-500 focus:outline-none "
-                />
+    
+              {(newHabit.type === "countable" ||
+                newHabit.type === "big_number") && (
+                <div className="flex gap-2 mb-2">
+                  <input
+                    type="number"
+                    placeholder="Goal (e.g. 20)"
+                    required
+                    min="1"
+                    value={newHabit.goal}
+                    onChange={(e) =>
+                      setNewHabit({ ...newHabit, goal: e.target.value })
+                    }
+                    className="w-1/3 bg-[var(--bg-primary)]/50 border border-[var(--border)]/30 rounded-xl px-4 py-3 text-sm text-[var(--text-primary)] focus:border-emerald-500 focus:outline-none"
+                  />
+                  <input
+                    type="text"
+                    placeholder="Unit (e.g. pages)"
+                    required
+                    value={newHabit.unit}
+                    onChange={(e) =>
+                      setNewHabit({ ...newHabit, unit: e.target.value })
+                    }
+                    className="w-2/3 bg-[var(--bg-primary)]/50 border border-[var(--border)]/30 rounded-xl px-4 py-3 text-sm text-[var(--text-primary)] focus:border-emerald-500 focus:outline-none"
+                  />
+                </div>
+              )}
+    
+              {newHabit.type === "time_locked" && (
+                <div className="flex gap-2 mb-2">
+                  <div className="w-1/2">
+                    <label className="text-[10px] text-[var(--text-secondary)] uppercase tracking-wider block mb-1">
+                      Target Time
+                    </label>
+                    <input
+                      type="time"
+                      required
+                      value={newHabit.targetTime}
+                      onChange={(e) =>
+                        setNewHabit({ ...newHabit, targetTime: e.target.value })
+                      }
+                      className="w-full bg-[var(--bg-primary)]/50 border border-[var(--border)]/30 rounded-xl px-4 py-3 text-sm text-[var(--text-primary)] focus:border-emerald-500 focus:outline-none "
+                    />
+                  </div>
+                  <div className="w-1/2">
+                    <label className="text-[10px] text-[var(--text-secondary)] uppercase tracking-wider block mb-1">
+                      Grace Window (mins)
+                    </label>
+                    <input
+                      type="number"
+                      required
+                      min="1"
+                      value={newHabit.graceWindow}
+                      onChange={(e) =>
+                        setNewHabit({ ...newHabit, graceWindow: e.target.value })
+                      }
+                      className="w-full bg-[var(--bg-primary)]/50 border border-[var(--border)]/30 rounded-xl px-4 py-3 text-sm text-[var(--text-primary)] focus:border-emerald-500 focus:outline-none"
+                    />
+                  </div>
+                </div>
+              )}
+    
+              <div className="flex gap-2 mt-4">
+                <button
+                  type="button"
+                  onClick={() => setIsAdding(false)}
+                  className="w-1/3 bg-[var(--bg-card)] border border-[var(--border)] hover:bg-[var(--bg-card-hover)] text-[var(--text-primary)] font-medium py-3 rounded-xl transition-all active:scale-95 flex justify-center items-center"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="w-2/3 bg-emerald-600/90 hover:bg-emerald-700 text-white font-medium py-3 rounded-xl transition-all active:scale-95 flex justify-center items-center shadow-lg"
+                >
+                  Add Ritual
+                </button>
               </div>
-              <div className="w-1/2">
-                <label className="text-[10px] text-[var(--text-secondary)] uppercase tracking-wider block mb-1">
-                  Grace Window (mins)
-                </label>
-                <input
-                  type="number"
-                  required
-                  min="1"
-                  value={newHabit.graceWindow}
-                  onChange={(e) =>
-                    setNewHabit({ ...newHabit, graceWindow: e.target.value })
-                  }
-                  className="w-full bg-[var(--bg-primary)] border border-[var(--border)] rounded px-3 py-2 text-sm text-[var(--text-primary)] focus:border-emerald-500 focus:outline-none"
-                />
-              </div>
-            </div>
-          )}
-
-          <button
-            type="submit"
-            className="w-full mt-2 bg-emerald-600 hover:bg-emerald-700 text-[var(--text-primary)] py-2 rounded text-sm font-medium transition-all active:scale-95"
-          >
-            Add Ritual
-          </button>
-        </form>
+            </form>
+          </div>
+        </div>
       )}
 
       <div className="flex flex-col gap-3">

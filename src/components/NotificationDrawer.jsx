@@ -1,7 +1,12 @@
 import React, { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { getNotifications, deleteNotification, markAllAsRead } from "../db";
-import { getLocalYMD } from "../utils";
+import {
+  getNotifications,
+  deleteNotification,
+  markAllAsRead,
+  cleanOldNotifications,
+  clearAllNotifications,
+} from "../db";
 import NotificationManager from "./NotificationManager";
 
 const iconMap = {
@@ -19,6 +24,7 @@ const getRelativeTime = (timestamp) => {
   const diffInHours = Math.floor(diffInMinutes / 60);
   if (diffInHours < 24) return `${diffInHours}h ago`;
   const diffInDays = Math.floor(diffInHours / 24);
+  if (diffInDays === 1) return "Yesterday";
   return `${diffInDays}d ago`;
 };
 
@@ -33,11 +39,14 @@ export default function NotificationDrawer({ isOpen, onClose, setCurrentTab }) {
 
   const loadNotifications = async () => {
     try {
+      await cleanOldNotifications();
       const allNotifs = await getNotifications();
-      const today = getLocalYMD();
+      const now = Date.now();
+      const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
 
+      // Show notifications from the last 7 days
       const notifs = allNotifs.filter((n) => {
-        return getLocalYMD(new Date(n.timestamp)) === today;
+        return now - n.timestamp <= SEVEN_DAYS_MS;
       });
 
       // sort newest first
@@ -47,7 +56,6 @@ export default function NotificationDrawer({ isOpen, onClose, setCurrentTab }) {
       const unreadCount = notifs.filter((n) => !n.read).length;
       if (unreadCount > 0) {
         await markAllAsRead();
-        // optionally trigger a re-render or event to update bell dot
         window.dispatchEvent(new Event("notifications_read"));
       }
     } catch (e) {
@@ -60,6 +68,16 @@ export default function NotificationDrawer({ isOpen, onClose, setCurrentTab }) {
     try {
       await deleteNotification(id);
       setNotifications((prev) => prev.filter((n) => n.id !== id));
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleClearAll = async () => {
+    try {
+      await clearAllNotifications();
+      setNotifications([]);
+      window.dispatchEvent(new Event("notifications_read"));
     } catch (err) {
       console.error(err);
     }
@@ -108,24 +126,34 @@ export default function NotificationDrawer({ isOpen, onClose, setCurrentTab }) {
                 </svg>
                 Notifications
               </h2>
-              <button
-                onClick={onClose}
-                className="p-2 bg-[var(--bg-card)]/80 rounded-full hover:bg-[var(--bg-card)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors border border-[var(--border)]/50"
-              >
-                <svg
-                  className="w-5 h-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
+              <div className="flex items-center gap-2">
+                {notifications.length > 0 && (
+                  <button
+                    onClick={handleClearAll}
+                    className="text-xs font-semibold text-[var(--text-secondary)] hover:text-[var(--danger)] px-2.5 py-1 rounded-lg hover:bg-[var(--bg-card)] transition-colors"
+                  >
+                    Clear all
+                  </button>
+                )}
+                <button
+                  onClick={onClose}
+                  className="p-2 bg-[var(--bg-card)]/80 rounded-full hover:bg-[var(--bg-card)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors border border-[var(--border)]/50"
                 >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M6 18L18 6M6 6l12 12"
-                  ></path>
-                </svg>
-              </button>
+                  <svg
+                    className="w-5 h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M6 18L18 6M6 6l12 12"
+                    ></path>
+                  </svg>
+                </button>
+              </div>
             </div>
 
             <div className="flex-1 overflow-y-auto flex flex-col">
@@ -197,9 +225,9 @@ export default function NotificationDrawer({ isOpen, onClose, setCurrentTab }) {
               )}
             </div>
 
-            <div className="p-3 text-center border-t border-[var(--border)]/60 bg-[var(--bg-primary)]/30 backdrop-blur-md pb-safe">
-              <p className="text-[10px] text-[var(--text-muted)] font-medium">
-                Older notifications are cleared daily.
+            <div className="p-3 text-center border-t border-[var(--border)]/60 bg-[var(--bg-primary)]/40 backdrop-blur-md pb-safe">
+              <p className="text-xs text-[var(--text-secondary)] font-medium">
+                Notifications are saved for the last 7 days.
               </p>
             </div>
           </motion.div>

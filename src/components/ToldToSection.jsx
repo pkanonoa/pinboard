@@ -157,47 +157,52 @@ export default function ToldToSection() {
       )}
 
       {isAdding && (
-        <form onSubmit={handleSubmit} className="flex flex-col gap-3">
-          <input
-            type="text"
-            placeholder="Task description"
-            required
-            value={taskName}
-            onChange={(e) => setTaskName(e.target.value)}
-            className="w-full bg-[var(--bg-card)] border-none rounded-xl px-4 py-3 text-[var(--text-primary)] placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-colors"
-          />
-          <div className="flex gap-2">
-            <input
-              type="text"
-              placeholder="Assigned by (optional)"
-              value={whoSaidIt}
-              onChange={(e) => setWhoSaidIt(e.target.value)}
-              className="w-1/2 bg-[var(--bg-card)] border-none rounded-xl px-4 py-3 text-[var(--text-primary)] placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-colors text-sm"
-            />
-            <input
-              type="datetime-local"
-              value={dueDate}
-              onChange={(e) => setDueDate(e.target.value)}
-              className="w-1/2 bg-[var(--bg-card)] border-none rounded-xl px-3 py-3 text-[var(--text-secondary)] placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-colors text-sm"
-            />
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-md p-4 animate-fade-in">
+          <div className="w-full max-w-md bg-[var(--bg-card)]/80 backdrop-blur-xl p-5 rounded-3xl shadow-2xl border border-[var(--border)]/50 animate-fade-in-down">
+            <h3 className="text-lg font-bold text-[var(--text-primary)] mb-4 text-center">New Task</h3>
+            <form onSubmit={handleSubmit} className="flex flex-col gap-3">
+              <input
+                type="text"
+                placeholder="Task description"
+                required
+                value={taskName}
+                onChange={(e) => setTaskName(e.target.value)}
+                className="w-full bg-[var(--bg-primary)]/50 border border-[var(--border)]/30 rounded-xl px-4 py-3 text-[var(--text-primary)] placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-colors"
+              />
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  placeholder="Assigned by (optional)"
+                  value={whoSaidIt}
+                  onChange={(e) => setWhoSaidIt(e.target.value)}
+                  className="w-1/2 bg-[var(--bg-primary)]/50 border border-[var(--border)]/30 rounded-xl px-4 py-3 text-[var(--text-primary)] placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-colors text-sm"
+                />
+                <input
+                  type="datetime-local"
+                  value={dueDate}
+                  onChange={(e) => setDueDate(e.target.value)}
+                  className="w-1/2 bg-[var(--bg-primary)]/50 border border-[var(--border)]/30 rounded-xl px-3 py-3 text-[var(--text-secondary)] placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-colors text-sm"
+                />
+              </div>
+              <div className="flex gap-2 mt-3">
+                <button
+                  type="button"
+                  onClick={() => setIsAdding(false)}
+                  className="w-1/3 bg-[var(--bg-card)] border border-[var(--border)] hover:bg-[var(--bg-card-hover)] text-[var(--text-primary)] font-medium py-3 rounded-xl transition-all active:scale-95 flex justify-center items-center"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isScheduling}
+                  className="w-2/3 bg-indigo-500/90 hover:bg-indigo-600 text-white font-medium py-3 rounded-xl transition-all active:scale-95 disabled:opacity-70 flex justify-center items-center gap-2 shadow-lg"
+                >
+                  {isScheduling ? "Scheduling..." : "Add task"}
+                </button>
+              </div>
+            </form>
           </div>
-          <div className="flex gap-2 mt-1">
-            <button
-              type="button"
-              onClick={() => setIsAdding(false)}
-              className="w-1/3 bg-[var(--bg-card)] hover:bg-[var(--bg-card-hover)] text-[var(--text-secondary)] font-medium py-3 rounded-xl transition-all active:scale-95 flex justify-center items-center"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={isScheduling}
-              className="w-2/3 bg-indigo-500 hover:bg-indigo-600 text-[var(--text-primary)] font-medium py-3 rounded-xl transition-all active:scale-95 disabled:opacity-70 flex justify-center items-center gap-2"
-            >
-              {isScheduling ? "Scheduling..." : "Add task"}
-            </button>
-          </div>
-        </form>
+        </div>
       )}
 
       <div className="flex flex-col gap-6">

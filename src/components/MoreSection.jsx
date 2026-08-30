@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import {
   BarChart2,
   Award,
@@ -10,9 +11,11 @@ import {
 } from "lucide-react";
 import { getUserStats } from "../utils";
 import { playNotificationSound } from "../utils/audioUtils";
+import UserManualModal from "./UserManualModal";
 
 export default function MoreSection({ setCurrentTab, onOpenWeeklyReview }) {
   const [points, setPoints] = useState(0);
+  const [showUserManual, setShowUserManual] = useState(false);
 
   useEffect(() => {
     const stats = getUserStats();
@@ -167,7 +170,29 @@ export default function MoreSection({ setCurrentTab, onOpenWeeklyReview }) {
             />
           </button>
         </div>
+        {/* Add User Manual Section */}
+        <div className="bg-[var(--bg-card)] border border-[var(--border)]/60 rounded-2xl overflow-hidden shadow-sm mt-6">
+          <button
+            onClick={() => setShowUserManual(true)}
+            className="flex items-center justify-between w-full px-4 py-4 hover:bg-[var(--bg-card-hover)] transition-colors active:bg-white/[0.05]"
+          >
+            <div className="flex items-center gap-3.5">
+              <div className="w-8 h-8 rounded-full bg-blue-500/10 flex items-center justify-center text-blue-500">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" /></svg>
+              </div>
+              <span className="text-[15px] font-medium text-[var(--text-primary)]">
+                User Manual & Guide
+              </span>
+            </div>
+            <ChevronRight
+              className="w-4 h-4 text-[var(--text-muted)]"
+              strokeWidth={2}
+            />
+          </button>
+        </div>
       </div>
+
+      <UserManualModal isOpen={showUserManual} onClose={() => setShowUserManual(false)} />
 
       {window.location.hostname === 'localhost' && (
         <div className="bg-[var(--bg-card)] border border-[var(--border)]/60 rounded-2xl p-4 shadow-sm mt-6">
