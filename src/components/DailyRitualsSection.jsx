@@ -38,22 +38,7 @@ export default function DailyRitualsSection() {
   const [newHabit, setNewHabit] = useState({ name: '', goal: '', unit: '', type: 'countable', targetTime: '09:00', graceWindow: '30' });
 
   const [editingHabitId, setEditingHabitId] = useState(null);
-  const [editHabitData, setEditHabitData] = useState({
-    name: '',
-    goal: '',
-    unit: '',
-    type: 'countable',
-    targetTime: '09:00',
-    graceWindow: '30',
-    reminderEnabled: false,
-    reminderType: 'fixed',
-    reminderTime: '09:00',
-    reminderInterval: 2,
-    reminderIntervalUnit: 'hours',
-    checkInTimes: ['12:00', '18:00'],
-    alertThreshold: 0.5,
-    messageTemplate: "You're {remaining} away from your goal. Let's get moving! 🚶"
-  });
+  const [editHabitData, setEditHabitData] = useState({ name: '', goal: '', unit: '', type: 'countable', targetTime: '09:00', graceWindow: '30', reminderEnabled: false, reminderType: 'fixed', reminderTime: '09:00', reminderInterval: 2, reminderIntervalUnit: 'hours' });
   const [expandedHabitId, setExpandedHabitId] = useState(null);
   const [bigNumberInputs, setBigNumberInputs] = useState({});
   const [now, setNow] = useState(new Date());
@@ -61,13 +46,13 @@ export default function DailyRitualsSection() {
   const [activeMenuId, setActiveMenuId] = useState(null);
   const [pauseModalId, setPauseModalId] = useState(null);
   const [longPressTimer, setLongPressTimer] = useState(null);
-  
+
   const getDefaultResumeDate = () => {
     const d = new Date();
     d.setDate(d.getDate() + 3);
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
   };
-  
+
   const getMinResumeDate = () => {
     const d = new Date();
     d.setDate(d.getDate() + 1);
@@ -211,7 +196,7 @@ export default function DailyRitualsSection() {
         });
         if (unpausedCount > 0) {
           window.dispatchEvent(new CustomEvent('neo-bounce'));
-          
+
           try {
             const savedGoals = localStorage.getItem('pinboard_goals');
             if (savedGoals) {
@@ -237,7 +222,7 @@ export default function DailyRitualsSection() {
                 window.dispatchEvent(new Event('pinboard_goals_updated'));
               }
             }
-          } catch(e) {}
+          } catch (e) { }
         }
         return changed ? next : current;
       });
@@ -274,9 +259,9 @@ export default function DailyRitualsSection() {
 
     // Call sync exactly once (avoiding React Strict Mode double-invocation of state updaters)
     syncMonthlyGoalProgress(id, 1);
-    
+
     window.dispatchEvent(new CustomEvent('neo-bounce'));
-    
+
     setHabits(currentHabits => currentHabits.map(habit => {
       if (habit.id === id) {
         const newCount = habit.count + 1;
@@ -312,7 +297,7 @@ export default function DailyRitualsSection() {
     } else {
       syncMonthlyGoalProgress(id, -1);
     }
-    
+
     setHabits(currentHabits => currentHabits.map(habit => {
       if (habit.id === id && habit.count > 0) {
         let newCount = habit.count - 1;
@@ -416,7 +401,7 @@ export default function DailyRitualsSection() {
 
   const handlePauseSubmit = () => {
     if (!pauseModalId || !resumeDateInput) return;
-    
+
     setHabits(currentHabits => {
       const newHabits = currentHabits.map(habit => {
         if (habit.id === pauseModalId) {
@@ -453,7 +438,7 @@ export default function DailyRitualsSection() {
           window.dispatchEvent(new Event('pinboard_goals_updated'));
         }
       }
-    } catch(e) {}
+    } catch (e) { }
 
     setPauseModalId(null);
   };
@@ -498,39 +483,6 @@ export default function DailyRitualsSection() {
     setHabits(currentHabits => currentHabits.filter(h => h.id !== id));
   };
 
-  const addCheckInTime = () => {
-    const currentTimes = editHabitData.checkInTimes || [];
-    let nextTime = '18:00';
-    if (currentTimes.includes('18:00')) nextTime = '21:00';
-    else if (currentTimes.includes('12:00')) nextTime = '18:00';
-    setEditHabitData(prev => ({
-      ...prev,
-      checkInTimes: [...(prev.checkInTimes || []), nextTime]
-    }));
-  };
-
-  const removeCheckInTime = (indexToRemove) => {
-    setEditHabitData(prev => {
-      const currentTimes = prev.checkInTimes || [];
-      if (currentTimes.length <= 1) return prev;
-      return {
-        ...prev,
-        checkInTimes: currentTimes.filter((_, i) => i !== indexToRemove)
-      };
-    });
-  };
-
-  const updateCheckInTime = (index, val) => {
-    setEditHabitData(prev => {
-      const currentTimes = [...(prev.checkInTimes || [])];
-      currentTimes[index] = val;
-      return {
-        ...prev,
-        checkInTimes: currentTimes
-      };
-    });
-  };
-
   const startEditHabit = (habit) => {
     setEditingHabitId(habit.id);
     setEditHabitData({
@@ -544,12 +496,7 @@ export default function DailyRitualsSection() {
       reminderType: habit.reminderType || 'fixed',
       reminderTime: habit.reminderTime || '09:00',
       reminderInterval: habit.reminderInterval || 2,
-      reminderIntervalUnit: habit.reminderIntervalUnit || 'hours',
-      checkInTimes: Array.isArray(habit.checkInTimes) && habit.checkInTimes.length > 0
-        ? [...habit.checkInTimes]
-        : ['12:00', '18:00'],
-      alertThreshold: habit.alertThreshold !== undefined ? habit.alertThreshold : 0.5,
-      messageTemplate: habit.messageTemplate || "You're {remaining} away from your goal. Let's get moving! 🚶"
+      reminderIntervalUnit: habit.reminderIntervalUnit || 'hours'
     });
   };
 
@@ -568,10 +515,7 @@ export default function DailyRitualsSection() {
         reminderType: editHabitData.reminderType || 'fixed',
         reminderTime: editHabitData.reminderTime,
         reminderInterval: editHabitData.reminderInterval === '' ? 2 : parseInt(editHabitData.reminderInterval, 10),
-        reminderIntervalUnit: editHabitData.reminderIntervalUnit || 'hours',
-        checkInTimes: editHabitData.checkInTimes || ['12:00', '18:00'],
-        alertThreshold: editHabitData.alertThreshold !== undefined ? Number(editHabitData.alertThreshold) : 0.5,
-        messageTemplate: editHabitData.messageTemplate || "You're {remaining} away from your goal. Let's get moving! 🚶"
+        reminderIntervalUnit: editHabitData.reminderIntervalUnit || 'hours'
       };
 
       if (editHabitData.type === 'countable' || editHabitData.type === 'big_number') {
@@ -694,8 +638,8 @@ export default function DailyRitualsSection() {
             const isCompleted = habit.count >= habit.goal;
 
             return (
-              <div 
-                key={habit.id} 
+              <div
+                key={habit.id}
                 className={`p-4 rounded-2xl flex flex-col gap-3 relative transition-all duration-300 bg-[#1e1e28] select-none ${habit.paused ? 'opacity-50 grayscale' : ''} ${activeMenuId === habit.id ? 'z-50' : 'z-10'}`}
                 onTouchStart={() => !editingHabitId && startLongPress(habit.id)}
                 onTouchEnd={clearLongPress}
@@ -774,180 +718,75 @@ export default function DailyRitualsSection() {
                       </div>
                     )}
 
-                    {(() => {
-                      const isNumericRitual = editHabitData.type === 'countable' || editHabitData.type === 'big_number' || (parseInt(editHabitData.goal, 10) > 1);
-                      const currentTarget = parseInt(editHabitData.goal, 10) || 6000;
-                      const currentHabitObj = habits.find(h => h.id === editingHabitId);
-                      const currentCount = currentHabitObj ? (currentHabitObj.count || 0) : 1500;
-                      const currentUnit = editHabitData.unit ? ` ${editHabitData.unit}` : ' steps';
-                      const remainingCount = Math.max(0, currentTarget - currentCount);
-                      const remainingStr = `${remainingCount.toLocaleString()}${currentUnit}`;
-                      const percentStr = `${Math.round(currentTarget > 0 ? (currentCount / currentTarget) * 100 : 0)}%`;
-                      const thresholdPct = Math.round((editHabitData.alertThreshold !== undefined ? editHabitData.alertThreshold : 0.5) * 100);
-                      const resolvedPreviewMessage = (editHabitData.messageTemplate || "You're {remaining} away from your goal. Let's get moving! 🚶")
-                        .replace(/{remaining}/g, remainingStr)
-                        .replace(/{percent}/g, percentStr);
+                    <div className="mb-3 p-3 bg-[#16161f] rounded-xl flex flex-col gap-3">
+                      <div className="flex items-center justify-between">
+                        <label className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-0">Enable Reminder</label>
+                        <button
+                          type="button"
+                          onClick={() => setEditHabitData({ ...editHabitData, reminderEnabled: !editHabitData.reminderEnabled })}
+                          className={`w-10 h-5 rounded-full transition-colors relative ${editHabitData.reminderEnabled ? 'bg-indigo-500' : 'bg-gray-700'}`}
+                        >
+                          <div className={`w-3 h-3 bg-white rounded-full absolute top-1 transition-transform ${editHabitData.reminderEnabled ? 'translate-x-6' : 'translate-x-1'}`}></div>
+                        </button>
+                      </div>
 
-                      return (
-                        <div className="mb-3 p-3 bg-[#16161f] rounded-xl flex flex-col gap-3">
-                          <div className="flex items-center justify-between">
-                            <label className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-0">Enable Reminder</label>
-                            <button
-                              type="button"
-                              onClick={() => setEditHabitData({ ...editHabitData, reminderEnabled: !editHabitData.reminderEnabled })}
-                              className={`w-10 h-5 rounded-full transition-colors relative ${editHabitData.reminderEnabled ? 'bg-indigo-500' : 'bg-gray-700'}`}
+                      {editHabitData.reminderEnabled && (
+                        <>
+                          <div className="animate-fade-in-down flex items-center justify-between pt-1">
+                            <label className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-0">Reminder Type</label>
+                            <select
+                              value={editHabitData.reminderType || 'fixed'}
+                              onChange={e => setEditHabitData({ ...editHabitData, reminderType: e.target.value })}
+                              className="bg-gray-800 border-none rounded-lg px-2 py-1 text-white text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500"
                             >
-                              <div className={`w-3 h-3 bg-white rounded-full absolute top-1 transition-transform ${editHabitData.reminderEnabled ? 'translate-x-6' : 'translate-x-1'}`}></div>
-                            </button>
+                              <option value="fixed">Fixed Time</option>
+                              <option value="interval">Time Interval</option>
+                            </select>
                           </div>
 
-                          {editHabitData.reminderEnabled && (
-                            <div className="flex flex-col gap-3.5 pt-1">
-                              {/* REMINDER TYPE */}
-                              <div className="flex flex-col gap-1.5">
-                                <label className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Reminder Type</label>
-                                <select
-                                  value={editHabitData.reminderType || 'fixed'}
-                                  onChange={e => setEditHabitData({ ...editHabitData, reminderType: e.target.value })}
-                                  className="w-full bg-[#12131c] border border-indigo-500/40 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 cursor-pointer"
-                                >
-                                  <option value="fixed">Fixed Time</option>
-                                  <option value="interval">Time Interval</option>
-                                  <option value="goal_progress" disabled={!isNumericRitual}>
-                                    Goal / Progress Based 🎯 {!isNumericRitual ? '(Requires numeric target)' : ''}
-                                  </option>
-                                </select>
-                              </div>
-                              
-                              {/* FIXED TIME */}
-                              {(!editHabitData.reminderType || editHabitData.reminderType === 'fixed') && (
-                                <div className="animate-fade-in-down flex items-center justify-between pt-1">
-                                  <label className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-0">Time</label>
-                                  <input
-                                    type="time"
-                                    value={editHabitData.reminderTime}
-                                    onChange={e => setEditHabitData({ ...editHabitData, reminderTime: e.target.value })}
-                                    className="bg-[#12131c] border border-gray-800 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 [color-scheme:dark]"
-                                  />
-                                </div>
-                              )}
-
-                              {/* TIME INTERVAL */}
-                              {editHabitData.reminderType === 'interval' && (
-                                <div className="animate-fade-in-down flex items-center justify-between pt-1">
-                                  <label className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-0">Every</label>
-                                  <div className="flex gap-2">
-                                    <input
-                                      type="number"
-                                      min="1"
-                                      value={editHabitData.reminderInterval === '' ? '' : editHabitData.reminderInterval}
-                                      onChange={e => setEditHabitData({ ...editHabitData, reminderInterval: e.target.value === '' ? '' : parseInt(e.target.value, 10) })}
-                                      className="bg-[#12131c] w-20 border border-gray-800 rounded-xl px-3 py-2 text-white text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500"
-                                    />
-                                    <select
-                                      value={editHabitData.reminderIntervalUnit || 'hours'}
-                                      onChange={e => setEditHabitData({ ...editHabitData, reminderIntervalUnit: e.target.value })}
-                                      className="bg-[#12131c] border border-gray-800 rounded-xl px-3 py-2 text-white text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500"
-                                    >
-                                      <option value="hours">Hours</option>
-                                      <option value="minutes">Minutes</option>
-                                    </select>
-                                  </div>
-                                </div>
-                              )}
-
-                              {/* GOAL / PROGRESS BASED */}
-                              {editHabitData.reminderType === 'goal_progress' && (
-                                <div className="animate-fade-in-down flex flex-col gap-4 pt-1">
-                                  {/* CHECK-IN TIMES */}
-                                  <div>
-                                    <label className="text-xs font-semibold text-gray-400 uppercase tracking-wider block mb-2">Check-in times</label>
-                                    <div className="flex flex-col gap-2">
-                                      {(editHabitData.checkInTimes || ['12:00']).map((t, idx) => (
-                                        <div key={idx} className="flex items-center justify-between bg-[#12131c] border border-gray-800 rounded-xl px-4 py-3">
-                                          <input
-                                            type="time"
-                                            value={t}
-                                            onChange={e => updateCheckInTime(idx, e.target.value)}
-                                            className="bg-transparent text-white font-medium text-sm focus:outline-none [color-scheme:dark] flex-1 cursor-pointer"
-                                          />
-                                          {(editHabitData.checkInTimes?.length || 1) > 1 && (
-                                            <button
-                                              type="button"
-                                              onClick={() => removeCheckInTime(idx)}
-                                              className="text-gray-500 hover:text-gray-300 p-1 transition-colors"
-                                              title="Remove check-in time"
-                                            >
-                                              ✕
-                                            </button>
-                                          )}
-                                        </div>
-                                      ))}
-                                      <button
-                                        type="button"
-                                        onClick={addCheckInTime}
-                                        className="w-full py-3 border border-dashed border-indigo-500/30 hover:border-indigo-500/60 rounded-xl text-indigo-400 text-sm font-medium flex items-center justify-center gap-1.5 transition-colors bg-indigo-500/5 hover:bg-indigo-500/10 active:scale-[0.99]"
-                                      >
-                                        <span className="text-base leading-none">+</span>
-                                        <span>Add check-in time</span>
-                                      </button>
-                                    </div>
-                                  </div>
-
-                                  {/* ALERT THRESHOLD */}
-                                  <div>
-                                    <label className="text-xs font-semibold text-gray-400 uppercase tracking-wider block mb-2">Alert Threshold</label>
-                                    <div className="bg-[#12131c] border border-gray-800 rounded-xl p-4">
-                                      <div className="flex justify-between items-center text-sm mb-3">
-                                        <span className="text-gray-300 font-medium">Remind if below</span>
-                                        <span className="font-bold text-indigo-400">
-                                          {thresholdPct}%
-                                        </span>
-                                      </div>
-                                      <input
-                                        type="range"
-                                        min="5"
-                                        max="100"
-                                        step="5"
-                                        value={thresholdPct}
-                                        onChange={e => setEditHabitData({ ...editHabitData, alertThreshold: parseInt(e.target.value, 10) / 100 })}
-                                        className="w-full h-1.5 rounded-lg appearance-none cursor-pointer accent-indigo-400"
-                                        style={{
-                                          background: `linear-gradient(to right, #818cf8 0%, #818cf8 ${thresholdPct}%, #2d2e3f ${thresholdPct}%, #2d2e3f 100%)`
-                                        }}
-                                      />
-                                    </div>
-                                  </div>
-
-                                  {/* MESSAGE */}
-                                  <div>
-                                    <label className="text-xs font-semibold text-gray-400 uppercase tracking-wider block mb-2">Message</label>
-                                    <div className="bg-[#12131c] border border-gray-800 rounded-xl p-3.5 focus-within:border-indigo-500/60 transition-colors">
-                                      <textarea
-                                        rows={2}
-                                        value={editHabitData.messageTemplate || "You're {remaining} away from your goal. Let's get moving! 🚶"}
-                                        onChange={e => setEditHabitData({ ...editHabitData, messageTemplate: e.target.value })}
-                                        className="w-full bg-transparent text-indigo-100 text-sm font-mono focus:outline-none resize-none leading-relaxed"
-                                        placeholder="You're {remaining} away from your goal. Let's get moving! 🚶"
-                                      />
-                                    </div>
-                                    <p className="text-xs text-gray-400 mt-2 font-normal leading-relaxed">
-                                      Preview: "{resolvedPreviewMessage}"
-                                    </p>
-                                  </div>
-                                </div>
-                              )}
+                          {(!editHabitData.reminderType || editHabitData.reminderType === 'fixed') && (
+                            <div className="animate-fade-in-down flex items-center justify-between pt-1">
+                              <label className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-0">Time</label>
+                              <input
+                                type="time"
+                                value={editHabitData.reminderTime}
+                                onChange={e => setEditHabitData({ ...editHabitData, reminderTime: e.target.value })}
+                                className="bg-gray-800 border-none rounded-lg px-3 py-1 text-white text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 [color-scheme:dark]"
+                              />
                             </div>
                           )}
-                        </div>
-                      );
-                    })()}
 
-                    <div className="flex gap-3 mt-4">
-                      <button type="submit" className="flex-1 bg-indigo-500 hover:bg-indigo-600 text-white py-3.5 rounded-2xl text-sm font-semibold transition-all active:scale-95 shadow-md">
+                          {editHabitData.reminderType === 'interval' && (
+                            <div className="animate-fade-in-down flex items-center justify-between pt-1">
+                              <label className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-0">Every</label>
+                              <div className="flex gap-2">
+                                <input
+                                  type="number"
+                                  min="1"
+                                  value={editHabitData.reminderInterval === '' ? '' : editHabitData.reminderInterval}
+                                  onChange={e => setEditHabitData({ ...editHabitData, reminderInterval: e.target.value === '' ? '' : parseInt(e.target.value, 10) })}
+                                  className="bg-gray-800 w-16 border-none rounded-lg px-2 py-1 text-white text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                                />
+                                <select
+                                  value={editHabitData.reminderIntervalUnit || 'hours'}
+                                  onChange={e => setEditHabitData({ ...editHabitData, reminderIntervalUnit: e.target.value })}
+                                  className="bg-gray-800 border-none rounded-lg px-2 py-1 text-white text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                                >
+                                  <option value="hours">Hours</option>
+                                  <option value="minutes">Minutes</option>
+                                </select>
+                              </div>
+                            </div>
+                          )}
+                        </>
+                      )}
+                    </div>
+
+                    <div className="flex gap-2">
+                      <button type="submit" className="flex-1 bg-indigo-500 hover:bg-indigo-600 text-white py-3 rounded-xl text-sm font-medium transition-all active:scale-95">
                         Save
                       </button>
-                      <button type="button" onClick={() => setEditingHabitId(null)} className="flex-1 bg-[#1a1b26] hover:bg-[#202230] border border-gray-800 text-gray-300 py-3.5 rounded-2xl text-sm font-semibold transition-all active:scale-95">
+                      <button type="button" onClick={() => setEditingHabitId(null)} className="px-6 bg-gray-700 hover:bg-gray-600 text-white py-3 rounded-xl text-sm font-medium transition-all active:scale-95">
                         Cancel
                       </button>
                     </div>
@@ -962,14 +801,11 @@ export default function DailyRitualsSection() {
                         <div className="text-sm text-gray-400 truncate mt-0.5">
                           {habit.type === 'countable' && <span>{habit.count} / {habit.goal} {habit.unit}</span>}
                           {habit.type === 'countable' && habit.reminderEnabled && habit.reminderType === 'interval' && <span> · every {habit.reminderInterval || 2}{habit.reminderIntervalUnit === 'minutes' ? 'm' : 'h'}</span>}
-                          {habit.reminderEnabled && habit.reminderType === 'goal_progress' && (
-                            <span> · 🎯 {(habit.checkInTimes || []).map(t => formatTime12h(t)).join(', ')}</span>
-                          )}
-                          
+
                           {habit.type === 'big_number' && <span>{habit.count} / {habit.goal} {habit.unit}</span>}
-                          
+
                           {habit.type === 'time_locked' && <span>Target {formatTime12h(habit.targetTime)} · ±{habit.graceWindow}m</span>}
-                          
+
                           {habit.type === 'one_time' && <span>Daily check-off</span>}
                         </div>
                       </div>
@@ -1024,11 +860,10 @@ export default function DailyRitualsSection() {
                                 <button
                                   onClick={() => handleUndo(habit.id)}
                                   disabled={habit.count <= 0}
-                                  className={`px-3 py-2 rounded-lg font-medium text-sm flex items-center justify-center transition-colors min-w-[2.5rem] ${
-                                    habit.count <= 0
+                                  className={`px-3 py-2 rounded-lg font-medium text-sm flex items-center justify-center transition-colors min-w-[2.5rem] ${habit.count <= 0
                                       ? 'bg-[#2a2a35]/40 text-gray-600 cursor-not-allowed'
                                       : 'bg-[#2a2a35] text-gray-300 hover:bg-gray-700 active:scale-95'
-                                  }`}
+                                    }`}
                                   title="Decrease 1"
                                 >
                                   -1
@@ -1062,7 +897,7 @@ export default function DailyRitualsSection() {
                                 </button>
                               )
                             )}
-                            
+
                             {habit.type === 'big_number' && (
                               <div className="flex items-center gap-1.5">
                                 {habit.count > 0 && (
@@ -1075,8 +910,8 @@ export default function DailyRitualsSection() {
                                   </button>
                                 )}
                                 {isCompleted ? (
-                                  <div 
-                                    className="px-4 py-2 bg-emerald-900/30 text-emerald-400 rounded-lg font-medium text-sm flex items-center justify-center cursor-pointer active:scale-95 transition-transform" 
+                                  <div
+                                    className="px-4 py-2 bg-emerald-900/30 text-emerald-400 rounded-lg font-medium text-sm flex items-center justify-center cursor-pointer active:scale-95 transition-transform"
                                     onClick={() => setBigNumberInputs(prev => ({ ...prev, [habit.id]: prev[habit.id] !== undefined ? undefined : habit.count }))}
                                     title="Click to edit or adjust"
                                   >
@@ -1094,7 +929,7 @@ export default function DailyRitualsSection() {
                             )}
                           </>
                         )}
-                        
+
                         {/* Action Sheet (Long Press) */}
                         {activeMenuId === habit.id && (
                           <div className="absolute top-full right-0 mt-2 w-36 bg-[#16161f] border border-gray-700/60 rounded-xl shadow-2xl overflow-hidden z-[60] animate-fade-in-down origin-top-right">
@@ -1165,14 +1000,14 @@ export default function DailyRitualsSection() {
       {pauseModalId && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
           <div className="bg-gray-900 border border-gray-700 rounded-2xl w-full max-w-sm p-6 shadow-2xl relative flex flex-col items-center text-center animate-fade-in-up">
-            <img 
-              src={neoImg} 
-              alt="Sleepy Neo" 
+            <img
+              src={neoImg}
+              alt="Sleepy Neo"
               className="w-[100px] mb-4 filter grayscale-[60%] opacity-80 neo-gentle-rock"
             />
             <h3 className="text-xl font-bold text-white mb-2">Pause {habits.find(h => h.id === pauseModalId)?.name}?</h3>
             <p className="text-sm text-teal-400/80 mb-6 font-medium">Life happens. Neo holds your streak while you rest.</p>
-            
+
             <div className="w-full text-left mb-6">
               <label className="text-xs font-bold text-gray-400 uppercase tracking-wider block mb-2">Resume on</label>
               <input
@@ -1184,16 +1019,16 @@ export default function DailyRitualsSection() {
                 className="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-teal-500 [color-scheme:dark]"
               />
             </div>
-            
+
             <div className="flex w-full gap-3">
-              <button 
-                onClick={() => setPauseModalId(null)} 
+              <button
+                onClick={() => setPauseModalId(null)}
                 className="flex-1 py-3 px-4 bg-transparent hover:bg-gray-800 text-gray-300 font-bold rounded-xl transition-colors"
               >
                 Cancel
               </button>
-              <button 
-                onClick={handlePauseSubmit} 
+              <button
+                onClick={handlePauseSubmit}
                 className="flex-1 py-3 px-4 bg-teal-600 hover:bg-teal-500 text-white font-bold rounded-xl transition-colors shadow-lg shadow-teal-900/50"
               >
                 ⏸ Pause it

@@ -3,7 +3,6 @@ import confetti from 'canvas-confetti';
 import neoImg from '../assets/neo.png';
 import neoSadImg from '../assets/neo-sad.png';
 import neoProgressbarImg from '../assets/neo-progressbar.png';
-import { getLocalYMD } from '../utils';
 
 const INSPIRATIONAL_QUOTES = [
   "Small daily wins create massive yearly results! 🏆",
@@ -21,7 +20,7 @@ const INSPIRATIONAL_QUOTES = [
 // Returns 'morning' | 'noon' | 'evening' | 'night'
 const getTimePeriod = () => {
   const h = new Date().getHours();
-  if (h >= 5 && h < 11)  return 'morning';
+  if (h >= 5 && h < 11) return 'morning';
   if (h >= 11 && h < 16) return 'noon';
   if (h >= 16 && h < 21) return 'evening';
   return 'night';
@@ -29,10 +28,10 @@ const getTimePeriod = () => {
 
 const getPeriodGreeting = (period, name) => {
   const n = name && name !== 'friend' ? `, ${name}` : '';
-  if (period === 'morning')  return `Good morning${n}!`;
-  if (period === 'noon')     return `Good afternoon${n}!`;
-  if (period === 'evening')  return `Good evening${n}!`;
-  return                            `Hey there${n}!`;
+  if (period === 'morning') return `Good morning${n}!`;
+  if (period === 'noon') return `Good afternoon${n}!`;
+  if (period === 'evening') return `Good evening${n}!`;
+  return `Hey there${n}!`;
 };
 
 export default function NeoAvatar({ habits = [], tasks = [], allGoalsOnTrack = false }) {
@@ -50,17 +49,13 @@ export default function NeoAvatar({ habits = [], tasks = [], allGoalsOnTrack = f
   const activeHabits = habits.filter(h => !h.paused);
   const totalHabits = activeHabits.length;
   const doneHabits = activeHabits.filter(h => h.count >= h.goal).length;
-  const pct = totalHabits > 0 ? doneHabits / totalHabits : 0;
+  const pct = totalHabits > 0 ? doneHabits / totalHabits : 1;
 
   const userName = localStorage.getItem('pinboard_user_name') || 'friend';
 
-  const todayStr = getLocalYMD();
-  const currentHour = new Date().getHours();
-  const hasFailedHabits = activeHabits.some(h => h.failedDate === todayStr);
-
-  // Compute state & animation based on habit progress and time of day
-  let state = 2; // Default to neutral/smiling state 2 instead of sad state 1
-  let animationClass = "neo-gentle-float";
+  // Compute state & animation based on habit progress
+  let state = 1;
+  let animationClass = "neo-gentle-rock";
 
   // State 6: All habits done + all goals on track → progressbar neo
   if (pct === 1 && totalHabits > 0 && allGoalsOnTrack) {
@@ -78,23 +73,7 @@ export default function NeoAvatar({ habits = [], tasks = [], allGoalsOnTrack = f
   } else if (pct > 0) {
     state = 2;
     animationClass = "neo-gentle-float";
-  } else {
-    // pct is 0 (or totalHabits is 0)
-    // Sad Neo (state 1) only triggers if we have active habits AND:
-    // (a) they failed a time-locked habit today, OR
-    // (b) it's late in the day (after 4pm / 16:00) and they haven't done any rituals.
-    const isLate = currentHour >= 16;
-    if (totalHabits > 0 && (hasFailedHabits || isLate)) {
-      state = 1;
-      animationClass = "neo-gentle-rock";
-    } else {
-      state = 2;
-      animationClass = "neo-gentle-float";
-    }
   }
-
-  const stateRef = useRef(state);
-  stateRef.current = state;
 
   // ── Mood-aware full greeting (1st open per period) ────────────────────
   const buildFullGreeting = (period, currentState, tasks, habits) => {
@@ -105,7 +84,7 @@ export default function NeoAvatar({ habits = [], tasks = [], allGoalsOnTrack = f
     const remaining = activeH.filter(h => h.count < h.goal);
 
     const happy = currentState >= 4; // 4, 5, 6
-    const sad   = currentState === 1;
+    const sad = currentState === 1;
 
     if (sad) {
       // Sad Neo — gentle encouragement
@@ -154,32 +133,32 @@ export default function NeoAvatar({ habits = [], tasks = [], allGoalsOnTrack = f
     const remaining = activeH.filter(h => h.count < h.goal);
 
     const happy = currentState >= 4;
-    const sad   = currentState === 1;
+    const sad = currentState === 1;
 
     // Priority: overdue → pending task → habit reminder → quote
     if (overdue.length > 0) {
       if (happy) return `Still on fire! Don't forget "${overdue[0].name}" is overdue 🔥`;
-      if (sad)   return `Hey... "${overdue[0].name}" is still waiting. You've got this 💛`;
+      if (sad) return `Hey... "${overdue[0].name}" is still waiting. You've got this 💛`;
       return `Hey! "${overdue[0].name}" is overdue — quick catch-up! ⏰`;
     }
     if (pending.length > 0) {
       const t = pending[Math.floor(Math.random() * pending.length)];
       if (happy) return `Psst — "${t.name}" is still on the list! Let's blast through it! ⚡`;
-      if (sad)   return `When you're ready, "${t.name}" is waiting 🤍`;
+      if (sad) return `When you're ready, "${t.name}" is waiting 🤍`;
       return `Reminder: "${t.name}" needs your attention 🎯`;
     }
     if (remaining.length > 0) {
       const h = remaining[Math.floor(Math.random() * remaining.length)];
       if (happy) return `Nearly there! "${h.name}" is all that's left 💪🔥`;
-      if (sad)   return `Take it easy — "${h.name}" is still left for today 🌿`;
+      if (sad) return `Take it easy — "${h.name}" is still left for today 🌿`;
       return `Don't forget your "${h.name}" ritual! 💧`;
     }
     // Fallback: quote (mood-tinted)
     const quotes = happy
       ? ["You're absolutely on FIRE today! 🔥🏆", "Max productivity unlocked! 🚀", "Neo is proud of you today! ⭐"]
       : sad
-      ? ["Rest if you must, but don't quit 💛", "Progress > perfection, always 🌿", "Small steps still move you forward 🤝"]
-      : INSPIRATIONAL_QUOTES;
+        ? ["Rest if you must, but don't quit 💛", "Progress > perfection, always 🌿", "Small steps still move you forward 🤝"]
+        : INSPIRATIONAL_QUOTES;
     return quotes[Math.floor(Math.random() * quotes.length)];
   };
 
@@ -187,7 +166,7 @@ export default function NeoAvatar({ habits = [], tasks = [], allGoalsOnTrack = f
   const triggerNotification = () => {
     const currentTasks = tasksRef.current || [];
     const currentHabits = habitsRef.current || [];
-    const msg = buildShortHi(stateRef.current, currentTasks, currentHabits);
+    const msg = buildShortHi(state, currentTasks, currentHabits);
     setSpeech(msg);
     setBounce(true);
     setTimeout(() => setBounce(false), 380);
@@ -205,32 +184,19 @@ export default function NeoAvatar({ habits = [], tasks = [], allGoalsOnTrack = f
     const currentTasks = tasksRef.current || [];
     const currentHabits = habitsRef.current || [];
 
-    // Delay greeting by 400ms so props (habits/tasks) have time to load from parent's useEffect
-    const greetingTimer = setTimeout(() => {
-      const currentTasks = tasksRef.current || [];
-      const currentHabits = habitsRef.current || [];
+    let msg;
+    if (!hasGreetedThisPeriod) {
+      // 1st open of this time period → full mood-aware greeting
+      localStorage.setItem(periodKey, '1');
+      msg = buildFullGreeting(period, state, currentTasks, currentHabits);
+    } else {
+      // 2nd+ open → short hi + task/quote
+      msg = buildShortHi(state, currentTasks, currentHabits);
+    }
 
-      const firstWelcomeShown = localStorage.getItem('neo_first_welcome_shown') === 'true';
-      let msg;
-      let displayTime = 5500;
-
-      if (!firstWelcomeShown) {
-        localStorage.setItem('neo_first_welcome_shown', 'true');
-        // Set the period key too so they don't get double greeted with a normal greeting right after
-        localStorage.setItem(periodKey, '1');
-        msg = `Welcome to Pinboard, ${userName}! 🎉 Neo is so excited to help you build habits and conquer your days! Let's make today your first victory! 🧅✨`;
-        displayTime = 9000;
-      } else if (!hasGreetedThisPeriod) {
-        localStorage.setItem(periodKey, '1');
-        msg = buildFullGreeting(period, stateRef.current, currentTasks, currentHabits);
-      } else {
-        msg = buildShortHi(stateRef.current, currentTasks, currentHabits);
-      }
-
-      setSpeech(msg);
-      if (speechTimeoutRef.current) clearTimeout(speechTimeoutRef.current);
-      speechTimeoutRef.current = setTimeout(() => setSpeech(null), displayTime);
-    }, 400);
+    setSpeech(msg);
+    if (speechTimeoutRef.current) clearTimeout(speechTimeoutRef.current);
+    speechTimeoutRef.current = setTimeout(() => setSpeech(null), 5500);
 
     // Automatic motivational quote timer: fires every 15 minutes
     const autoInterval = setInterval(() => {
@@ -238,7 +204,6 @@ export default function NeoAvatar({ habits = [], tasks = [], allGoalsOnTrack = f
     }, 15 * 60 * 1000);
 
     return () => {
-      clearTimeout(greetingTimer);
       if (speechTimeoutRef.current) clearTimeout(speechTimeoutRef.current);
       clearInterval(autoInterval);
     };
@@ -286,9 +251,9 @@ export default function NeoAvatar({ habits = [], tasks = [], allGoalsOnTrack = f
 
   return (
     <div className="fixed bottom-[80px] right-2 flex flex-col items-end justify-end select-none z-40 pointer-events-none">
-      
+
       {/* Speech Bubble */}
-      <div 
+      <div
         className={`absolute bottom-full right-2 mb-2 bg-white text-gray-900 px-3.5 py-2 rounded-2xl text-xs font-semibold shadow-xl max-w-[210px] text-center transition-all duration-300 pointer-events-none leading-snug ${speech ? 'opacity-100 scale-100' : 'opacity-0 scale-95'}`}
       >
         {speech}
@@ -296,24 +261,23 @@ export default function NeoAvatar({ habits = [], tasks = [], allGoalsOnTrack = f
       </div>
 
       {/* Main Avatar Container */}
-      <div 
+      <div
         className="relative cursor-pointer mt-2 pointer-events-auto"
         onClick={handleTap}
         style={{ width: '96px', height: '96px' }}
       >
         <div className={`${animationClass} w-full h-full relative`}>
           <div className={`w-full h-full transition-transform duration-600 ${bounce ? 'neo-bounce-once' : ''}`}>
-            
+
             {/* State 1: Sad Neo, State 5: Glow Neo, State 6: Progressbar Neo */}
             <img
               src={state === 6 ? neoProgressbarImg : state === 1 ? neoSadImg : neoImg}
               alt="Neo"
               draggable="false"
-              className={`w-full h-full object-contain ${
-                state === 5 ? 'drop-shadow-[0_0_18px_#f5c518]'
-                : state === 6 ? 'drop-shadow-[0_0_22px_#34d399]'
-                : ''
-              }`}
+              className={`w-full h-full object-contain ${state === 5 ? 'drop-shadow-[0_0_18px_#f5c518]'
+                  : state === 6 ? 'drop-shadow-[0_0_22px_#34d399]'
+                    : ''
+                }`}
             />
 
 
@@ -323,7 +287,7 @@ export default function NeoAvatar({ habits = [], tasks = [], allGoalsOnTrack = f
             {state === 3 && (
               <>
                 {[...Array(6)].map((_, i) => (
-                  <span 
+                  <span
                     key={`sparkle3-${i}`}
                     className="absolute text-yellow-300 neo-twinkle text-lg"
                     style={{
@@ -340,7 +304,7 @@ export default function NeoAvatar({ habits = [], tasks = [], allGoalsOnTrack = f
             {state === 4 && (
               <>
                 {[...Array(10)].map((_, i) => (
-                  <span 
+                  <span
                     key={`sparkle4-${i}`}
                     className="absolute text-yellow-400 neo-twinkle text-xl"
                     style={{
@@ -366,7 +330,7 @@ export default function NeoAvatar({ habits = [], tasks = [], allGoalsOnTrack = f
                 📈
               </div>
             )}
-            
+
 
           </div>
         </div>

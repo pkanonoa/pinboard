@@ -5,11 +5,11 @@ import { saveNotification } from '../db';
 
 export default function SettingsSection() {
   const [theme, setTheme] = useState(localStorage.getItem('pinboard_theme') || 'darker');
-  
+
   const [notificationsEnabled, setNotificationsEnabled] = useState(
     localStorage.getItem('pinboard_push_subscribed') === 'true'
   );
-  
+
   const [dailyReviewTime, setDailyReviewTime] = useState(
     localStorage.getItem('pinboard_daily_review_time') || '20:00'
   );
@@ -20,7 +20,7 @@ export default function SettingsSection() {
   useEffect(() => {
     const saved = localStorage.getItem('pinboard_rituals_data');
     if (saved) {
-      try { setHabits(JSON.parse(saved).habits || []); } catch (e) {}
+      try { setHabits(JSON.parse(saved).habits || []); } catch (e) { }
     }
 
     // Auto-subscribe if they enabled it in device settings
@@ -30,7 +30,7 @@ export default function SettingsSection() {
           const reg = await navigator.serviceWorker.ready;
           // Note: using the same key from NotificationManager
           const publicVapidKey = import.meta.env.VITE_VAPID_PUBLIC_KEY;
-          
+
           const urlBase64ToUint8Array = (base64String) => {
             const padding = '='.repeat((4 - base64String.length % 4) % 4);
             const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
@@ -44,7 +44,7 @@ export default function SettingsSection() {
             userVisibleOnly: true,
             applicationServerKey: urlBase64ToUint8Array(publicVapidKey)
           });
-          
+
           setNotificationsEnabled(true);
           localStorage.setItem('pinboard_push_subscribed', 'true');
           syncStateToBackend();
@@ -76,7 +76,7 @@ export default function SettingsSection() {
   const handleReorder = (newOrder) => {
     saveHabits(newOrder);
   };
-  
+
   const handleThemeChange = (newTheme) => {
     setTheme(newTheme);
     localStorage.setItem('pinboard_theme', newTheme);
@@ -119,7 +119,7 @@ export default function SettingsSection() {
         const reg = await navigator.serviceWorker.ready;
         const title = 'Test Notification';
         const body = 'This is a test notification from Pinboard Settings!';
-        
+
         reg.showNotification(title, {
           body: body,
           icon: '/logo.jpg',
@@ -135,10 +135,10 @@ export default function SettingsSection() {
           timestamp: Date.now(),
           read: false
         });
-        
+
         // Notify App to update the bell
         window.dispatchEvent(new Event('notifications_read'));
-        
+
       } catch (e) {
         console.error(e);
         alert('Database Error: ' + e.message);
@@ -196,7 +196,7 @@ export default function SettingsSection() {
       {/* Notifications */}
       <section id="settings-notifications" className="bg-gray-900 border border-gray-800 rounded-xl p-5 shadow-lg">
         <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-4">Notifications</h3>
-        
+
         {(!('Notification' in window) || Notification.permission !== 'granted') && (
           <div className="bg-gray-800 p-4 rounded-lg mb-4 text-center border border-gray-700">
             <p className="text-gray-300 text-sm">Please enable notifications in your device app settings to receive reminders.</p>
@@ -205,15 +205,15 @@ export default function SettingsSection() {
 
         <div className="flex items-center justify-between mb-4">
           <span className="text-white font-medium">Daily Review Time</span>
-          <input 
-            type="time" 
-            value={dailyReviewTime} 
+          <input
+            type="time"
+            value={dailyReviewTime}
             onChange={handleDailyReviewTimeChange}
             className="bg-gray-800 border border-gray-700 rounded-lg px-3 py-1.5 text-white outline-none focus:border-indigo-500"
           />
         </div>
 
-        <button 
+        <button
           onClick={testNotification}
           className="w-full py-2 bg-gray-800 hover:bg-gray-700 text-indigo-400 font-bold rounded-lg transition-colors border border-gray-700"
         >
@@ -225,7 +225,7 @@ export default function SettingsSection() {
       <section id="settings-rituals" className="bg-gray-900 border border-gray-800 rounded-xl p-5 shadow-lg">
         <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-4">Rituals Management</h3>
         <p className="text-xs text-gray-500 mb-3">Drag to reorder. Tap a habit to edit.</p>
-        
+
         {habits.length === 0 ? (
           <p className="text-gray-500 italic text-sm">No rituals to manage.</p>
         ) : (
@@ -237,41 +237,41 @@ export default function SettingsSection() {
                     <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 8h16M4 16h16"></path></svg>
                     <span className="text-white font-medium">{habit.name}</span>
                   </div>
-                  <button 
+                  <button
                     onClick={() => setEditingHabitId(editingHabitId === habit.id ? null : habit.id)}
                     className="text-xs text-indigo-400 font-bold px-2 py-1 bg-gray-700 rounded hover:bg-gray-600"
                   >
                     {editingHabitId === habit.id ? 'Close' : 'Edit'}
                   </button>
                 </div>
-                
+
                 {editingHabitId === habit.id && (
                   <div className="mt-4 flex flex-col gap-3 border-t border-gray-700 pt-3">
-                    <input 
-                      type="text" 
-                      value={habit.name} 
+                    <input
+                      type="text"
+                      value={habit.name}
                       onChange={(e) => updateHabit(habit.id, { name: e.target.value })}
                       placeholder="Habit name"
                       className="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-white outline-none focus:border-indigo-500"
                     />
                     <div className="flex gap-2">
-                      <input 
-                        type="number" 
-                        value={habit.goal} 
+                      <input
+                        type="number"
+                        value={habit.goal}
                         onChange={(e) => updateHabit(habit.id, { goal: parseInt(e.target.value) || 1 })}
                         className="w-24 bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-white outline-none focus:border-indigo-500"
                       />
-                      <input 
-                        type="text" 
-                        value={habit.unit} 
+                      <input
+                        type="text"
+                        value={habit.unit}
                         onChange={(e) => updateHabit(habit.id, { unit: e.target.value })}
                         className="flex-1 bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-white outline-none focus:border-indigo-500"
                       />
                     </div>
-                    
+
                     <div className="flex items-center justify-between mt-2">
                       <span className="text-sm text-gray-300">Habit Reminder</span>
-                      <button 
+                      <button
                         onClick={() => updateHabit(habit.id, { reminderEnabled: !habit.reminderEnabled })}
                         className={`w-10 h-5 rounded-full transition-colors relative ${habit.reminderEnabled ? 'bg-emerald-500' : 'bg-gray-700'}`}
                       >
@@ -279,15 +279,15 @@ export default function SettingsSection() {
                       </button>
                     </div>
                     {habit.reminderEnabled && (
-                      <input 
-                        type="time" 
-                        value={habit.reminderTime || '09:00'} 
+                      <input
+                        type="time"
+                        value={habit.reminderTime || '09:00'}
                         onChange={(e) => updateHabit(habit.id, { reminderTime: e.target.value })}
                         className="bg-gray-900 border border-gray-700 rounded-lg px-3 py-1.5 text-white outline-none focus:border-indigo-500 self-end"
                       />
                     )}
 
-                    <button 
+                    <button
                       onClick={() => deleteHabit(habit.id)}
                       className="mt-2 text-red-400 text-sm font-bold w-full text-center py-2 bg-red-500/10 rounded-lg hover:bg-red-500/20"
                     >
@@ -318,14 +318,14 @@ export default function SettingsSection() {
                 </div>
                 <button
                   onClick={() => {
-                    const newHabits = habits.map(h => 
-                      h.id === habit.id 
-                        ? { ...h, paused: false, pausedAt: null, resumeDate: null } 
+                    const newHabits = habits.map(h =>
+                      h.id === habit.id
+                        ? { ...h, paused: false, pausedAt: null, resumeDate: null }
                         : h
                     );
                     saveHabits(newHabits);
                     window.dispatchEvent(new CustomEvent('neo-bounce'));
-                    
+
                     // Unpause linked goals
                     try {
                       const savedGoals = localStorage.getItem('pinboard_goals');
@@ -351,7 +351,7 @@ export default function SettingsSection() {
                           window.dispatchEvent(new Event('pinboard_goals_updated'));
                         }
                       }
-                    } catch(e) {}
+                    } catch (e) { }
                   }}
                   className="text-xs bg-teal-500 hover:bg-teal-400 text-teal-950 font-bold px-3 py-1.5 rounded-lg transition-colors"
                 >
@@ -366,23 +366,23 @@ export default function SettingsSection() {
       {/* App Preferences / Account */}
       <section id="settings-account" className="bg-gray-900 border border-gray-800 rounded-xl p-5 shadow-lg">
         <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-4">App & Account</h3>
-        
+
         <div className="mb-6">
           <span className="text-white font-medium block mb-2">Theme</span>
           <div className="flex gap-2">
-            <button 
+            <button
               onClick={() => handleThemeChange('dark')}
               className={`flex-1 py-2 rounded-lg font-bold text-xs transition-colors ${theme === 'dark' ? 'bg-indigo-500 text-white' : 'bg-gray-800 text-gray-400 border border-gray-700'}`}
             >
               Dark
             </button>
-            <button 
+            <button
               onClick={() => handleThemeChange('darker')}
               className={`flex-1 py-2 rounded-lg font-bold text-xs transition-colors ${theme === 'darker' ? 'bg-indigo-500 text-white' : 'bg-gray-800 text-gray-400 border border-gray-700'}`}
             >
               Darker
             </button>
-            <button 
+            <button
               onClick={() => handleThemeChange('amoled')}
               className={`flex-1 py-2 rounded-lg font-bold text-xs transition-colors ${theme === 'amoled' ? 'bg-indigo-500 text-white' : 'bg-gray-800 text-gray-400 border border-gray-700'}`}
             >
@@ -392,19 +392,19 @@ export default function SettingsSection() {
         </div>
 
         <div className="flex flex-col gap-3">
-          <button 
+          <button
             onClick={clearCompletedTasks}
             className="w-full py-3 bg-gray-800 hover:bg-gray-700 text-white font-medium rounded-lg transition-colors border border-gray-700"
           >
             Clear Completed Tasks
           </button>
-          <button 
+          <button
             onClick={resetStreaks}
             className="w-full py-3 bg-gray-800 hover:bg-gray-700 text-amber-400 font-medium rounded-lg transition-colors border border-gray-700"
           >
             Reset All Streaks
           </button>
-          <button 
+          <button
             onClick={clearAllData}
             className="w-full py-3 bg-red-500/10 hover:bg-red-500/20 text-red-400 font-bold rounded-lg transition-colors border border-red-500/20"
           >

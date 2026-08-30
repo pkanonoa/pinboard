@@ -84,18 +84,6 @@ export default function Dashboard({ setCurrentTab }) {
   });
   const allGoalsOnTrack = goalPaceList.length > 0 && goalPaceList.every(g => g.status === 'on_track');
 
-  // Header date & greeting
-  const formattedDate = new Intl.DateTimeFormat('en-US', {
-    weekday: 'long',
-    month: 'short',
-    day: 'numeric'
-  }).format(new Date());
-
-  const currentHour = new Date().getHours();
-  let greeting = 'Good afternoon';
-  if (currentHour < 12) greeting = 'Good morning';
-  else if (currentHour >= 17) greeting = 'Good evening';
-
   // Level & Points calculation
   const points = stats.points || 0;
   const currentLevelName = stats.currentLevel?.name || 'Beginner';
@@ -193,13 +181,6 @@ export default function Dashboard({ setCurrentTab }) {
       
       {/* Top Header */}
       <div className="flex flex-col pr-14 pt-1">
-        <span className="text-sm text-gray-400 font-medium tracking-wide">
-          {formattedDate}
-        </span>
-        <h1 className="text-[28px] font-bold text-white tracking-tight mt-0.5 leading-tight">
-          {greeting}
-        </h1>
-
         {/* Level badge & points line */}
         <div className="flex items-center gap-2 mt-3 flex-wrap">
           <span className="bg-indigo-950/50 border border-indigo-500/30 text-indigo-300 text-xs font-semibold px-3 py-1 rounded-full shadow-sm tracking-wide">
