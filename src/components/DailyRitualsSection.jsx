@@ -38,7 +38,7 @@ export default function DailyRitualsSection() {
   const [newHabit, setNewHabit] = useState({ name: '', goal: '', unit: '', type: 'countable', targetTime: '09:00', graceWindow: '30' });
 
   const [editingHabitId, setEditingHabitId] = useState(null);
-  const [editHabitData, setEditHabitData] = useState({ name: '', goal: '', unit: '', type: 'countable', targetTime: '09:00', graceWindow: '30', reminderEnabled: false, reminderType: 'fixed', reminderTime: '09:00', reminderInterval: 2, reminderIntervalUnit: 'hours' });
+  const [editHabitData, setEditHabitData] = useState({ name: '', goal: '', unit: '', type: 'countable', targetTime: '09:00', graceWindow: '30', reminderEnabled: false, reminderType: 'fixed', reminderTime: '09:00', reminderInterval: 2, reminderIntervalUnit: 'hours', reminderDays: [] });
   const [expandedHabitId, setExpandedHabitId] = useState(null);
   const [bigNumberInputs, setBigNumberInputs] = useState({});
   const [now, setNow] = useState(new Date());
@@ -154,9 +154,20 @@ export default function DailyRitualsSection() {
           reminderType: habit.reminderType || 'fixed',
           reminderTime: habit.reminderTime || '09:00',
           reminderInterval: habit.reminderInterval || 2,
-          reminderIntervalUnit: habit.reminderIntervalUnit || 'hours'
+          reminderIntervalUnit: habit.reminderIntervalUnit || 'hours',
+          reminderDays: habit.reminderDays || []
         });
         setExpandedHabitId(habit.id);
+      }
+    }
+
+    // Check if there is a pending pause request (e.g. from "Learn about pausing" suggestion)
+    const pendingPauseId = sessionStorage.getItem('pinboard_pending_pause_habit');
+    if (pendingPauseId) {
+      sessionStorage.removeItem('pinboard_pending_pause_habit');
+      const habit = loadedHabits.find(h => h.id === pendingPauseId);
+      if (habit) {
+        setPauseModalId(habit.id);
       }
     }
 
@@ -523,7 +534,8 @@ export default function DailyRitualsSection() {
       reminderType: habit.reminderType || 'fixed',
       reminderTime: habit.reminderTime || '09:00',
       reminderInterval: habit.reminderInterval || 2,
-      reminderIntervalUnit: habit.reminderIntervalUnit || 'hours'
+      reminderIntervalUnit: habit.reminderIntervalUnit || 'hours',
+      reminderDays: habit.reminderDays || []
     });
   };
 
@@ -542,7 +554,8 @@ export default function DailyRitualsSection() {
         reminderType: editHabitData.reminderType || 'fixed',
         reminderTime: editHabitData.reminderTime,
         reminderInterval: editHabitData.reminderInterval === '' ? 2 : parseInt(editHabitData.reminderInterval, 10),
-        reminderIntervalUnit: editHabitData.reminderIntervalUnit || 'hours'
+        reminderIntervalUnit: editHabitData.reminderIntervalUnit || 'hours',
+        reminderDays: editHabitData.reminderDays || []
       };
 
       if (editHabitData.type === 'countable' || editHabitData.type === 'big_number') {
@@ -773,15 +786,62 @@ export default function DailyRitualsSection() {
                           </div>
 
                           {(!editHabitData.reminderType || editHabitData.reminderType === 'fixed') && (
-                            <div className="animate-fade-in-down flex items-center justify-between pt-1">
-                              <label className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-0">Time</label>
-                              <input
-                                type="time"
-                                value={editHabitData.reminderTime}
-                                onChange={e => setEditHabitData({ ...editHabitData, reminderTime: e.target.value })}
-                                className="bg-gray-800 border-none rounded-lg px-3 py-1 text-white text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 [color-scheme:dark]"
-                              />
-                            </div>
+                            <>
+                              <div className="animate-fade-in-down flex items-center justify-between pt-1">
+                                <label className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-0">Time</label>
+                                <input
+                                  type="time"
+                                  value={editHabitData.reminderTime}
+                                  onChange={e => setEditHabitData({ ...editHabitData, reminderTime: e.target.value })}
+                                  className="bg-gray-800 border-none rounded-lg px-3 py-1 text-white text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 [color-scheme:dark]"
+                                />
+                              </div>
+
+                              <div className="animate-fade-in-down flex flex-col gap-1.5 pt-2">
+                                <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-1">Reminder Days</label>
+                                <div className="flex justify-between gap-1">
+                                  {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, idx) => {
+                                    const selected = editHabitData.reminderDays?.includes(idx) || (!editHabitData.reminderDays || editHabitData.reminderDays.length === 0);
+                                    return (
+                                      <button
+                                        key={idx}
+                                        type="button"
+                                        onClick={() => {
+                                          let currentDays = editHabitData.reminderDays ? [...editHabitData.reminderDays] : [];
+                                          if (currentDays.length === 0) {
+                                            // When empty, it means 'every day'. So clicking a day toggles it off
+                                            currentDays = [0, 1, 2, 3, 4, 5, 6].filter(d => d !== idx);
+                                          } else {
+                                            if (currentDays.includes(idx)) {
+                                              currentDays = currentDays.filter(d => d !== idx);
+                                            } else {
+                                              currentDays.push(idx);
+                                            }
+                                          }
+                                          // If all days are selected, reset to empty array (daily)
+                                          if (currentDays.length === 7) {
+                                            currentDays = [];
+                                          }
+                                          setEditHabitData({ ...editHabitData, reminderDays: currentDays });
+                                        }}
+                                        className={`w-7 h-7 rounded-lg text-xs font-bold transition-all flex items-center justify-center ${
+                                          selected
+                                            ? 'bg-indigo-500 text-white shadow-sm'
+                                            : 'bg-gray-800 text-gray-400 hover:text-gray-300'
+                                        }`}
+                                      >
+                                        {day}
+                                      </button>
+                                    );
+                                  })}
+                                </div>
+                                <span className="text-[10px] text-gray-500 italic mt-0.5">
+                                  {(!editHabitData.reminderDays || editHabitData.reminderDays.length === 0)
+                                    ? 'Fires every day'
+                                    : `Fires on: ${editHabitData.reminderDays.map(d => ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][d]).join(', ')}`}
+                                </span>
+                              </div>
+                            </>
                           )}
 
                           {editHabitData.reminderType === 'interval' && (

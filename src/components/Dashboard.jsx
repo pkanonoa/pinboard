@@ -181,10 +181,13 @@ export default function Dashboard({ setCurrentTab }) {
       return;
     }
 
-    // For other actions (e.g. 'add_reminder', 'adjust_goal'):
-    // Save to pending edit queue so DailyRitualsSection opens it immediately on mount
+    // For other actions (e.g. 'add_reminder', 'adjust_goal', 'pause'):
     if (suggestion.habitId) {
-      sessionStorage.setItem('pinboard_pending_edit_habit', suggestion.habitId);
+      if (suggestion.action.type === 'pause') {
+        sessionStorage.setItem('pinboard_pending_pause_habit', suggestion.habitId);
+      } else {
+        sessionStorage.setItem('pinboard_pending_edit_habit', suggestion.habitId);
+      }
     }
     setCurrentTab('rituals');
     handleDismissSuggestion(suggestion.id);

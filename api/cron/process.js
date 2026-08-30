@@ -78,6 +78,14 @@ export default async function handler(req, res) {
             const isInterval = habit.reminderType === 'interval';
 
             if (!isInterval && habit.reminderTime) {
+              // Day of week check (0=Sunday, 1=Monday...)
+              if (habit.reminderDays && habit.reminderDays.length > 0) {
+                const localDOW = userLocalNow.getUTCDay();
+                if (!habit.reminderDays.includes(localDOW)) {
+                  continue;
+                }
+              }
+
               const [th, tm] = habit.reminderTime.split(':').map(Number);
               const dueTime = Date.UTC(userYear, userMonth, userDate, th, tm, 0) - (timezoneOffset * 60 * 1000);
 
