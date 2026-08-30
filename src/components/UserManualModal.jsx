@@ -62,7 +62,7 @@ export default function UserManualModal({ isOpen, onClose }) {
                 <div className="bg-[var(--bg-primary)] p-4 rounded-2xl border border-[var(--border)]/50">
                   <p className="font-semibold text-[var(--text-primary)] mb-2 text-xs uppercase tracking-wider">How to use it</p>
                   <ul className="space-y-2 text-[13px]">
-                    <li className="flex gap-2"><ChevronRight className="w-4 h-4 text-emerald-500 shrink-0" /> <span>Tap the <strong>Mic Icon</strong> near Neo on the Home tab.</span></li>
+                    <li className="flex gap-2"><ChevronRight className="w-4 h-4 text-emerald-500 shrink-0" /> <span><strong>Hold (Long Press) Neo</strong> on the Home tab to start speaking.</span></li>
                     <li className="flex gap-2"><ChevronRight className="w-4 h-4 text-emerald-500 shrink-0" /> <span><strong>"I just drank water"</strong> → Logs +1 to your water ritual.</span></li>
                     <li className="flex gap-2"><ChevronRight className="w-4 h-4 text-emerald-500 shrink-0" /> <span><strong>"Remind me to call mom at 5 PM"</strong> → Creates a scheduled task.</span></li>
                   </ul>
