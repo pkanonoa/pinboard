@@ -109,6 +109,51 @@ export default function MoreSection({ setCurrentTab, onOpenWeeklyReview }) {
       </div>
 
 
+      <div className="bg-[#141522] border border-gray-800/60 rounded-2xl p-4 shadow-sm">
+        <h3 className="text-sm font-semibold text-white mb-4">Debug Tools</h3>
+        <button 
+          onClick={() => {
+            if (!('Notification' in window)) {
+              alert('Notifications not supported in this browser.');
+              return;
+            }
+            if (Notification.permission !== 'granted') {
+              Notification.requestPermission().then(p => {
+                if(p === 'granted') fireTestNotif();
+                else alert('Permission denied');
+              });
+            } else {
+              fireTestNotif();
+            }
+
+            function fireTestNotif() {
+              const title = 'Test OS Notification!';
+              const options = { body: 'If you see this, native notifications are working!', icon: '/pwa-192x192.png' };
+              try {
+                if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+                  navigator.serviceWorker.ready.then(r => {
+                    r.showNotification(title, options)
+                      .then(() => alert('Triggered via Service Worker'))
+                      .catch(err => {
+                        new Notification(title, options);
+                        alert('Service Worker failed, triggered via new Notification()');
+                      });
+                  });
+                } else {
+                  new Notification(title, options);
+                  alert('Triggered via new Notification() (No active Service Worker)');
+                }
+              } catch (err) {
+                alert('Error creating notification: ' + err.message);
+              }
+            }
+          }}
+          className="w-full bg-gray-800 hover:bg-gray-700 text-white py-3 rounded-xl font-medium transition-colors"
+        >
+          Test OS Notification
+        </button>
+      </div>
+
     </div>
   );
 }

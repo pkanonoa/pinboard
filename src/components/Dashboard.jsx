@@ -118,9 +118,9 @@ export default function Dashboard({ setCurrentTab }) {
 
   // Smart suggestions (useMemo, only when ≥14 days of data)
   const suggestions = useMemo(
-    () => generateSuggestions(habits, completionLog),
+    () => generateSuggestions(habits, tasks, monthlyGoals, completionLog),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [habits, completionLog, dismissedIds]
+    [habits, tasks, monthlyGoals, completionLog, dismissedIds]
   );
   const visibleSuggestions = suggestions;
 

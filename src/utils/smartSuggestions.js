@@ -291,14 +291,94 @@ function rule7_goalBehindRitual(habits, completionLog) {
   return suggestions;
 }
 
+// ── Rule 8 — Overdue Tasks ───────────────────────────────────────────────────
+
+function rule8_overdueTasks(tasks) {
+  const suggestions = [];
+  const now = new Date();
+  
+  if (!tasks) return suggestions;
+  
+  const overdueTasks = tasks.filter(t => !t.done && t.dueDate && new Date(t.dueDate) < now);
+
+  if (overdueTasks.length > 0) {
+    const task = overdueTasks[0];
+    suggestions.push({
+      id: `r8_${task.id}`,
+      icon: '⏰',
+      title: 'Task overdue',
+      body: `"${task.name}" is past its due date. Time to reschedule or tackle it today!`,
+      action: { label: 'Got it', type: 'dismiss' },
+      priority: 8
+    });
+  }
+  return suggestions;
+}
+
+// ── Rule 9 — Stale Tasks ─────────────────────────────────────────────────────
+
+function rule9_staleTasks(tasks) {
+  const suggestions = [];
+  const now = Date.now();
+  
+  if (!tasks) return suggestions;
+  
+  const staleTasks = tasks.filter(t => {
+    if (t.done || !t.createdAt) return false;
+    const daysOld = (now - new Date(t.createdAt).getTime()) / 86400000;
+    return daysOld > 14;
+  });
+
+  if (staleTasks.length > 0) {
+    const task = staleTasks[0];
+    suggestions.push({
+      id: `r9_${task.id}`,
+      icon: '🕸️',
+      title: 'Stale task found',
+      body: `"${task.name}" has been pending for over 2 weeks. Consider breaking it down or deleting it.`,
+      action: { label: 'Got it', type: 'dismiss' },
+      priority: 9
+    });
+  }
+  return suggestions;
+}
+
+// ── Rule 10 — Goal Halfway ───────────────────────────────────────────────────
+
+function rule10_goalHalfway(goals) {
+  const suggestions = [];
+  
+  if (!goals) return suggestions;
+  
+  for (const goal of goals) {
+    if (goal.isCompleted) continue;
+    const progressPct = (goal.progress || 0) / (goal.target || 1);
+    
+    // Check if it's recently halfway (50-60%)
+    if (progressPct >= 0.5 && progressPct < 0.6) {
+      suggestions.push({
+        id: `r10_${goal.id}`,
+        icon: '🎉',
+        title: 'You are halfway there!',
+        body: `You've reached the halfway mark for "${goal.name}". Keep up the great work!`,
+        action: { label: 'Keep going', type: 'dismiss' },
+        priority: 10
+      });
+      // Just return one to avoid overwhelming
+      break;
+    }
+  }
+  return suggestions;
+}
+
 // ── Public API ────────────────────────────────────────────────────────────────
 
 /**
- * generateSuggestions(habits, completionLog)
+ * generateSuggestions(habits, tasks, goals, completionLog)
  * Returns all passing suggestions sorted by priority ascending.
  * Caller slices to desired display count.
  */
-export function generateSuggestions(habits, completionLog) {
+export function generateSuggestions(habits, tasks = [], goals = [], completionLog = []) {
   if (!habits?.length || !completionLog?.length) return [];
 
   const oldest = Math.min(...completionLog.map(l => l.timestamp));
@@ -317,6 +397,9 @@ export function generateSuggestions(habits, completionLog) {
     ...rule2_streakRecovery(habits, completionLog),
     ...rule6_perfectWeek(habits, completionLog),
     ...rule7_goalBehindRitual(habits, completionLog),
+    ...rule8_overdueTasks(tasks),
+    ...rule9_staleTasks(tasks),
+    ...rule10_goalHalfway(goals)
   ];
 
   return all

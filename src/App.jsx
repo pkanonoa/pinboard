@@ -18,6 +18,7 @@ import WeeklyReviewScreen from './components/WeeklyReviewScreen';
 import { getNotifications, cleanOldNotifications } from './db';
 import { syncStateToBackend } from './utils';
 import { maybeResetDismissals } from './utils/smartSuggestions';
+import LocalTaskNotifier from './components/LocalTaskNotifier';
 
 function App() {
   const [currentTab, setCurrentTab] = useState('dashboard');
@@ -100,6 +101,7 @@ function App() {
     
     window.addEventListener('focus', checkUnread);
     window.addEventListener('notifications_read', checkUnread);
+    window.addEventListener('NEW_NOTIFICATION_LOCAL', checkUnread);
     const swMessageListener = (event) => {
       if (event.data && event.data.type === 'NEW_NOTIFICATION') {
         checkUnread();
@@ -116,6 +118,7 @@ function App() {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
       window.removeEventListener('focus', checkUnread);
       window.removeEventListener('notifications_read', checkUnread);
+      window.removeEventListener('NEW_NOTIFICATION_LOCAL', checkUnread);
       if ('serviceWorker' in navigator) {
         navigator.serviceWorker.removeEventListener('message', swMessageListener);
       }
@@ -173,6 +176,7 @@ function App() {
     >
       <BadgeCelebration />
       <NeoCelebration />
+      <LocalTaskNotifier />
 
       {/* Weekly Review overlay */}
       {showWeeklyReview && (
