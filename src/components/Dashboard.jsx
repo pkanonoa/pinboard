@@ -15,6 +15,14 @@ export default function Dashboard({ setCurrentTab }) {
   const [habits, setHabits] = useState([]);
   const [monthlyGoals, setMonthlyGoals] = useState([]);
   const [stats, setStats] = useState(() => getUserStats());
+  const [promptDismissed, setPromptDismissed] = useState(() => {
+    const dismissedAt = localStorage.getItem('goalPromptDismissedAt');
+    if (dismissedAt) {
+      const elapsed = Date.now() - parseInt(dismissedAt, 10);
+      return elapsed < 3 * 24 * 60 * 60 * 1000;
+    }
+    return false;
+  });
 
   const loadAllData = () => {
     const savedTasks = localStorage.getItem('pinboard_tasks');
@@ -95,11 +103,17 @@ export default function Dashboard({ setCurrentTab }) {
     ? Math.max(0, stats.currentLevel.max + 1 - points)
     : 101;
 
-  // Active Goal calculation
-  const activeGoal = monthlyGoals.find(g => !g.isCompleted) || monthlyGoals[0];
-  let goalName = activeGoal ? activeGoal.name : 'Run a 10k under 55 min';
-  let goalProgressPct = 62;
+  // Active Goal calculation (most recently created/updated)
+  const sortedGoals = [...monthlyGoals].sort((a, b) => {
+    const timeA = new Date(a.lastLoggedDate || a.createdAt || 0).getTime();
+    const timeB = new Date(b.lastLoggedDate || b.createdAt || 0).getTime();
+    return timeB - timeA;
+  });
+  const activeGoal = sortedGoals[0];
+  let goalName = '';
+  let goalProgressPct = 0;
   if (activeGoal) {
+    goalName = activeGoal.name;
     if (activeGoal.target > 0) {
       goalProgressPct = Math.min(100, Math.round(((activeGoal.progress || 0) / activeGoal.target) * 100));
     } else {
@@ -219,36 +233,71 @@ export default function Dashboard({ setCurrentTab }) {
       </div>
 
       {/* Active Goal Card */}
-      <div className="bg-[#141522] border border-gray-800/60 rounded-2xl p-4 shadow-sm">
-        <div className="flex justify-between items-center mb-2">
-          <div className="flex items-center gap-2">
-            <Target className="w-4 h-4 text-indigo-400" />
-            <span className="text-sm font-semibold text-gray-200">Active goal</span>
+      {(!promptDismissed || monthlyGoals.length > 0) && (
+        <div className={`border rounded-2xl p-4 shadow-sm transition-all ${
+          monthlyGoals.length > 0 
+            ? 'bg-[#141522] border-gray-800/60' 
+            : 'border-dashed border-gray-700/60 bg-transparent'
+        }`}>
+          <div className="flex justify-between items-center mb-2">
+            <div className="flex items-center gap-2">
+              <Target className="w-4 h-4 text-indigo-400" />
+              <span className="text-sm font-semibold text-gray-200">Active goal</span>
+            </div>
+            <button 
+              onClick={() => setCurrentTab('goals')}
+              className="text-xs text-indigo-400 hover:text-indigo-300 font-medium transition-colors"
+            >
+              View all
+            </button>
           </div>
-          <button 
-            onClick={() => setCurrentTab('goals')}
-            className="text-xs text-indigo-400 hover:text-indigo-300 font-medium transition-colors"
-          >
-            View all
-          </button>
-        </div>
 
-        <div className="text-[15px] font-semibold text-white mt-1.5 mb-2.5 truncate">
-          {goalName}
-        </div>
+          {monthlyGoals.length > 0 ? (
+            <>
+              <div className="text-[15px] font-semibold text-white mt-1.5 mb-2.5 truncate">
+                {goalName}
+              </div>
 
-        <div className="flex items-center gap-3">
-          <div className="flex-1 bg-gray-800/90 rounded-full h-1.5 overflow-hidden">
-            <div 
-              className="bg-emerald-400 h-full rounded-full transition-all duration-500"
-              style={{ width: `${goalProgressPct}%` }}
-            />
-          </div>
-          <span className="text-xs font-bold text-emerald-400 shrink-0">
-            {goalProgressPct}%
-          </span>
+              <div className="flex items-center gap-3">
+                <div className="flex-1 bg-gray-800/90 rounded-full h-1.5 overflow-hidden">
+                  <div 
+                    className="bg-emerald-400 h-full rounded-full transition-all duration-500"
+                    style={{ width: `${goalProgressPct}%` }}
+                  />
+                </div>
+                <span className="text-xs font-bold text-emerald-400 shrink-0">
+                  {goalProgressPct}%
+                </span>
+              </div>
+            </>
+          ) : (
+            <div className="flex flex-col items-center text-center py-2 px-1">
+              <span className="text-2xl mb-1.5">🎯</span>
+              <h3 className="text-sm font-semibold text-white">No active goal yet</h3>
+              <p className="text-xs text-gray-400 mt-1 mb-4 max-w-[260px] leading-relaxed">
+                Set one to track progress right from Home
+              </p>
+              <div className="flex items-center gap-3 w-full justify-center">
+                <button
+                  onClick={() => setCurrentTab('goals')}
+                  className="px-4 py-1.5 bg-indigo-500 hover:bg-indigo-600 text-white rounded-xl text-xs font-semibold shadow-sm transition-all active:scale-95"
+                >
+                  Set a goal
+                </button>
+                <button
+                  onClick={() => {
+                    localStorage.setItem('goalPromptDismissedAt', Date.now().toString());
+                    setPromptDismissed(true);
+                  }}
+                  className="px-3 py-1.5 text-gray-400 hover:text-gray-300 text-xs font-medium transition-colors"
+                >
+                  Skip
+                </button>
+              </div>
+            </div>
+          )}
         </div>
-      </div>
+      )}
 
       {/* Today's Rituals Card */}
       <div className="bg-[#141522] border border-gray-800/60 rounded-2xl p-4 shadow-sm">
