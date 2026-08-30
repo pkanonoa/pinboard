@@ -32,24 +32,19 @@
 
 /* Neo Avatar Animations */
 @keyframes neoGentleRock {
-  0%, 100% { transform: rotate(-3deg); }
-  50% { transform: rotate(3deg); }
+  0%, 100%, 50% { transform: none; }
 }
 @keyframes neoGentleFloat {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-6px); }
+  0%, 100%, 50% { transform: none; }
 }
 @keyframes neoFasterFloat {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-6px); }
+  0%, 100%, 50% { transform: none; }
 }
 @keyframes neoEnergeticBounce {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-14px); }
+  0%, 100%, 50% { transform: none; }
 }
 @keyframes neoProudPulse {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.06); }
+  0%, 100%, 50% { transform: none; }
 }
 @keyframes neoTwinkle {
   0%, 100% { opacity: 0; transform: scale(0.8); }
@@ -68,8 +63,7 @@
   to { transform: rotate(360deg); }
 }
 @keyframes neoBounceOnce {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-18px); }
+  0%, 100%, 50% { transform: none; }
 }
 @keyframes neoCloudDrift {
   0%, 100% { transform: translateX(-50%) translateX(-4px); }

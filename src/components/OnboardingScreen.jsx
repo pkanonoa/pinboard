@@ -199,17 +199,13 @@ export default function OnboardingScreen({ onComplete }) {
 
       <style>{`
         @keyframes floatNeo {
-          0%, 100% { transform: translateY(0); }
-          50% { transform: translateY(-8px); }
+          0%, 100%, 50% { transform: none; }
         }
         @keyframes bounceNeo {
-          0%, 100% { transform: translateY(0); }
-          50% { transform: translateY(-20px); }
+          0%, 100%, 50% { transform: none; }
         }
         @keyframes celebrateNeo {
-          0%, 100% { transform: scale(1) rotate(0deg); }
-          25% { transform: scale(1.1) rotate(-5deg); }
-          75% { transform: scale(1.1) rotate(5deg); }
+          0%, 100%, 25%, 75% { transform: none; }
         }
         .neo-float { animation: floatNeo 2.5s ease-in-out infinite; }
         .neo-bounce { animation: bounceNeo 400ms cubic-bezier(0.28, 0.84, 0.42, 1); }
