@@ -17,6 +17,7 @@ import MoreSection from './components/MoreSection';
 import WeeklyReviewScreen from './components/WeeklyReviewScreen';
 import { getNotifications, cleanOldNotifications } from './db';
 import { syncStateToBackend } from './utils';
+import { maybeResetDismissals } from './utils/smartSuggestions';
 
 function App() {
   const [currentTab, setCurrentTab] = useState('dashboard');
@@ -73,6 +74,8 @@ function App() {
 
   // Initialize theme on load
   useEffect(() => {
+    maybeResetDismissals();
+
     const isOnboarded = localStorage.getItem('pinboard_onboarded') === 'true';
     setOnboarded(isOnboarded);
     
@@ -127,7 +130,11 @@ function App() {
   };
 
   if (!onboarded) {
-    return <OnboardingScreen onComplete={() => setOnboarded(true)} />;
+    return <OnboardingScreen onComplete={() => {
+      setOnboarded(true);
+      window.history.replaceState({ tab: 'dashboard' }, '', '#dashboard');
+      setCurrentTab('dashboard');
+    }} />;
   }
 
   const onTouchStart = (e) => {
