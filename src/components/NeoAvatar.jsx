@@ -5,6 +5,9 @@ import confetti from 'canvas-confetti';
 import neoImg from '../assets/neo.png';
 import neoSadImg from '../assets/neo-sad.png';
 import neoProgressbarImg from '../assets/neo-progressbar.png';
+import { useVoiceLogger } from '../hooks/useVoiceLogger';
+import { updateHabitInStorage, syncStateToBackend } from '../utils';
+import { syncMonthlyGoalProgress } from '../utils';
 
 const INSPIRATIONAL_QUOTES = [
   "Small daily wins create massive yearly results! 🏆",
@@ -38,9 +41,12 @@ const getPeriodGreeting = (period, name) => {
 
 export default function NeoAvatar({ habits = [], tasks = [], allGoalsOnTrack = false, suggestions = [], onSuggestionAction = () => {}, onDismissSuggestion = () => {} }) {
   const [speech, setSpeech] = useState(null);
+  const [speechType, setSpeechType] = useState('default'); // 'default', 'success', 'fail', 'listening'
   const [bounce, setBounce] = useState(false);
+  const [wiggle, setWiggle] = useState(false);
   const [isSuggestionsOpen, setIsSuggestionsOpen] = useState(false);
   const speechTimeoutRef = useRef(null);
+  const longPressTimerRef = useRef(null);
 
   // Keep fresh references for intervals and timers
   const tasksRef = useRef(tasks);
@@ -179,10 +185,12 @@ export default function NeoAvatar({ habits = [], tasks = [], allGoalsOnTrack = f
 
   // Trigger contextual speech: task reminders, habit checks, or inspiration
   const triggerNotification = () => {
+    if (speechType === 'listening') return; // Don't interrupt if listening
     const currentTasks = tasksRef.current || [];
     const currentHabits = habitsRef.current || [];
     const msg = buildShortHi(state, currentTasks, currentHabits);
     setSpeech(msg);
+    setSpeechType('default');
     setBounce(true);
     setTimeout(() => setBounce(false), 380);
     if (speechTimeoutRef.current) clearTimeout(speechTimeoutRef.current);
@@ -252,9 +260,12 @@ export default function NeoAvatar({ habits = [], tasks = [], allGoalsOnTrack = f
       msg = buildShortHi(state, currentTasks, currentHabits);
     }
 
-    setSpeech(msg);
-    if (speechTimeoutRef.current) clearTimeout(speechTimeoutRef.current);
-    speechTimeoutRef.current = setTimeout(() => setSpeech(null), displayTime);
+    if (!speech || speechType !== 'listening') {
+      setSpeech(msg);
+      setSpeechType('default');
+      if (speechTimeoutRef.current) clearTimeout(speechTimeoutRef.current);
+      speechTimeoutRef.current = setTimeout(() => setSpeech(null), displayTime);
+    }
 
     // Automatic motivational quote timer: fires every 15 minutes
     const autoInterval = setInterval(() => {
@@ -317,13 +328,94 @@ export default function NeoAvatar({ habits = [], tasks = [], allGoalsOnTrack = f
     };
   }, [speech]);
 
+  // Voice Logger Logic
+  const handleVoiceLog = React.useCallback((parsed) => {
+    const { habitId, action, value, feedback } = parsed;
+    if (action === 'increment') syncMonthlyGoalProgress(habitId, value ?? 1);
+    else if (action === 'set') {
+      const habit = habitsRef.current.find(h => h.id === habitId);
+      if (habit) syncMonthlyGoalProgress(habitId, (value ?? 0) - habit.count);
+    } else if (action === 'complete') {
+      const habit = habitsRef.current.find(h => h.id === habitId);
+      if (habit && habit.count < habit.goal) {
+        syncMonthlyGoalProgress(habitId, habit.goal - habit.count);
+      }
+    }
+    updateHabitInStorage(habitId, action, value);
+    
+    setSpeech(feedback || 'Got it!');
+    setSpeechType('success');
+    setBounce(true);
+    setTimeout(() => setBounce(false), 400);
+    if (speechTimeoutRef.current) clearTimeout(speechTimeoutRef.current);
+    speechTimeoutRef.current = setTimeout(() => {
+      setSpeech(null);
+      setSpeechType('default');
+    }, 4000);
+
+    window.dispatchEvent(new CustomEvent('neo-bounce'));
+    window.dispatchEvent(new CustomEvent('neo_celebration'));
+    syncStateToBackend();
+  }, []);
+
+  const { startListening, stopListening, listening, result } = useVoiceLogger(habits, handleVoiceLog);
+
+  useEffect(() => {
+    if (listening) {
+      setSpeech("I'm listening... 🎙️");
+      setSpeechType('listening');
+      if (speechTimeoutRef.current) clearTimeout(speechTimeoutRef.current);
+    } else if (speechType === 'listening') {
+      // If listening stopped but no result came yet, reset
+      setSpeech(null);
+      setSpeechType('default');
+    }
+  }, [listening]);
+
+  useEffect(() => {
+    if (result && !result.success) {
+      if (result.message.includes('not-allowed') || result.message.includes('denied')) {
+        setSpeech("Microphone access denied 🎙️");
+      } else {
+        setSpeech("Hmm, didn't catch that. Try again?");
+        setWiggle(true);
+        setTimeout(() => setWiggle(false), 400);
+      }
+      setSpeechType('fail');
+      if (speechTimeoutRef.current) clearTimeout(speechTimeoutRef.current);
+      speechTimeoutRef.current = setTimeout(() => {
+        setSpeech(null);
+        setSpeechType('default');
+      }, 3000);
+    }
+  }, [result]);
+
   // On Tap: open suggestions if available, otherwise show quote
-  const handleTap = () => {
+  const handleTap = (e) => {
+    if (e) e.preventDefault();
+    if (listening) {
+      stopListening();
+      return;
+    }
     if (suggestions && suggestions.length > 0) {
       setIsSuggestionsOpen(true);
     } else {
       triggerNotification();
     }
+  };
+
+  // Long Press Handlers
+  const startPress = (e) => {
+    if (listening) return;
+    if (longPressTimerRef.current) clearTimeout(longPressTimerRef.current);
+    longPressTimerRef.current = setTimeout(() => {
+      if (navigator.vibrate) navigator.vibrate(50); // haptic feedback
+      startListening();
+    }, 500); // 500ms long press
+  };
+
+  const cancelPress = () => {
+    if (longPressTimerRef.current) clearTimeout(longPressTimerRef.current);
   };
 
   const bestStreak = habits.length > 0 ? Math.max(...habits.map(h => h.streak || 0)) : 0;
@@ -427,18 +519,25 @@ export default function NeoAvatar({ habits = [], tasks = [], allGoalsOnTrack = f
 
       {/* Speech Bubble */}
       <div
-        className={`absolute bottom-full right-2 mb-2 bg-white text-gray-900 px-3.5 py-2 rounded-2xl text-xs font-semibold shadow-xl max-w-[210px] text-center transition-all duration-300 pointer-events-none leading-snug ${speech ? 'opacity-100 scale-100' : 'opacity-0 scale-95'}`}
+        className={`absolute bottom-[105px] right-2 mb-2 bg-white text-gray-900 px-3.5 py-2 rounded-2xl text-xs font-semibold shadow-xl max-w-[210px] text-center transition-all duration-300 pointer-events-none leading-snug ${speech ? 'opacity-100 scale-100' : 'opacity-0 scale-95'} ${speechType === 'success' ? '!bg-[rgba(34,197,94,0.15)] !text-emerald-100' : speechType === 'fail' ? '!bg-[rgba(239,68,68,0.12)] !text-red-200' : speechType === 'listening' ? '!bg-red-500/20 !text-red-100 border border-red-500/40 animate-pulse' : 'text-gray-900'}`}
       >
         {speech}
-        <div className="absolute right-6 bottom-0 transform translate-y-[90%] w-0 h-0 border-l-[6px] border-r-[6px] border-t-[8px] border-l-transparent border-r-transparent border-t-white"></div>
+        <div className={`absolute right-6 bottom-0 transform translate-y-[90%] w-0 h-0 border-l-[6px] border-r-[6px] border-t-[8px] border-l-transparent border-r-transparent ${speechType === 'success' ? 'border-t-[rgba(34,197,94,0.15)]' : speechType === 'fail' ? 'border-t-[rgba(239,68,68,0.12)]' : speechType === 'listening' ? 'border-t-[rgba(239,68,68,0.2)]' : 'border-t-white'}`}></div>
       </div>
 
       {/* Main Avatar Container */}
       <div
         id="neo-avatar-container"
-        className="relative cursor-pointer mt-2 pointer-events-auto"
+        className={`relative cursor-pointer mt-2 pointer-events-auto transition-transform duration-400 ${wiggle ? 'neo-wiggle-once' : ''}`}
         onClick={handleTap}
-        style={{ width: '96px', height: '96px' }}
+        onMouseDown={startPress}
+        onMouseUp={cancelPress}
+        onMouseLeave={cancelPress}
+        onTouchStart={startPress}
+        onTouchEnd={cancelPress}
+        onTouchCancel={cancelPress}
+        onContextMenu={(e) => { e.preventDefault(); e.stopPropagation(); return false; }}
+        style={{ width: '96px', height: '96px', WebkitTouchCallout: 'none' }}
       >
         {/* Glowing Suggestions Badge Dot */}
         {suggestions && suggestions.length > 0 && (

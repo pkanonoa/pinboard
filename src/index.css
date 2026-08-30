@@ -250,3 +250,13 @@
 .neo-tear-drop {
   animation: neoTearDrop 2s ease-in infinite;
 }
+
+@keyframes neoWiggleOnce {
+  0%, 100% { transform: rotate(0deg); }
+  25% { transform: rotate(-10deg); }
+  75% { transform: rotate(10deg); }
+}
+
+.neo-wiggle-once {
+  animation: neoWiggleOnce 400ms ease-in-out;
+}
