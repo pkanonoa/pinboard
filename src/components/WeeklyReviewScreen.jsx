@@ -163,8 +163,8 @@ function ScoreRing({ score }) {
           />
         </svg>
         <div className="absolute flex flex-col items-center leading-tight">
-          <span className="text-3xl font-black text-white">{score}%</span>
-          <span className="text-[10px] text-gray-400 font-medium">This week</span>
+          <span className="text-3xl font-black text-[var(--text-primary)]">{score}%</span>
+          <span className="text-[10px] text-[var(--text-secondary)] font-medium">This week</span>
         </div>
       </div>
       <span className="text-xs font-semibold" style={{ color }}>{label}</span>
@@ -265,7 +265,7 @@ export default function WeeklyReviewScreen({ onClose }) {
   const maxStreak = Math.max(...streakDeltas.map(s => s.streak), 1);
 
   return (
-    <div className="fixed inset-0 z-[200] flex flex-col bg-[#0d0e17] overflow-hidden animate-slide-up">
+    <div className="fixed inset-0 z-[200] flex flex-col bg-[var(--bg-card)] overflow-hidden animate-slide-up">
       {/* Off-screen rendering container for share card capture */}
       {shareData && (
         <div style={{ position: 'absolute', left: '-9999px', top: '-9999px', zIndex: -100 }}>
@@ -277,13 +277,13 @@ export default function WeeklyReviewScreen({ onClose }) {
       <div className="relative flex flex-col items-center pt-10 pb-4 px-5">
         <button
           onClick={handleClose}
-          className="absolute top-5 right-5 w-8 h-8 flex items-center justify-center rounded-full bg-gray-800 hover:bg-gray-700 text-gray-400 hover:text-white transition-all active:scale-90 text-lg"
+          className="absolute top-5 right-5 w-8 h-8 flex items-center justify-center rounded-full bg-gray-800 hover:bg-gray-700 text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-all active:scale-90 text-lg"
           aria-label="Close"
         >
           ✕
         </button>
         <span className="text-xs text-gray-500 font-medium tracking-wide mb-1">{headerLabel}</span>
-        <h1 className="text-2xl font-black text-white mb-4">Your Weekly Recap</h1>
+        <h1 className="text-2xl font-black text-[var(--text-primary)] mb-4">Your Weekly Recap</h1>
         <div className={`${neoAnim}`} style={{ width: 120, height: 120 }}>
           <img src={neoImg} alt="Neo" className="w-full h-full object-contain" draggable={false} />
         </div>
@@ -293,49 +293,49 @@ export default function WeeklyReviewScreen({ onClose }) {
       <div className="flex-1 overflow-y-auto px-4 pb-36 space-y-3">
 
         {/* 1. Overall Score */}
-        <div className="bg-[#141522] border border-gray-800/60 rounded-2xl p-5 flex flex-col items-center gap-3">
-          <h2 className="text-xs font-bold text-gray-400 uppercase tracking-wider self-start">Overall Score</h2>
+        <div className="bg-[var(--bg-card)] border border-[var(--border)]/60 rounded-2xl p-5 flex flex-col items-center gap-3">
+          <h2 className="text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider self-start">Overall Score</h2>
           <ScoreRing score={overallScore} />
         </div>
 
         {/* 2. Best Habit */}
         {bestHabit && (
-          <div className="bg-[#141522] border-l-4 border-emerald-500 rounded-2xl p-4 space-y-1">
-            <span className="text-xs font-bold text-emerald-400 uppercase tracking-wider">🏆 Best habit</span>
+          <div className="bg-[var(--bg-card)] border-l-4 border-emerald-500 rounded-2xl p-4 space-y-1">
+            <span className="text-xs font-bold text-[var(--success)] uppercase tracking-wider">🏆 Best habit</span>
             <div className="flex items-center gap-2 mt-1">
-              <span className="text-white font-bold text-base">{bestHabit.name}</span>
+              <span className="text-[var(--text-primary)] font-bold text-base">{bestHabit.name}</span>
               {bestDays === 7 && <span className="text-yellow-400 text-lg">👑</span>}
             </div>
-            <p className="text-sm text-gray-400">Completed <span className="text-white font-semibold">{bestDays} / 7</span> days</p>
+            <p className="text-sm text-[var(--text-secondary)]">Completed <span className="text-[var(--text-primary)] font-semibold">{bestDays} / 7</span> days</p>
             {bestDays === 7 && (
-              <p className="text-xs text-emerald-400 font-semibold">Perfect week! Neo is so proud 🧅✨</p>
+              <p className="text-xs text-[var(--success)] font-semibold">Perfect week! Neo is so proud 🧅✨</p>
             )}
           </div>
         )}
 
         {/* 3. Worst Habit */}
         {worstHabit && worstHabit.id !== bestHabit?.id && (
-          <div className="bg-[#141522] border-l-4 border-amber-500 rounded-2xl p-4 space-y-1">
-            <span className="text-xs font-bold text-amber-400 uppercase tracking-wider">⚠️ Needs work</span>
-            <div className="text-white font-bold text-base mt-1">{worstHabit.name}</div>
-            <p className="text-sm text-gray-400">Only completed <span className="text-white font-semibold">{worstDays} / 7</span> days</p>
+          <div className="bg-[var(--bg-card)] border-l-4 border-amber-500 rounded-2xl p-4 space-y-1">
+            <span className="text-xs font-bold text-[var(--warning)] uppercase tracking-wider">⚠️ Needs work</span>
+            <div className="text-[var(--text-primary)] font-bold text-base mt-1">{worstHabit.name}</div>
+            <p className="text-sm text-[var(--text-secondary)]">Only completed <span className="text-[var(--text-primary)] font-semibold">{worstDays} / 7</span> days</p>
             <p className="text-xs text-gray-500 italic mt-1">Try pausing it if life is busy — no shame in that 💛</p>
           </div>
         )}
 
         {/* 4. Streak Changes */}
         {streakDeltas.length > 0 && (
-          <div className="bg-[#141522] border border-gray-800/60 rounded-2xl p-4">
-            <h2 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Streak Changes</h2>
+          <div className="bg-[var(--bg-card)] border border-[var(--border)]/60 rounded-2xl p-4">
+            <h2 className="text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider mb-3">Streak Changes</h2>
             <div className="flex flex-col gap-2">
               {streakDeltas.map(s => {
                 const barWidth = Math.round((s.streak / maxStreak) * 100);
-                const deltaColor = s.delta > 0 ? 'text-emerald-400' : s.delta < 0 ? 'text-red-400' : 'text-gray-500';
+                const deltaColor = s.delta > 0 ? 'text-[var(--success)]' : s.delta < 0 ? 'text-[var(--danger)]' : 'text-gray-500';
                 const deltaLabel = s.delta > 0 ? `+${s.delta} ↑` : s.delta < 0 ? `${s.delta} ↓` : '=';
                 return (
                   <div key={s.id} className="flex flex-col gap-1">
                     <div className="flex items-center justify-between">
-                      <span className="text-sm text-white font-medium flex items-center gap-1.5">
+                      <span className="text-sm text-[var(--text-primary)] font-medium flex items-center gap-1.5">
                         🔥 {s.name}
                       </span>
                       <span className="text-sm text-gray-300 flex items-center gap-2">
@@ -360,11 +360,11 @@ export default function WeeklyReviewScreen({ onClose }) {
         )}
 
         {/* 5. Points This Week */}
-        <div className="bg-[#141522] border border-gray-800/60 rounded-2xl p-4">
-          <h2 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Points This Week</h2>
+        <div className="bg-[var(--bg-card)] border border-[var(--border)]/60 rounded-2xl p-4">
+          <h2 className="text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider mb-3">Points This Week</h2>
           <div className="flex items-center gap-3 mb-3">
             <span className="text-3xl font-black text-yellow-400">⭐ {pointsThisWeek}</span>
-            <span className="text-sm text-gray-400">points earned</span>
+            <span className="text-sm text-[var(--text-secondary)]">points earned</span>
           </div>
           {/* Mini bar: this week vs last week */}
           <div className="space-y-1.5">
@@ -382,31 +382,31 @@ export default function WeeklyReviewScreen({ onClose }) {
                       style={{ width: `${pct}%`, background: row.color }}
                     />
                   </div>
-                  <span className="text-xs text-gray-400 w-8 text-right">{row.pts}</span>
+                  <span className="text-xs text-[var(--text-secondary)] w-8 text-right">{row.pts}</span>
                 </div>
               );
             })}
           </div>
           {isNewRecord && (
-            <p className="text-xs font-bold text-indigo-400 mt-2">🎉 New personal record this week!</p>
+            <p className="text-xs font-bold text-[var(--accent-purple)] mt-2">🎉 New personal record this week!</p>
           )}
           {!isNewRecord && bestWeekEver > 0 && (
-            <p className="text-xs text-gray-500 mt-2">Your best week: <span className="text-gray-400 font-semibold">{bestWeekEver} pts</span></p>
+            <p className="text-xs text-gray-500 mt-2">Your best week: <span className="text-[var(--text-secondary)] font-semibold">{bestWeekEver} pts</span></p>
           )}
         </div>
 
         {/* 6. Monthly Goals Pulse */}
         {goalsPulse.length > 0 && (
-          <div className="bg-[#141522] border border-gray-800/60 rounded-2xl p-4">
-            <h2 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Monthly Goals</h2>
+          <div className="bg-[var(--bg-card)] border border-[var(--border)]/60 rounded-2xl p-4">
+            <h2 className="text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider mb-3">Monthly Goals</h2>
             <div className="flex flex-col gap-2">
               {goalsPulse.map(g => {
                 const icon = g.status === 'on_track' ? '📈' : g.status === 'at_risk' ? '⚠️' : '🔴';
                 const statusLabel = g.status === 'on_track' ? 'on track' : g.status === 'at_risk' ? 'at risk' : 'falling behind';
-                const statusColor = g.status === 'on_track' ? 'text-emerald-400' : g.status === 'at_risk' ? 'text-amber-400' : 'text-red-400';
+                const statusColor = g.status === 'on_track' ? 'text-[var(--success)]' : g.status === 'at_risk' ? 'text-[var(--warning)]' : 'text-[var(--danger)]';
                 return (
                   <div key={g.id} className="flex items-center justify-between">
-                    <span className="text-sm text-white">{icon} {g.name}</span>
+                    <span className="text-sm text-[var(--text-primary)]">{icon} {g.name}</span>
                     <span className={`text-xs font-semibold ${statusColor}`}>
                       {statusLabel} ({g.progress}/{g.target})
                     </span>
@@ -419,12 +419,12 @@ export default function WeeklyReviewScreen({ onClose }) {
 
         {/* 7. Next Week Intention */}
         {!intentionSkipped && (
-          <div className="bg-[#141522] border border-gray-800/60 rounded-2xl p-4">
+          <div className="bg-[var(--bg-card)] border border-[var(--border)]/60 rounded-2xl p-4">
             <div className="flex items-center justify-between mb-2">
-              <h2 className="text-xs font-bold text-gray-400 uppercase tracking-wider">One thing to focus on next week</h2>
+              <h2 className="text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider">One thing to focus on next week</h2>
               <button
                 onClick={() => { saveIntention(); setIntentionSkipped(true); }}
-                className="text-xs text-gray-500 hover:text-gray-400 transition-colors"
+                className="text-xs text-gray-500 hover:text-[var(--text-secondary)] transition-colors"
               >
                 Skip
               </button>
@@ -440,24 +440,24 @@ export default function WeeklyReviewScreen({ onClose }) {
               }}
               placeholder="e.g. Don't miss water for 7 days straight"
               rows={2}
-              className="w-full bg-[#0d0e17] border border-gray-700 rounded-xl px-3 py-2 text-white text-sm placeholder-gray-600 outline-none focus:border-indigo-500 resize-none transition-colors"
+              className="w-full bg-[var(--bg-card)] border border-gray-700 rounded-xl px-3 py-2 text-[var(--text-primary)] text-sm placeholder-gray-600 outline-none focus:border-indigo-500 resize-none transition-colors"
             />
           </div>
         )}
       </div>
 
       {/* ── Close Button ── */}
-      <div className="fixed bottom-0 left-0 right-0 p-4 bg-[#0d0e17]/95 backdrop-blur-sm border-t border-gray-800/60 flex flex-col gap-2.5">
+      <div className="fixed bottom-0 left-0 right-0 p-4 bg-[var(--bg-card)]/95 backdrop-blur-sm border-t border-[var(--border)]/60 flex flex-col gap-2.5">
         <button
           onClick={handleShareClick}
           disabled={isGenerating}
-          className="w-full py-3 bg-teal-500 hover:bg-teal-600 disabled:bg-teal-700 text-white font-bold rounded-2xl transition-all active:scale-95 shadow-lg shadow-teal-900/40 text-sm flex items-center justify-center gap-1.5"
+          className="w-full py-3 bg-teal-500 hover:bg-teal-600 disabled:bg-teal-700 text-[var(--text-primary)] font-bold rounded-2xl transition-all active:scale-95 shadow-lg shadow-teal-900/40 text-sm flex items-center justify-center gap-1.5"
         >
           {isGenerating ? 'Generating card...' : '📤 Share my week'}
         </button>
         <button
           onClick={handleClose}
-          className="w-full py-3 bg-indigo-500 hover:bg-indigo-600 text-white font-bold rounded-2xl transition-all active:scale-95 shadow-lg shadow-indigo-900/40 text-sm"
+          className="w-full py-3 bg-indigo-500 hover:bg-indigo-600 text-[var(--text-primary)] font-bold rounded-2xl transition-all active:scale-95 shadow-lg shadow-indigo-900/40 text-sm"
         >
           Close review
         </button>

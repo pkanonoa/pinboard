@@ -4,10 +4,12 @@ import {
   Tooltip, ResponsiveContainer, CartesianGrid, Legend 
 } from 'recharts';
 import { getLocalYMD } from '../utils';
+import { useTheme } from '../hooks/useTheme';
 
 export default function ChartsSection() {
   const [view, setView] = useState('Day'); // Day, Week, Month
   const [completionLog, setCompletionLog] = useState([]);
+  const { theme } = useTheme();
 
   useEffect(() => {
     const logStr = localStorage.getItem('pinboard_completion_log');
@@ -124,7 +126,7 @@ export default function ChartsSection() {
   const CustomTooltip = ({ active, payload, label }) => {
     if (active && payload && payload.length) {
       return (
-        <div className="bg-[#1e1e28] border-none rounded-xl p-3 text-sm text-white shadow-xl">
+        <div className={`border-none rounded-xl p-3 text-sm shadow-xl ${theme === 'light' ? 'bg-white text-gray-900' : 'bg-[#1e1e28] text-white'}`}>
           <p className="font-semibold mb-1">{label}</p>
           {payload.map((entry, index) => (
             <p key={index} style={{ color: entry.color }}>
@@ -140,19 +142,21 @@ export default function ChartsSection() {
   return (
     <div className="w-full max-w-md z-10 flex flex-col gap-6 pt-6 pb-8">
       <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold text-white flex items-center gap-2">
+        <h2 className="text-2xl font-bold text-[var(--text-primary)] flex items-center gap-2">
           Activity
         </h2>
       </div>
 
       {/* Toggle View */}
-      <div className="flex bg-[#1e1e28] rounded-xl p-1.5 mb-2">
+      <div className={`flex rounded-xl p-1.5 mb-2 ${theme === 'light' ? 'bg-gray-100' : 'bg-[#1e1e28]'}`}>
         {['Day', 'Week', 'Month'].map(v => (
           <button
             key={v}
             onClick={() => setView(v)}
             className={`flex-1 text-sm font-medium py-2 rounded-lg transition-colors ${
-              view === v ? 'bg-[#2a2a35] text-white shadow-sm' : 'text-gray-400 hover:text-gray-200'
+              view === v 
+                ? (theme === 'light' ? 'bg-white text-gray-900 shadow-sm' : 'bg-[#2a2a35] text-white shadow-sm') 
+                : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-200'
             }`}
           >
             {v}
@@ -165,32 +169,32 @@ export default function ChartsSection() {
         <ResponsiveContainer width="100%" height="100%">
           {view === 'Day' ? (
             <BarChart data={getDailyData()} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#374151" vertical={false} />
-              <XAxis dataKey="name" stroke="#9CA3AF" tick={{ fill: '#9CA3AF', fontSize: 10 }} tickFormatter={(val, index) => index % 3 === 0 ? val : ''} />
-              <YAxis stroke="#9CA3AF" tick={{ fill: '#9CA3AF' }} allowDecimals={false} />
-              <Tooltip content={<CustomTooltip />} />
+              <CartesianGrid strokeDasharray="3 3" stroke={theme === 'light' ? 'rgba(0,0,0,0.06)' : '#374151'} vertical={false} />
+              <XAxis dataKey="name" stroke="var(--text-secondary)" tick={{ fill: 'var(--text-secondary)', fontSize: 10 }} tickFormatter={(val, index) => index % 3 === 0 ? val : ''} />
+              <YAxis stroke="var(--text-secondary)" tick={{ fill: 'var(--text-secondary)' }} allowDecimals={false} />
+              <Tooltip content={<CustomTooltip />} cursor={{ fill: theme === 'light' ? 'rgba(0,0,0,0.04)' : 'rgba(255,255,255,0.04)' }} />
               <Legend wrapperStyle={{ fontSize: '12px', paddingTop: '10px' }} />
-              <Bar dataKey="tasks" name="Tasks" stackId="a" fill="#818CF8" radius={[0, 0, 0, 0]} />
-              <Bar dataKey="habits" name="Rituals" stackId="a" fill="#34D399" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="tasks" name="Tasks" stackId="a" fill="var(--accent-purple)" radius={[0, 0, 0, 0]} />
+              <Bar dataKey="habits" name="Rituals" stackId="a" fill="var(--success)" radius={[4, 4, 0, 0]} />
             </BarChart>
           ) : view === 'Week' ? (
             <BarChart data={getWeeklyData()} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#374151" vertical={false} />
-              <XAxis dataKey="name" stroke="#9CA3AF" tick={{ fill: '#9CA3AF' }} />
-              <YAxis stroke="#9CA3AF" tick={{ fill: '#9CA3AF' }} allowDecimals={false} />
-              <Tooltip content={<CustomTooltip />} />
+              <CartesianGrid strokeDasharray="3 3" stroke={theme === 'light' ? 'rgba(0,0,0,0.06)' : '#374151'} vertical={false} />
+              <XAxis dataKey="name" stroke="var(--text-secondary)" tick={{ fill: 'var(--text-secondary)' }} />
+              <YAxis stroke="var(--text-secondary)" tick={{ fill: 'var(--text-secondary)' }} allowDecimals={false} />
+              <Tooltip content={<CustomTooltip />} cursor={{ fill: theme === 'light' ? 'rgba(0,0,0,0.04)' : 'rgba(255,255,255,0.04)' }} />
               <Legend wrapperStyle={{ fontSize: '12px', paddingTop: '10px' }} />
-              <Bar dataKey="tasks" name="Tasks" stackId="a" fill="#818CF8" radius={[0, 0, 0, 0]} />
-              <Bar dataKey="habits" name="Rituals" stackId="a" fill="#34D399" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="tasks" name="Tasks" stackId="a" fill="var(--accent-purple)" radius={[0, 0, 0, 0]} />
+              <Bar dataKey="habits" name="Rituals" stackId="a" fill="var(--success)" radius={[4, 4, 0, 0]} />
             </BarChart>
           ) : (
             <LineChart data={getMonthlyData()} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#374151" vertical={false} />
-              <XAxis dataKey="name" stroke="#9CA3AF" tick={{ fill: '#9CA3AF', fontSize: 10 }} tickFormatter={(val, index) => index % 5 === 0 ? val : ''} />
-              <YAxis stroke="#9CA3AF" tick={{ fill: '#9CA3AF' }} allowDecimals={false} />
+              <CartesianGrid strokeDasharray="3 3" stroke={theme === 'light' ? 'rgba(0,0,0,0.06)' : '#374151'} vertical={false} />
+              <XAxis dataKey="name" stroke="var(--text-secondary)" tick={{ fill: 'var(--text-secondary)', fontSize: 10 }} tickFormatter={(val, index) => index % 5 === 0 ? val : ''} />
+              <YAxis stroke="var(--text-secondary)" tick={{ fill: 'var(--text-secondary)' }} allowDecimals={false} />
               <Tooltip content={<CustomTooltip />} />
               <Legend wrapperStyle={{ fontSize: '12px', paddingTop: '10px' }} />
-              <Line type="monotone" dataKey="total" name="Total Completions" stroke="#FBBF24" strokeWidth={3} dot={false} activeDot={{ r: 6, fill: '#FBBF24', stroke: '#1F2937', strokeWidth: 2 }} />
+              <Line type="monotone" dataKey="total" name="Total Completions" stroke="var(--warning)" strokeWidth={3} dot={false} activeDot={{ r: 6, fill: 'var(--warning)', stroke: 'var(--bg-primary)', strokeWidth: 2 }} />
             </LineChart>
           )}
         </ResponsiveContainer>

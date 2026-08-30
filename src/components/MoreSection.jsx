@@ -12,21 +12,21 @@ export default function MoreSection({ setCurrentTab, onOpenWeeklyReview }) {
 
   return (
     <div className="w-full max-w-md mx-auto animate-fade-in pb-28 px-1 pt-1">
-      <h1 className="text-2xl font-bold text-white mb-6">More</h1>
+      <h1 className="text-2xl font-bold text-[var(--text-primary)] mb-6">More</h1>
       
       {/* INSIGHTS GROUP */}
       <div className="mb-6">
         <div className="text-xs font-semibold tracking-wider text-gray-500 uppercase px-1 mb-2.5">
           INSIGHTS
         </div>
-        <div className="bg-[#181824] rounded-2xl overflow-hidden border border-gray-800/40 divide-y divide-gray-800/60 shadow-lg">
+        <div className="bg-[#181824] rounded-2xl overflow-hidden border border-[var(--border)]/40 divide-y divide-gray-800/60 shadow-lg">
           <button 
             onClick={() => setCurrentTab('charts')}
             className="flex items-center justify-between w-full px-4 py-4 hover:bg-white/[0.03] transition-colors active:bg-white/[0.05]"
           >
             <div className="flex items-center gap-3.5">
-              <BarChart2 className="w-5 h-5 text-indigo-400" strokeWidth={2} />
-              <span className="text-[15px] font-medium text-white">Activity charts</span>
+              <BarChart2 className="w-5 h-5 text-[var(--accent-purple)]" strokeWidth={2} />
+              <span className="text-[15px] font-medium text-[var(--text-primary)]">Activity charts</span>
             </div>
             <ChevronRight className="w-4 h-4 text-gray-500" strokeWidth={2} />
           </button>
@@ -36,11 +36,11 @@ export default function MoreSection({ setCurrentTab, onOpenWeeklyReview }) {
             className="flex items-center justify-between w-full px-4 py-4 hover:bg-white/[0.03] transition-colors active:bg-white/[0.05]"
           >
             <div className="flex items-center gap-3.5">
-              <Award className="w-5 h-5 text-amber-400" strokeWidth={2} />
-              <span className="text-[15px] font-medium text-white">Rewards</span>
+              <Award className="w-5 h-5 text-[var(--warning)]" strokeWidth={2} />
+              <span className="text-[15px] font-medium text-[var(--text-primary)]">Rewards</span>
             </div>
             <div className="flex items-center gap-2">
-              <span className="text-sm text-gray-400 font-normal">{points} pts</span>
+              <span className="text-sm text-[var(--text-secondary)] font-normal">{points} pts</span>
               <ChevronRight className="w-4 h-4 text-gray-500" strokeWidth={2} />
             </div>
           </button>
@@ -51,7 +51,7 @@ export default function MoreSection({ setCurrentTab, onOpenWeeklyReview }) {
           >
             <div className="flex items-center gap-3.5">
               <CalendarDays className="w-5 h-5 text-violet-400" strokeWidth={2} />
-              <span className="text-[15px] font-medium text-white">Weekly review</span>
+              <span className="text-[15px] font-medium text-[var(--text-primary)]">Weekly review</span>
             </div>
             <ChevronRight className="w-4 h-4 text-gray-500" strokeWidth={2} />
           </button>
@@ -63,7 +63,7 @@ export default function MoreSection({ setCurrentTab, onOpenWeeklyReview }) {
         <div className="text-xs font-semibold tracking-wider text-gray-500 uppercase px-1 mb-2.5">
           SETTINGS
         </div>
-        <div className="bg-[#181824] rounded-2xl overflow-hidden border border-gray-800/40 divide-y divide-gray-800/60 shadow-lg">
+        <div className="bg-[#181824] rounded-2xl overflow-hidden border border-[var(--border)]/40 divide-y divide-gray-800/60 shadow-lg">
           <button 
             onClick={() => {
               localStorage.setItem('pinboard_settings_focus', 'notifications');
@@ -72,8 +72,8 @@ export default function MoreSection({ setCurrentTab, onOpenWeeklyReview }) {
             className="flex items-center justify-between w-full px-4 py-4 hover:bg-white/[0.03] transition-colors active:bg-white/[0.05]"
           >
             <div className="flex items-center gap-3.5">
-              <Bell className="w-5 h-5 text-gray-400" strokeWidth={2} />
-              <span className="text-[15px] font-medium text-white">Notifications</span>
+              <Bell className="w-5 h-5 text-[var(--text-secondary)]" strokeWidth={2} />
+              <span className="text-[15px] font-medium text-[var(--text-primary)]">Notifications</span>
             </div>
             <ChevronRight className="w-4 h-4 text-gray-500" strokeWidth={2} />
           </button>
@@ -86,8 +86,8 @@ export default function MoreSection({ setCurrentTab, onOpenWeeklyReview }) {
             className="flex items-center justify-between w-full px-4 py-4 hover:bg-white/[0.03] transition-colors active:bg-white/[0.05]"
           >
             <div className="flex items-center gap-3.5">
-              <Repeat className="w-5 h-5 text-gray-400" strokeWidth={2} />
-              <span className="text-[15px] font-medium text-white">Manage rituals</span>
+              <Repeat className="w-5 h-5 text-[var(--text-secondary)]" strokeWidth={2} />
+              <span className="text-[15px] font-medium text-[var(--text-primary)]">Manage rituals</span>
             </div>
             <ChevronRight className="w-4 h-4 text-gray-500" strokeWidth={2} />
           </button>
@@ -100,8 +100,8 @@ export default function MoreSection({ setCurrentTab, onOpenWeeklyReview }) {
             className="flex items-center justify-between w-full px-4 py-4 hover:bg-white/[0.03] transition-colors active:bg-white/[0.05]"
           >
             <div className="flex items-center gap-3.5">
-              <User className="w-5 h-5 text-gray-400" strokeWidth={2} />
-              <span className="text-[15px] font-medium text-white">Account</span>
+              <User className="w-5 h-5 text-[var(--text-secondary)]" strokeWidth={2} />
+              <span className="text-[15px] font-medium text-[var(--text-primary)]">Account</span>
             </div>
             <ChevronRight className="w-4 h-4 text-gray-500" strokeWidth={2} />
           </button>
@@ -109,8 +109,8 @@ export default function MoreSection({ setCurrentTab, onOpenWeeklyReview }) {
       </div>
 
 
-      <div className="bg-[#141522] border border-gray-800/60 rounded-2xl p-4 shadow-sm">
-        <h3 className="text-sm font-semibold text-white mb-4">Debug Tools</h3>
+      <div className="bg-[var(--bg-card)] border border-[var(--border)]/60 rounded-2xl p-4 shadow-sm">
+        <h3 className="text-sm font-semibold text-[var(--text-primary)] mb-4">Debug Tools</h3>
         <button 
           onClick={() => {
             if (!('Notification' in window)) {
@@ -148,7 +148,7 @@ export default function MoreSection({ setCurrentTab, onOpenWeeklyReview }) {
               }
             }
           }}
-          className="w-full bg-gray-800 hover:bg-gray-700 text-white py-3 rounded-xl font-medium transition-colors"
+          className="w-full bg-gray-800 hover:bg-gray-700 text-[var(--text-primary)] py-3 rounded-xl font-medium transition-colors"
         >
           Test OS Notification
         </button>

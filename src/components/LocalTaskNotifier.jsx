@@ -209,6 +209,83 @@ export default function LocalTaskNotifier() {
             }
           });
         }
+
+        // ==========================
+        // DAILY REVIEW & GOALS PACE LOGIC
+        // ==========================
+        const dailyReviewTime = localStorage.getItem('pinboard_daily_review_time') || '20:00';
+        if (dailyReviewTime === `${hh}:${mins}`) {
+          // 1. Task Digest
+          if (savedTasks) {
+            const tasks = JSON.parse(savedTasks);
+            const pendingTasks = tasks.filter(t => !t.done);
+            if (pendingTasks.length > 0) {
+              const notifKey = `task_digest_${todayStr}`;
+              if (!notifiedTasksRef.current.has(notifKey)) {
+                notifiedTasksRef.current.add(notifKey);
+
+                let bodyStr = pendingTasks.slice(0, 3).map(t => `• ${t.name}`).join('\n');
+                if (pendingTasks.length > 3) {
+                  bodyStr += `\n...and ${pendingTasks.length - 3} more.`;
+                }
+
+                dispatchNotification({
+                  title: '📋 Daily Task Review',
+                  body: bodyStr,
+                  iconEmoji: '📋',
+                  type: 'task',
+                  deepLink: '#tasks',
+                  tag: 'task-digest'
+                });
+              }
+            }
+          }
+
+          // 2. Monthly Goals Pace
+          const savedGoals = localStorage.getItem('pinboard_goals');
+          if (savedGoals) {
+            const monthlyGoals = JSON.parse(savedGoals);
+            if (Array.isArray(monthlyGoals) && monthlyGoals.length > 0) {
+              const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+              const daysPassed = now.getDate();
+              const daysRemaining = daysInMonth - daysPassed;
+
+              monthlyGoals.forEach(goal => {
+                if (!goal.id || !goal.target || goal.isCompleted) return;
+                const progress = goal.progress || 0;
+                const target = goal.target;
+                const progressPct = target > 0 ? progress / target : 0;
+                const expectedPct = daysInMonth > 0 ? daysPassed / daysInMonth : 1;
+                const pace = expectedPct > 0 ? progressPct / expectedPct : (progressPct > 0 ? 999 : 0);
+
+                const notifKey = `goal_pace_${goal.id}_${todayStr}`;
+                if (!notifiedTasksRef.current.has(notifKey)) {
+                  notifiedTasksRef.current.add(notifKey);
+
+                  let title, body;
+                  if (pace < 0.6) {
+                    title = `🔴 ${goal.name} is falling behind`;
+                    body = `Only ${progress}/${target} ${goal.unit || ''} logged. ${daysRemaining} days left — let's pick it up!`;
+                  } else if (pace < 0.9) {
+                    title = `⚠️ ${goal.name} needs attention`;
+                    body = `A little behind pace — ${progress}/${target} ${goal.unit || ''}. ${daysRemaining} days remaining.`;
+                  }
+
+                  if (title && body) {
+                    dispatchNotification({
+                      title,
+                      body,
+                      iconEmoji: '🎯',
+                      type: 'goal',
+                      deepLink: '#goals',
+                      tag: `goal-${goal.id}`
+                    });
+                  }
+                }
+              });
+            }
+          }
+        }
       } catch (error) {
         console.error("LocalTaskNotifier error:", error);
       }
@@ -228,7 +305,7 @@ export default function LocalTaskNotifier() {
           initial={{ opacity: 0, y: -50, scale: 0.9 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: -20, scale: 0.9 }}
-          className="fixed top-6 left-1/2 -translate-x-1/2 z-[100] bg-indigo-600 text-white px-5 py-3 rounded-2xl shadow-2xl flex items-center gap-3 border border-indigo-400 max-w-[90vw]"
+          className="fixed top-6 left-1/2 -translate-x-1/2 z-[100] bg-indigo-600 text-[var(--text-primary)] px-5 py-3 rounded-2xl shadow-2xl flex items-center gap-3 border border-indigo-400 max-w-[90vw]"
         >
           <span className="text-2xl animate-bounce">{activeToast.icon || '⏰'}</span>
           <div className="flex flex-col">

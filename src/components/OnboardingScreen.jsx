@@ -123,7 +123,7 @@ export default function OnboardingScreen({ onComplete }) {
   };
 
   return (
-    <div className="fixed inset-0 z-[100] bg-[#0a0f1a] text-white flex flex-col items-center justify-center p-6 overflow-hidden">
+    <div className="fixed inset-0 z-[100] bg-[var(--bg-primary)] text-[var(--text-primary)] flex flex-col items-center justify-center p-6 overflow-hidden">
 
       {/* Progress Dots */}
       <div className="absolute top-8 left-0 right-0 flex justify-center gap-2">
@@ -161,7 +161,7 @@ export default function OnboardingScreen({ onComplete }) {
           <h1 className="text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-teal-400 mb-2">
             Pinboard
           </h1>
-          <p className="text-gray-400 font-medium mb-10 text-lg">Your habits. Your rules.</p>
+          <p className="text-[var(--text-secondary)] font-medium mb-10 text-lg">Your habits. Your rules.</p>
           <img src={neoImg} alt="Neo" className="w-[180px] mb-12 neo-float drop-shadow-2xl" />
           <button
             onClick={handleNext}
@@ -185,7 +185,7 @@ export default function OnboardingScreen({ onComplete }) {
             placeholder="Your name..."
             value={name}
             onChange={e => setName(e.target.value)}
-            className="w-full bg-transparent border-b-2 border-gray-700 focus:border-teal-400 text-center text-3xl py-3 outline-none text-white transition-colors mb-12 placeholder-gray-600"
+            className="w-full bg-transparent border-b-2 border-gray-700 focus:border-teal-400 text-center text-3xl py-3 outline-none text-[var(--text-primary)] transition-colors mb-12 placeholder-gray-600"
           />
           <button
             onClick={handleNext}
@@ -206,7 +206,7 @@ export default function OnboardingScreen({ onComplete }) {
           <div className="flex items-center justify-between mb-6">
             <div>
               <h2 className="text-2xl font-bold mb-1">Pick habits to track</h2>
-              <p className="text-gray-400 text-sm">Choose at least one to start.</p>
+              <p className="text-[var(--text-secondary)] text-sm">Choose at least one to start.</p>
             </div>
             <img src={neoImg} alt="Neo" className={`w-[70px] ${neoBounce ? 'neo-bounce' : 'neo-float'}`} />
           </div>
@@ -220,11 +220,11 @@ export default function OnboardingScreen({ onComplete }) {
                   onClick={() => toggleHabit(habit.id)}
                   className={`flex flex-col items-center justify-center p-4 rounded-xl border-2 transition-all active:scale-95 ${isSelected
                       ? 'border-teal-500 bg-teal-500/20'
-                      : 'border-gray-800 bg-gray-900/50 text-gray-400 hover:border-gray-700'
+                      : 'border-[var(--border)] bg-gray-900/50 text-[var(--text-secondary)] hover:border-gray-700'
                     }`}
                 >
                   <span className="text-3xl mb-2">{habit.emoji}</span>
-                  <span className={`text-sm font-semibold ${isSelected ? 'text-teal-400' : ''}`}>{habit.name}</span>
+                  <span className={`text-sm font-semibold ${isSelected ? 'text-[var(--accent-teal)]' : ''}`}>{habit.name}</span>
                 </button>
               );
             })}
@@ -253,24 +253,24 @@ export default function OnboardingScreen({ onComplete }) {
 
           <div className="w-full flex flex-col gap-6 mb-12">
             {selectedHabits.includes('h_wake') && (
-              <div className="bg-gray-900/80 p-5 rounded-2xl border border-gray-800 text-left">
-                <label className="text-sm text-gray-400 font-bold uppercase tracking-wider block mb-3">I wake up at</label>
+              <div className="bg-gray-900/80 p-5 rounded-2xl border border-[var(--border)] text-left">
+                <label className="text-sm text-[var(--text-secondary)] font-bold uppercase tracking-wider block mb-3">I wake up at</label>
                 <input
                   type="time"
                   value={wakeTime}
                   onChange={e => setWakeTime(e.target.value)}
-                  className="w-full bg-gray-800 border-none rounded-xl px-4 py-3 text-white text-2xl outline-none focus:ring-2 focus:ring-teal-500 [color-scheme:dark]"
+                  className="w-full bg-gray-800 border-none rounded-xl px-4 py-3 text-[var(--text-primary)] text-2xl outline-none focus:ring-2 focus:ring-teal-500 [color-scheme:dark]"
                 />
               </div>
             )}
             {selectedHabits.includes('h_sleep') && (
-              <div className="bg-gray-900/80 p-5 rounded-2xl border border-gray-800 text-left">
-                <label className="text-sm text-gray-400 font-bold uppercase tracking-wider block mb-3">I sleep at</label>
+              <div className="bg-gray-900/80 p-5 rounded-2xl border border-[var(--border)] text-left">
+                <label className="text-sm text-[var(--text-secondary)] font-bold uppercase tracking-wider block mb-3">I sleep at</label>
                 <input
                   type="time"
                   value={sleepTime}
                   onChange={e => setSleepTime(e.target.value)}
-                  className="w-full bg-gray-800 border-none rounded-xl px-4 py-3 text-white text-2xl outline-none focus:ring-2 focus:ring-purple-500 [color-scheme:dark]"
+                  className="w-full bg-gray-800 border-none rounded-xl px-4 py-3 text-[var(--text-primary)] text-2xl outline-none focus:ring-2 focus:ring-purple-500 [color-scheme:dark]"
                 />
               </div>
             )}
@@ -288,17 +288,17 @@ export default function OnboardingScreen({ onComplete }) {
       {/* NOTIFICATIONS POPUP (Overlay over Step 4) */}
       {step === 5 && (
         <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 animate-fade-in">
-          <div className="bg-gray-900 border border-gray-800 rounded-3xl p-6 w-full max-w-sm flex flex-col items-center text-center shadow-2xl relative overflow-hidden">
+          <div className="bg-gray-900 border border-[var(--border)] rounded-3xl p-6 w-full max-w-sm flex flex-col items-center text-center shadow-2xl relative overflow-hidden">
             <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-teal-500 to-indigo-500"></div>
 
             <div className="text-5xl mb-4 mt-2">🔔</div>
             <h2 className="text-2xl font-bold mb-2">Enable Notifications</h2>
-            <p className="text-gray-400 text-sm mb-6">Neo will nudge you at the right time, every day so you never forget.</p>
+            <p className="text-[var(--text-secondary)] text-sm mb-6">Neo will nudge you at the right time, every day so you never forget.</p>
 
             <div className="flex flex-col w-full gap-3">
               <button
                 onClick={requestNotifications}
-                className="w-full bg-indigo-500 hover:bg-indigo-400 text-white font-bold py-3 rounded-xl transition-transform active:scale-95"
+                className="w-full bg-indigo-500 hover:bg-indigo-400 text-[var(--text-primary)] font-bold py-3 rounded-xl transition-transform active:scale-95"
               >
                 Enable Notifications
               </button>
@@ -319,11 +319,11 @@ export default function OnboardingScreen({ onComplete }) {
           <img src={neoImg} alt="Neo" className="w-[200px] mb-8 neo-celebrate drop-shadow-[0_0_30px_rgba(251,191,36,0.3)]" />
 
           <h2 className="text-4xl font-extrabold mb-3">Ready, {name}! 🎉</h2>
-          <p className="text-gray-400 text-xl mb-12">Neo's got your back from here.</p>
+          <p className="text-[var(--text-secondary)] text-xl mb-12">Neo's got your back from here.</p>
 
           <button
             onClick={finishOnboarding}
-            className="w-full bg-gradient-to-r from-teal-500 to-indigo-500 text-white shadow-[0_0_30px_rgba(99,102,241,0.5)] font-bold text-xl py-4 rounded-2xl transition-transform active:scale-95"
+            className="w-full bg-gradient-to-r from-teal-500 to-indigo-500 text-[var(--text-primary)] shadow-[0_0_30px_rgba(99,102,241,0.5)] font-bold text-xl py-4 rounded-2xl transition-transform active:scale-95"
           >
             Open Pinboard &rarr;
           </button>

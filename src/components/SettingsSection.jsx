@@ -2,9 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { Reorder } from 'framer-motion';
 import { syncStateToBackend } from '../utils';
 import { saveNotification } from '../db';
+import { useTheme } from '../hooks/useTheme';
 
 export default function SettingsSection() {
-  const [theme, setTheme] = useState(localStorage.getItem('pinboard_theme') || 'darker');
+  const { theme, setTheme, THEMES } = useTheme();
 
   const [notificationsEnabled, setNotificationsEnabled] = useState(
     localStorage.getItem('pinboard_push_subscribed') === 'true'
@@ -75,12 +76,6 @@ export default function SettingsSection() {
 
   const handleReorder = (newOrder) => {
     saveHabits(newOrder);
-  };
-
-  const handleThemeChange = (newTheme) => {
-    setTheme(newTheme);
-    localStorage.setItem('pinboard_theme', newTheme);
-    document.documentElement.setAttribute('data-theme', newTheme);
   };
 
   const handleDailyReviewTimeChange = (e) => {
@@ -190,12 +185,12 @@ export default function SettingsSection() {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
           </svg>
         </div>
-        <h2 className="text-2xl font-bold text-white">Settings</h2>
+        <h2 className="text-2xl font-bold text-[var(--text-primary)]">Settings</h2>
       </div>
 
       {/* Notifications */}
-      <section id="settings-notifications" className="bg-gray-900 border border-gray-800 rounded-xl p-5 shadow-lg">
-        <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-4">Notifications</h3>
+      <section id="settings-notifications" className="bg-gray-900 border border-[var(--border)] rounded-xl p-5 shadow-lg">
+        <h3 className="text-sm font-bold text-[var(--text-secondary)] uppercase tracking-wider mb-4">Notifications</h3>
 
         {(!('Notification' in window) || Notification.permission !== 'granted') && (
           <div className="bg-gray-800 p-4 rounded-lg mb-4 text-center border border-gray-700">
@@ -204,26 +199,26 @@ export default function SettingsSection() {
         )}
 
         <div className="flex items-center justify-between mb-4">
-          <span className="text-white font-medium">Daily Review Time</span>
+          <span className="text-[var(--text-primary)] font-medium">Daily Review Time</span>
           <input
             type="time"
             value={dailyReviewTime}
             onChange={handleDailyReviewTimeChange}
-            className="bg-gray-800 border border-gray-700 rounded-lg px-3 py-1.5 text-white outline-none focus:border-indigo-500"
+            className="bg-gray-800 border border-gray-700 rounded-lg px-3 py-1.5 text-[var(--text-primary)] outline-none focus:border-indigo-500"
           />
         </div>
 
         <button
           onClick={testNotification}
-          className="w-full py-2 bg-gray-800 hover:bg-gray-700 text-indigo-400 font-bold rounded-lg transition-colors border border-gray-700"
+          className="w-full py-2 bg-gray-800 hover:bg-gray-700 text-[var(--accent-purple)] font-bold rounded-lg transition-colors border border-gray-700"
         >
           Test Notification
         </button>
       </section>
 
       {/* Habits Management */}
-      <section id="settings-rituals" className="bg-gray-900 border border-gray-800 rounded-xl p-5 shadow-lg">
-        <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-4">Rituals Management</h3>
+      <section id="settings-rituals" className="bg-gray-900 border border-[var(--border)] rounded-xl p-5 shadow-lg">
+        <h3 className="text-sm font-bold text-[var(--text-secondary)] uppercase tracking-wider mb-4">Rituals Management</h3>
         <p className="text-xs text-gray-500 mb-3">Drag to reorder. Tap a habit to edit.</p>
 
         {habits.length === 0 ? (
@@ -235,11 +230,11 @@ export default function SettingsSection() {
                 <div className="flex justify-between items-start mb-2">
                   <div className="flex items-center gap-3">
                     <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 8h16M4 16h16"></path></svg>
-                    <span className="text-white font-medium">{habit.name}</span>
+                    <span className="text-[var(--text-primary)] font-medium">{habit.name}</span>
                   </div>
                   <button
                     onClick={() => setEditingHabitId(editingHabitId === habit.id ? null : habit.id)}
-                    className="text-xs text-indigo-400 font-bold px-2 py-1 bg-gray-700 rounded hover:bg-gray-600"
+                    className="text-xs text-[var(--accent-purple)] font-bold px-2 py-1 bg-gray-700 rounded hover:bg-gray-600"
                   >
                     {editingHabitId === habit.id ? 'Close' : 'Edit'}
                   </button>
@@ -252,20 +247,20 @@ export default function SettingsSection() {
                       value={habit.name}
                       onChange={(e) => updateHabit(habit.id, { name: e.target.value })}
                       placeholder="Habit name"
-                      className="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-white outline-none focus:border-indigo-500"
+                      className="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-[var(--text-primary)] outline-none focus:border-indigo-500"
                     />
                     <div className="flex gap-2">
                       <input
                         type="number"
                         value={habit.goal}
                         onChange={(e) => updateHabit(habit.id, { goal: parseInt(e.target.value) || 1 })}
-                        className="w-24 bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-white outline-none focus:border-indigo-500"
+                        className="w-24 bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-[var(--text-primary)] outline-none focus:border-indigo-500"
                       />
                       <input
                         type="text"
                         value={habit.unit}
                         onChange={(e) => updateHabit(habit.id, { unit: e.target.value })}
-                        className="flex-1 bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-white outline-none focus:border-indigo-500"
+                        className="flex-1 bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-[var(--text-primary)] outline-none focus:border-indigo-500"
                       />
                     </div>
 
@@ -283,13 +278,13 @@ export default function SettingsSection() {
                         type="time"
                         value={habit.reminderTime || '09:00'}
                         onChange={(e) => updateHabit(habit.id, { reminderTime: e.target.value })}
-                        className="bg-gray-900 border border-gray-700 rounded-lg px-3 py-1.5 text-white outline-none focus:border-indigo-500 self-end"
+                        className="bg-gray-900 border border-gray-700 rounded-lg px-3 py-1.5 text-[var(--text-primary)] outline-none focus:border-indigo-500 self-end"
                       />
                     )}
 
                     <button
                       onClick={() => deleteHabit(habit.id)}
-                      className="mt-2 text-red-400 text-sm font-bold w-full text-center py-2 bg-red-500/10 rounded-lg hover:bg-red-500/20"
+                      className="mt-2 text-[var(--danger)] text-sm font-bold w-full text-center py-2 bg-red-500/10 rounded-lg hover:bg-red-500/20"
                     >
                       Delete Ritual
                     </button>
@@ -303,16 +298,16 @@ export default function SettingsSection() {
 
       {/* Paused Habits Section */}
       {habits.some(h => h.paused) && (
-        <section className="bg-gray-900 border border-gray-800 rounded-xl p-5 shadow-lg">
-          <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-4">Paused Rituals</h3>
+        <section className="bg-gray-900 border border-[var(--border)] rounded-xl p-5 shadow-lg">
+          <h3 className="text-sm font-bold text-[var(--text-secondary)] uppercase tracking-wider mb-4">Paused Rituals</h3>
           <div className="flex flex-col gap-3">
             {habits.filter(h => h.paused).map(habit => (
               <div key={`paused_${habit.id}`} className="bg-gray-800 border border-gray-700 rounded-lg p-3 flex justify-between items-center">
                 <div>
-                  <div className="text-white font-medium flex items-center gap-2">
+                  <div className="text-[var(--text-primary)] font-medium flex items-center gap-2">
                     <span className="text-xl">😴</span> {habit.name}
                   </div>
-                  <div className="text-xs text-gray-400 mt-1">
+                  <div className="text-xs text-[var(--text-secondary)] mt-1">
                     Resumes: {habit.resumeDate || 'Unknown'}
                   </div>
                 </div>
@@ -364,49 +359,63 @@ export default function SettingsSection() {
       )}
 
       {/* App Preferences / Account */}
-      <section id="settings-account" className="bg-gray-900 border border-gray-800 rounded-xl p-5 shadow-lg">
-        <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-4">App & Account</h3>
+      <section id="settings-account" className="bg-gray-900 border border-[var(--border)] rounded-xl p-5 shadow-lg">
+        <h3 className="text-sm font-bold text-[var(--text-secondary)] uppercase tracking-wider mb-4">App & Account</h3>
 
         <div className="mb-6">
-          <span className="text-white font-medium block mb-2">Theme</span>
-          <div className="flex gap-2">
-            <button
-              onClick={() => handleThemeChange('dark')}
-              className={`flex-1 py-2 rounded-lg font-bold text-xs transition-colors ${theme === 'dark' ? 'bg-indigo-500 text-white' : 'bg-gray-800 text-gray-400 border border-gray-700'}`}
-            >
-              Dark
-            </button>
-            <button
-              onClick={() => handleThemeChange('darker')}
-              className={`flex-1 py-2 rounded-lg font-bold text-xs transition-colors ${theme === 'darker' ? 'bg-indigo-500 text-white' : 'bg-gray-800 text-gray-400 border border-gray-700'}`}
-            >
-              Darker
-            </button>
-            <button
-              onClick={() => handleThemeChange('amoled')}
-              className={`flex-1 py-2 rounded-lg font-bold text-xs transition-colors ${theme === 'amoled' ? 'bg-indigo-500 text-white' : 'bg-gray-800 text-gray-400 border border-gray-700'}`}
-            >
-              AMOLED
-            </button>
+          <span className="text-[var(--text-primary)] font-medium block mb-2">Theme</span>
+          <div className="grid grid-cols-3 gap-2">
+            {[
+              { id: 'dark', label: 'Dark', icon: '🌑', bg: '#0a0f1a', card: '#1a2535', text: '#f8fafc', accent: '#2dd4bf' },
+              { id: 'light', label: 'Light', icon: '☀️', bg: '#f8fafc', card: '#ffffff', text: '#0f172a', accent: '#0d9488' },
+              { id: 'amoled', label: 'AMOLED', icon: '⬛', bg: '#000000', card: '#111111', text: '#ffffff', accent: '#2dd4bf' }
+            ].map((t) => {
+              const isActive = theme === t.id;
+              return (
+                <button
+                  key={t.id}
+                  onClick={() => setTheme(t.id)}
+                  className={`relative flex flex-col items-center justify-center p-3 rounded-xl border transition-all ${
+                    isActive
+                      ? 'border-[var(--accent-teal)] bg-[var(--accent-teal)]/5 shadow-md'
+                      : 'border-[var(--border)] bg-[var(--bg-card)] hover:border-[var(--text-secondary)]'
+                  }`}
+                  style={{ backgroundColor: t.bg }}
+                >
+                  {isActive && (
+                    <div className="absolute top-1.5 right-1.5 bg-[var(--accent-teal)] text-teal-950 rounded-full w-4 h-4 flex items-center justify-center shadow-sm">
+                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7"></path></svg>
+                    </div>
+                  )}
+                  <span className="text-xl mb-2">{t.icon}</span>
+                  <span className="text-xs font-semibold mb-2" style={{ color: t.text }}>{t.label}</span>
+                  <div className="flex gap-1">
+                    <span className="w-2.5 h-2.5 rounded-full border border-gray-500/30" style={{ backgroundColor: t.card }}></span>
+                    <span className="w-2.5 h-2.5 rounded-full border border-gray-500/30" style={{ backgroundColor: t.text }}></span>
+                    <span className="w-2.5 h-2.5 rounded-full border border-gray-500/30" style={{ backgroundColor: t.accent }}></span>
+                  </div>
+                </button>
+              );
+            })}
           </div>
         </div>
 
         <div className="flex flex-col gap-3">
           <button
             onClick={clearCompletedTasks}
-            className="w-full py-3 bg-gray-800 hover:bg-gray-700 text-white font-medium rounded-lg transition-colors border border-gray-700"
+            className="w-full py-3 bg-gray-800 hover:bg-gray-700 text-[var(--text-primary)] font-medium rounded-lg transition-colors border border-gray-700"
           >
             Clear Completed Tasks
           </button>
           <button
             onClick={resetStreaks}
-            className="w-full py-3 bg-gray-800 hover:bg-gray-700 text-amber-400 font-medium rounded-lg transition-colors border border-gray-700"
+            className="w-full py-3 bg-gray-800 hover:bg-gray-700 text-[var(--warning)] font-medium rounded-lg transition-colors border border-gray-700"
           >
             Reset All Streaks
           </button>
           <button
             onClick={clearAllData}
-            className="w-full py-3 bg-red-500/10 hover:bg-red-500/20 text-red-400 font-bold rounded-lg transition-colors border border-red-500/20"
+            className="w-full py-3 bg-red-500/10 hover:bg-red-500/20 text-[var(--danger)] font-bold rounded-lg transition-colors border border-red-500/20"
           >
             Clear All Data
           </button>
@@ -418,14 +427,14 @@ export default function SettingsSection() {
         <div className="w-12 h-12 rounded-xl bg-gray-800 border border-gray-700 flex items-center justify-center">
           <img src="/logo.jpg" alt="Logo" className="w-8 h-8 rounded-lg" />
         </div>
-        <p className="text-sm font-bold text-white">Pinboard <span className="font-normal text-gray-400">v1.2.0</span></p>
+        <p className="text-sm font-bold text-[var(--text-primary)]">Pinboard <span className="font-normal text-[var(--text-secondary)]">v1.2.0</span></p>
         <p className="text-xs text-gray-500">Made for you 🌱</p>
         <button
           onClick={() => {
             localStorage.removeItem('pinboard_onboarded');
             window.location.reload();
           }}
-          className="mt-4 px-4 py-2 bg-gray-800 hover:bg-gray-700 text-gray-400 text-xs font-semibold rounded-lg transition-colors border border-gray-700"
+          className="mt-4 px-4 py-2 bg-gray-800 hover:bg-gray-700 text-[var(--text-secondary)] text-xs font-semibold rounded-lg transition-colors border border-gray-700"
         >
           Redo Setup
         </button>

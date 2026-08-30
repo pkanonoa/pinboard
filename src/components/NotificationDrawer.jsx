@@ -89,14 +89,14 @@ export default function NotificationDrawer({ isOpen, onClose, setCurrentTab }) {
             animate={{ y: 0 }}
             exit={{ y: '-100%' }}
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-            className="fixed top-0 left-0 right-0 z-50 bg-gray-900 border-b border-gray-800 shadow-2xl rounded-b-3xl max-h-[80vh] flex flex-col pt-safe"
+            className="fixed top-0 left-0 right-0 z-50 bg-gray-900 border-b border-[var(--border)] shadow-2xl rounded-b-3xl max-h-[80vh] flex flex-col pt-safe"
           >
-            <div className="flex items-center justify-between p-5 pb-4 border-b border-gray-800">
-              <h2 className="text-xl font-bold text-white flex items-center gap-2">
-                <svg className="w-5 h-5 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg>
+            <div className="flex items-center justify-between p-5 pb-4 border-b border-[var(--border)]">
+              <h2 className="text-xl font-bold text-[var(--text-primary)] flex items-center gap-2">
+                <svg className="w-5 h-5 text-[var(--accent-purple)]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg>
                 Notifications
               </h2>
-              <button onClick={onClose} className="p-2 bg-gray-800 rounded-full hover:bg-gray-700 text-gray-400 transition-colors">
+              <button onClick={onClose} className="p-2 bg-gray-800 rounded-full hover:bg-gray-700 text-[var(--text-secondary)] transition-colors">
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
               </button>
             </div>
@@ -122,13 +122,13 @@ export default function NotificationDrawer({ isOpen, onClose, setCurrentTab }) {
                           {iconMap[notif.type] || '🔔'}
                         </div>
                         <div className="flex-1 min-w-0 pr-6">
-                          <h4 className="text-sm font-bold text-white mb-0.5">{notif.title}</h4>
-                          <p className="text-xs text-gray-400 leading-tight mb-2 line-clamp-2">{notif.body}</p>
-                          <span className="text-[10px] font-semibold text-indigo-400 uppercase tracking-wider">{getRelativeTime(notif.timestamp)}</span>
+                          <h4 className="text-sm font-bold text-[var(--text-primary)] mb-0.5">{notif.title}</h4>
+                          <p className="text-xs text-[var(--text-secondary)] leading-tight mb-2 line-clamp-2">{notif.body}</p>
+                          <span className="text-[10px] font-semibold text-[var(--accent-purple)] uppercase tracking-wider">{getRelativeTime(notif.timestamp)}</span>
                         </div>
                         <button 
                           onClick={(e) => handleDismiss(e, notif.id)}
-                          className="absolute top-2 right-2 p-1.5 text-gray-500 hover:text-white rounded-lg hover:bg-gray-700 transition-colors"
+                          className="absolute top-2 right-2 p-1.5 text-gray-500 hover:text-[var(--text-primary)] rounded-lg hover:bg-gray-700 transition-colors"
                         >
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                         </button>
@@ -139,7 +139,7 @@ export default function NotificationDrawer({ isOpen, onClose, setCurrentTab }) {
               )}
             </div>
             
-            <div className="p-3 text-center border-t border-gray-800 pb-safe">
+            <div className="p-3 text-center border-t border-[var(--border)] pb-safe">
               <p className="text-[10px] text-gray-500 font-medium">Older notifications are cleared daily.</p>
             </div>
           </motion.div>

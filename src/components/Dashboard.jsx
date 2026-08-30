@@ -270,8 +270,8 @@ export default function Dashboard({ setCurrentTab }) {
           <span className="bg-indigo-950/50 border border-indigo-500/30 text-indigo-300 text-xs font-semibold px-3 py-1 rounded-full shadow-sm tracking-wide">
             {currentLevelName}
           </span>
-          <div className="flex items-center gap-1.5 bg-[#171926] border border-gray-800/80 px-3 py-1 rounded-full text-xs shadow-sm">
-            <span className="text-amber-400 font-bold">{points} pts</span>
+          <div className="flex items-center gap-1.5 bg-[var(--bg-card)] border border-[var(--border)]/80 px-3 py-1 rounded-full text-xs shadow-sm">
+            <span className="text-[var(--warning)] font-bold">{points} pts</span>
             <span className="text-gray-600 font-bold">·</span>
             <span className="text-gray-300 font-medium">{pointsToNextLevel} to next level</span>
           </div>
@@ -290,17 +290,17 @@ export default function Dashboard({ setCurrentTab }) {
 
       {/* Stat Tiles */}
       <div className="grid grid-cols-3 gap-3 mt-1">
-        <div className="bg-[#141522] border border-gray-800/60 rounded-2xl py-3.5 px-2 flex flex-col items-center justify-center text-center shadow-sm">
-          <span className="text-2xl font-bold text-indigo-400 leading-none">{completedTasksToday}</span>
-          <span className="text-xs text-gray-400 font-medium mt-1.5">tasks</span>
+        <div className="bg-[var(--bg-card)] border border-[var(--border)]/60 rounded-2xl py-3.5 px-2 flex flex-col items-center justify-center text-center shadow-sm">
+          <span className="text-2xl font-bold text-[var(--accent-purple)] leading-none">{completedTasksToday}</span>
+          <span className="text-xs text-[var(--text-secondary)] font-medium mt-1.5">tasks</span>
         </div>
-        <div className="bg-[#141522] border border-gray-800/60 rounded-2xl py-3.5 px-2 flex flex-col items-center justify-center text-center shadow-sm">
-          <span className="text-2xl font-bold text-emerald-400 leading-none">{habitsDoneToday}</span>
-          <span className="text-xs text-gray-400 font-medium mt-1.5">rituals</span>
+        <div className="bg-[var(--bg-card)] border border-[var(--border)]/60 rounded-2xl py-3.5 px-2 flex flex-col items-center justify-center text-center shadow-sm">
+          <span className="text-2xl font-bold text-[var(--success)] leading-none">{habitsDoneToday}</span>
+          <span className="text-xs text-[var(--text-secondary)] font-medium mt-1.5">rituals</span>
         </div>
-        <div className="bg-[#141522] border border-gray-800/60 rounded-2xl py-3.5 px-2 flex flex-col items-center justify-center text-center shadow-sm">
-          <span className="text-2xl font-bold text-amber-400 leading-none">{bestStreak}</span>
-          <span className="text-xs text-gray-400 font-medium mt-1.5">streak</span>
+        <div className="bg-[var(--bg-card)] border border-[var(--border)]/60 rounded-2xl py-3.5 px-2 flex flex-col items-center justify-center text-center shadow-sm">
+          <span className="text-2xl font-bold text-[var(--warning)] leading-none">{bestStreak}</span>
+          <span className="text-xs text-[var(--text-secondary)] font-medium mt-1.5">streak</span>
         </div>
       </div>
 
@@ -308,17 +308,17 @@ export default function Dashboard({ setCurrentTab }) {
       {(!promptDismissed || monthlyGoals.length > 0) && (
         <div className={`border rounded-2xl p-4 shadow-sm transition-all ${
           monthlyGoals.length > 0 
-            ? 'bg-[#141522] border-gray-800/60' 
+            ? 'bg-[var(--bg-card)] border-[var(--border)]/60' 
             : 'border-dashed border-gray-700/60 bg-transparent'
         }`}>
           <div className="flex justify-between items-center mb-2">
             <div className="flex items-center gap-2">
-              <Target className="w-4 h-4 text-indigo-400" />
+              <Target className="w-4 h-4 text-[var(--accent-purple)]" />
               <span className="text-sm font-semibold text-gray-200">Active goal</span>
             </div>
             <button 
               onClick={() => setCurrentTab('goals')}
-              className="text-xs text-indigo-400 hover:text-indigo-300 font-medium transition-colors"
+              className="text-xs text-[var(--accent-purple)] hover:text-indigo-300 font-medium transition-colors"
             >
               View all
             </button>
@@ -326,7 +326,7 @@ export default function Dashboard({ setCurrentTab }) {
 
           {monthlyGoals.length > 0 ? (
             <>
-              <div className="text-[15px] font-semibold text-white mt-1.5 mb-2.5 truncate">
+              <div className="text-[15px] font-semibold text-[var(--text-primary)] mt-1.5 mb-2.5 truncate">
                 {goalName}
               </div>
 
@@ -337,7 +337,7 @@ export default function Dashboard({ setCurrentTab }) {
                     style={{ width: `${goalProgressPct}%` }}
                   />
                 </div>
-                <span className="text-xs font-bold text-emerald-400 shrink-0">
+                <span className="text-xs font-bold text-[var(--success)] shrink-0">
                   {goalProgressPct}%
                 </span>
               </div>
@@ -345,14 +345,14 @@ export default function Dashboard({ setCurrentTab }) {
           ) : (
             <div className="flex flex-col items-center text-center py-2 px-1">
               <span className="text-2xl mb-1.5">🎯</span>
-              <h3 className="text-sm font-semibold text-white">No active goal yet</h3>
-              <p className="text-xs text-gray-400 mt-1 mb-4 max-w-[260px] leading-relaxed">
+              <h3 className="text-sm font-semibold text-[var(--text-primary)]">No active goal yet</h3>
+              <p className="text-xs text-[var(--text-secondary)] mt-1 mb-4 max-w-[260px] leading-relaxed">
                 Set one to track progress right from Home
               </p>
               <div className="flex items-center gap-3 w-full justify-center">
                 <button
                   onClick={() => setCurrentTab('goals')}
-                  className="px-4 py-1.5 bg-indigo-500 hover:bg-indigo-600 text-white rounded-xl text-xs font-semibold shadow-sm transition-all active:scale-95"
+                  className="px-4 py-1.5 bg-indigo-500 hover:bg-indigo-600 text-[var(--text-primary)] rounded-xl text-xs font-semibold shadow-sm transition-all active:scale-95"
                 >
                   Set a goal
                 </button>
@@ -361,7 +361,7 @@ export default function Dashboard({ setCurrentTab }) {
                     localStorage.setItem('goalPromptDismissedAt', Date.now().toString());
                     setPromptDismissed(true);
                   }}
-                  className="px-3 py-1.5 text-gray-400 hover:text-gray-300 text-xs font-medium transition-colors"
+                  className="px-3 py-1.5 text-[var(--text-secondary)] hover:text-gray-300 text-xs font-medium transition-colors"
                 >
                   Skip
                 </button>
@@ -372,15 +372,15 @@ export default function Dashboard({ setCurrentTab }) {
       )}
 
       {/* Today's Rituals Card */}
-      <div className="bg-[#141522] border border-gray-800/60 rounded-2xl p-4 shadow-sm">
+      <div className="bg-[var(--bg-card)] border border-[var(--border)]/60 rounded-2xl p-4 shadow-sm">
         <div className="flex justify-between items-center mb-3">
           <div className="flex items-center gap-2">
-            <Repeat className="w-4 h-4 text-emerald-400" />
+            <Repeat className="w-4 h-4 text-[var(--success)]" />
             <span className="text-sm font-semibold text-gray-200">Today's rituals</span>
           </div>
           <button 
             onClick={() => setCurrentTab('rituals')}
-            className="text-xs text-indigo-400 hover:text-indigo-300 font-medium transition-colors"
+            className="text-xs text-[var(--accent-purple)] hover:text-indigo-300 font-medium transition-colors"
           >
             View all
           </button>
@@ -393,26 +393,26 @@ export default function Dashboard({ setCurrentTab }) {
 
             return (
               <div key={ritual.id} className="py-2.5 first:pt-0 last:pb-0 flex items-center justify-between">
-                <span className={`text-sm font-medium ${isDone ? 'text-gray-400 line-through' : 'text-white'}`}>
+                <span className={`text-sm font-medium ${isDone ? 'text-[var(--text-secondary)] line-through' : 'text-[var(--text-primary)]'}`}>
                   {ritual.name}
                 </span>
 
                 {isMissed ? (
-                  <span className="bg-red-950/40 border border-red-800/40 text-red-400 text-xs px-2.5 py-0.5 rounded-lg font-medium">
+                  <span className="bg-red-950/40 border border-red-800/40 text-[var(--danger)] text-xs px-2.5 py-0.5 rounded-lg font-medium">
                     Missed
                   </span>
                 ) : isDone ? (
-                  <span className="bg-emerald-950/40 border border-emerald-800/40 text-emerald-400 text-xs px-2.5 py-0.5 rounded-lg font-medium">
+                  <span className="bg-emerald-950/40 border border-emerald-800/40 text-[var(--success)] text-xs px-2.5 py-0.5 rounded-lg font-medium">
                     Done
                   </span>
                 ) : ritual.type === 'counter' || ritual.goal > 1 ? (
-                  <span className="text-xs text-gray-400 font-medium">
+                  <span className="text-xs text-[var(--text-secondary)] font-medium">
                     {ritual.count || 0} / {ritual.goal}
                   </span>
                 ) : (
                   <button
                     onClick={() => handleQuickMarkDone(ritual.id)}
-                    className="bg-emerald-950/40 hover:bg-emerald-900/60 border border-emerald-800/40 text-emerald-400 text-xs px-3 py-1 rounded-lg font-medium transition-colors active:scale-95"
+                    className="bg-emerald-950/40 hover:bg-emerald-900/60 border border-emerald-800/40 text-[var(--success)] text-xs px-3 py-1 rounded-lg font-medium transition-colors active:scale-95"
                   >
                     Mark done
                   </button>
@@ -424,9 +424,9 @@ export default function Dashboard({ setCurrentTab }) {
       </div>
 
       {/* Up Next Task Card */}
-      <div className="bg-[#141522] border border-gray-800/60 rounded-2xl p-4 shadow-sm">
+      <div className="bg-[var(--bg-card)] border border-[var(--border)]/60 rounded-2xl p-4 shadow-sm">
         <div className="flex items-center gap-2 mb-3">
-          <ClipboardList className="w-4 h-4 text-indigo-400" />
+          <ClipboardList className="w-4 h-4 text-[var(--accent-purple)]" />
           <span className="text-sm font-semibold text-gray-200">Up next</span>
         </div>
 
@@ -437,11 +437,11 @@ export default function Dashboard({ setCurrentTab }) {
                 onClick={() => handleQuickCompleteTask(upNextTask.id)}
                 className="w-5 h-5 rounded-md border border-gray-600 hover:border-indigo-400 flex items-center justify-center transition-colors shrink-0 active:scale-90"
               />
-              <span className="text-sm font-medium text-white truncate">
+              <span className="text-sm font-medium text-[var(--text-primary)] truncate">
                 {upNextTask.name}
               </span>
             </div>
-            <span className="text-xs text-gray-400 shrink-0 ml-3 font-normal">
+            <span className="text-xs text-[var(--text-secondary)] shrink-0 ml-3 font-normal">
               {formatTaskTime(upNextTask)}
             </span>
           </div>
@@ -449,9 +449,9 @@ export default function Dashboard({ setCurrentTab }) {
           <div className="flex items-center justify-between py-1">
             <div className="flex items-center gap-3 flex-1 min-w-0">
               <div className="w-5 h-5 rounded-md border border-gray-600 shrink-0" />
-              <span className="text-sm font-medium text-white truncate">Laundry</span>
+              <span className="text-sm font-medium text-[var(--text-primary)] truncate">Laundry</span>
             </div>
-            <span className="text-xs text-gray-400 shrink-0 ml-3 font-normal">4:00 PM</span>
+            <span className="text-xs text-[var(--text-secondary)] shrink-0 ml-3 font-normal">4:00 PM</span>
           </div>
         )}
       </div>

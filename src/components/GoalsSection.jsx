@@ -280,7 +280,7 @@ export default function GoalsSection() {
   return (
     <div className="w-full max-w-md z-10 flex flex-col gap-4">
       <div className="flex justify-between items-center pr-14">
-        <h1 className="text-2xl font-bold text-white flex items-center gap-2">Goals</h1>
+        <h1 className="text-2xl font-bold text-[var(--text-primary)] flex items-center gap-2">Goals</h1>
       </div>
 
       <button 
@@ -293,7 +293,7 @@ export default function GoalsSection() {
             setIsAdding(true);
           }
         }}
-        className="flex items-center justify-center gap-1.5 w-full bg-[#1e1e28] text-indigo-300 hover:bg-gray-800 py-3 rounded-xl text-sm font-medium transition-colors border border-gray-800/60 active:scale-95 shadow-sm"
+        className="flex items-center justify-center gap-1.5 w-full bg-[#1e1e28] text-indigo-300 hover:bg-gray-800 py-3 rounded-xl text-sm font-medium transition-colors border border-[var(--border)]/60 active:scale-95 shadow-sm"
       >
         {isAdding ? 'Cancel' : '+ New goal'}
       </button>
@@ -306,7 +306,7 @@ export default function GoalsSection() {
             required
             value={newGoal.name}
             onChange={e => setNewGoal({...newGoal, name: e.target.value})}
-            className="w-full bg-[#16161f] border-none rounded-xl px-4 py-3 text-[15px] text-white mb-4 focus:ring-1 focus:ring-indigo-500 focus:outline-none placeholder-gray-500"
+            className="w-full bg-[#16161f] border-none rounded-xl px-4 py-3 text-[15px] text-[var(--text-primary)] mb-4 focus:ring-1 focus:ring-indigo-500 focus:outline-none placeholder-gray-500"
           />
           
           <div className="flex gap-3 mb-4">
@@ -315,7 +315,7 @@ export default function GoalsSection() {
               <select 
                 value={newGoal.category}
                 onChange={e => setNewGoal({...newGoal, category: e.target.value})}
-                className="w-full bg-[#16161f] border-none rounded-xl px-4 py-3 text-[14px] text-white focus:ring-1 focus:ring-indigo-500 focus:outline-none appearance-none"
+                className="w-full bg-[#16161f] border-none rounded-xl px-4 py-3 text-[14px] text-[var(--text-primary)] focus:ring-1 focus:ring-indigo-500 focus:outline-none appearance-none"
               >
                 <option value="Body">Body</option>
                 <option value="Performance">Performance</option>
@@ -329,7 +329,7 @@ export default function GoalsSection() {
                 type="date" 
                 value={newGoal.dueDate}
                 onChange={e => setNewGoal({...newGoal, dueDate: e.target.value})}
-                className="w-full bg-[#16161f] border-none rounded-xl px-4 py-3 text-[14px] text-white focus:ring-1 focus:ring-indigo-500 focus:outline-none [color-scheme:dark]"
+                className="w-full bg-[#16161f] border-none rounded-xl px-4 py-3 text-[14px] text-[var(--text-primary)] focus:ring-1 focus:ring-indigo-500 focus:outline-none [color-scheme:dark]"
               />
             </div>
           </div>
@@ -339,7 +339,7 @@ export default function GoalsSection() {
             <select 
               value={newGoal.trackingType}
               onChange={e => setNewGoal({...newGoal, trackingType: e.target.value})}
-              className="w-full bg-[#16161f] border-none rounded-xl px-4 py-3 text-[14px] text-white focus:ring-1 focus:ring-indigo-500 focus:outline-none appearance-none"
+              className="w-full bg-[#16161f] border-none rounded-xl px-4 py-3 text-[14px] text-[var(--text-primary)] focus:ring-1 focus:ring-indigo-500 focus:outline-none appearance-none"
             >
               <option value="count_toward">Number of Times (e.g. 20 gym visits)</option>
               <option value="cumulative">Total Amount (e.g. 500 pages)</option>
@@ -359,7 +359,7 @@ export default function GoalsSection() {
                   step="any"
                   value={newGoal.target}
                   onChange={e => setNewGoal({...newGoal, target: e.target.value})}
-                  className="w-full bg-[#16161f] border-none rounded-xl px-4 py-3 text-[14px] text-white focus:ring-1 focus:ring-indigo-500 focus:outline-none"
+                  className="w-full bg-[#16161f] border-none rounded-xl px-4 py-3 text-[14px] text-[var(--text-primary)] focus:ring-1 focus:ring-indigo-500 focus:outline-none"
                 />
               </div>
               <div className="w-1/2">
@@ -370,7 +370,7 @@ export default function GoalsSection() {
                   placeholder="e.g. pages"
                   value={newGoal.unit}
                   onChange={e => setNewGoal({...newGoal, unit: e.target.value})}
-                  className="w-full bg-[#16161f] border-none rounded-xl px-4 py-3 text-[14px] text-white focus:ring-1 focus:ring-indigo-500 focus:outline-none placeholder-gray-500"
+                  className="w-full bg-[#16161f] border-none rounded-xl px-4 py-3 text-[14px] text-[var(--text-primary)] focus:ring-1 focus:ring-indigo-500 focus:outline-none placeholder-gray-500"
                 />
               </div>
             </div>
@@ -401,7 +401,7 @@ export default function GoalsSection() {
             <p className="text-[10px] text-gray-500 mt-2 leading-tight pl-1">If linked, completing any of the selected rituals will automatically log progress here.</p>
           </div>
           
-          <button type="submit" className="w-full bg-indigo-500 hover:bg-indigo-600 text-white py-3.5 rounded-xl text-[15px] font-bold transition-all active:scale-95">
+          <button type="submit" className="w-full bg-indigo-500 hover:bg-indigo-600 text-[var(--text-primary)] py-3.5 rounded-xl text-[15px] font-bold transition-all active:scale-95">
             {editingGoalId ? 'Save Changes' : 'Create Goal'}
           </button>
         </form>
@@ -413,7 +413,7 @@ export default function GoalsSection() {
             <svg className="w-16 h-16 text-gray-700 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
             </svg>
-            <p className="text-[15px] font-medium text-gray-400">No goals set yet.</p>
+            <p className="text-[15px] font-medium text-[var(--text-secondary)]">No goals set yet.</p>
             <p className="text-[13px] mt-1.5">Tap the button above to create your first goal.</p>
           </div>
         ) : (

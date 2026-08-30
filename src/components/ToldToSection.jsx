@@ -121,13 +121,13 @@ export default function ToldToSection() {
   return (
     <div className="w-full max-w-md z-10 flex flex-col gap-4">
       <div className="flex justify-between items-center pr-14">
-        <h1 className="text-2xl font-bold text-white">Tasks</h1>
+        <h1 className="text-2xl font-bold text-[var(--text-primary)]">Tasks</h1>
       </div>
 
       {!isAdding && (
         <button 
           onClick={() => setIsAdding(true)}
-          className="flex items-center justify-center gap-1.5 w-full bg-[#1e1e28] text-indigo-300 hover:bg-gray-800 py-3 rounded-xl text-sm font-medium transition-colors border border-gray-800/60 active:scale-95 shadow-sm"
+          className="flex items-center justify-center gap-1.5 w-full bg-[#1e1e28] text-indigo-300 hover:bg-gray-800 py-3 rounded-xl text-sm font-medium transition-colors border border-[var(--border)]/60 active:scale-95 shadow-sm"
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4"></path></svg>
           Task
@@ -142,7 +142,7 @@ export default function ToldToSection() {
             required 
             value={taskName}
             onChange={(e) => setTaskName(e.target.value)}
-            className="w-full bg-[#1e1e28] border-none rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-colors"
+            className="w-full bg-[#1e1e28] border-none rounded-xl px-4 py-3 text-[var(--text-primary)] placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-colors"
           />
           <div className="flex gap-2">
             <input 
@@ -150,7 +150,7 @@ export default function ToldToSection() {
               placeholder="Assigned by (optional)" 
               value={whoSaidIt}
               onChange={(e) => setWhoSaidIt(e.target.value)}
-              className="w-1/2 bg-[#1e1e28] border-none rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-colors text-sm"
+              className="w-1/2 bg-[#1e1e28] border-none rounded-xl px-4 py-3 text-[var(--text-primary)] placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-colors text-sm"
             />
             <input 
               type="datetime-local" 
@@ -170,7 +170,7 @@ export default function ToldToSection() {
             <button 
               type="submit" 
               disabled={isScheduling}
-              className="w-2/3 bg-indigo-500 hover:bg-indigo-600 text-white font-medium py-3 rounded-xl transition-all active:scale-95 disabled:opacity-70 flex justify-center items-center gap-2"
+              className="w-2/3 bg-indigo-500 hover:bg-indigo-600 text-[var(--text-primary)] font-medium py-3 rounded-xl transition-all active:scale-95 disabled:opacity-70 flex justify-center items-center gap-2"
             >
               {isScheduling ? 'Scheduling...' : 'Add task'}
             </button>
@@ -196,9 +196,9 @@ export default function ToldToSection() {
                 >
                 </div>
                 <div className="flex-1 min-w-0 flex flex-col justify-center">
-                  <p className="font-medium text-white text-base break-words leading-tight">{task.name}</p>
+                  <p className="font-medium text-[var(--text-primary)] text-base break-words leading-tight">{task.name}</p>
                   {(task.person || task.dueDate) && (
-                    <div className="flex items-center gap-1 mt-1 text-sm text-gray-400">
+                    <div className="flex items-center gap-1 mt-1 text-sm text-[var(--text-secondary)]">
                       {task.dueDate && <span>{new Date(task.dueDate).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}</span>}
                       {task.dueDate && task.person && <span>·</span>}
                       {task.person && <span>from {task.person}</span>}
@@ -207,7 +207,7 @@ export default function ToldToSection() {
                 </div>
                 <button 
                   onClick={() => handleDeleteTask(task.id)}
-                  className="text-gray-600 hover:text-red-400 p-2 rounded-md transition-colors flex-shrink-0"
+                  className="text-gray-600 hover:text-[var(--danger)] p-2 rounded-md transition-colors flex-shrink-0"
                   aria-label="Delete task"
                 >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
@@ -235,7 +235,7 @@ export default function ToldToSection() {
                   className="w-[22px] h-[22px] rounded-md border-2 border-emerald-400 bg-emerald-400/20 flex items-center justify-center cursor-pointer flex-shrink-0"
                   onClick={(e) => { e.stopPropagation(); handleToggleDone(task.id); }}
                 >
-                  <svg className="w-3.5 h-3.5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7"></path></svg>
+                  <svg className="w-3.5 h-3.5 text-[var(--success)]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7"></path></svg>
                 </div>
                 <div className="flex-1 min-w-0 flex flex-col justify-center">
                   <p className="font-medium text-gray-500 text-base break-words leading-tight line-through">{task.name}</p>
@@ -244,7 +244,7 @@ export default function ToldToSection() {
                   <button 
                     onClick={(e) => { e.stopPropagation(); handleDeleteTask(task.id); }}
                     onPointerDown={(e) => e.stopPropagation()}
-                    className="text-red-400 p-2 rounded-md hover:bg-gray-800 transition-colors flex-shrink-0 animate-fade-in"
+                    className="text-[var(--danger)] p-2 rounded-md hover:bg-gray-800 transition-colors flex-shrink-0 animate-fade-in"
                     aria-label="Delete task"
                   >
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>

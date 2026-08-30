@@ -131,7 +131,7 @@ export default function RewardsSection() {
       )}
 
       <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold text-white flex items-center gap-2">
+        <h2 className="text-2xl font-bold text-[var(--text-primary)] flex items-center gap-2">
           Rewards
         </h2>
       </div>
@@ -145,7 +145,7 @@ export default function RewardsSection() {
             {points.toLocaleString()}
           </div>
           <div className="inline-block bg-white/10 backdrop-blur-md px-4 py-1.5 rounded-full border border-white/20 mb-4">
-            <span className="text-white font-bold tracking-wide">{currentLevel.name}</span>
+            <span className="text-[var(--text-primary)] font-bold tracking-wide">{currentLevel.name}</span>
           </div>
 
           <div className="w-full bg-black/40 rounded-full h-2.5 mb-2 overflow-hidden border border-white/10">
@@ -166,7 +166,7 @@ export default function RewardsSection() {
           <button
             onClick={handleShareClick}
             disabled={isGenerating}
-            className="inline-flex items-center gap-1.5 px-4 py-1.5 text-xs font-semibold text-indigo-300 hover:text-white bg-white/5 hover:bg-white/10 rounded-full border border-white/10 active:scale-95 transition-all"
+            className="inline-flex items-center gap-1.5 px-4 py-1.5 text-xs font-semibold text-indigo-300 hover:text-[var(--text-primary)] bg-white/5 hover:bg-white/10 rounded-full border border-white/10 active:scale-95 transition-all"
           >
             {isGenerating ? 'Generating...' : 'Share progress 📤'}
           </button>
@@ -175,7 +175,7 @@ export default function RewardsSection() {
 
       {/* Badges Grid */}
       <div className="flex flex-col gap-4">
-        <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider px-1">Badges</h3>
+        <h3 className="text-sm font-bold text-[var(--text-secondary)] uppercase tracking-wider px-1">Badges</h3>
         <div className="grid grid-cols-2 gap-3">
           {BADGE_DEFINITIONS.map(badgeDef => {
             const earnedInfo = earnedBadges.find(b => b.id === badgeDef.id);
@@ -191,7 +191,7 @@ export default function RewardsSection() {
                 }`}
               >
                 <div className="text-4xl mb-3 drop-shadow-md">{badgeDef.icon}</div>
-                <h4 className={`font-bold text-sm mb-1 ${isEarned ? 'text-white' : 'text-gray-400'}`}>{badgeDef.name}</h4>
+                <h4 className={`font-bold text-sm mb-1 ${isEarned ? 'text-[var(--text-primary)]' : 'text-[var(--text-secondary)]'}`}>{badgeDef.name}</h4>
                 <p className="text-[10px] text-gray-500 leading-tight mb-3 flex-grow">{badgeDef.description}</p>
                 
                 {isEarned ? (

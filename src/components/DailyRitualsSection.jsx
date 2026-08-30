@@ -38,7 +38,23 @@ export default function DailyRitualsSection() {
   const [newHabit, setNewHabit] = useState({ name: '', goal: '', unit: '', type: 'countable', targetTime: '09:00', graceWindow: '30' });
 
   const [editingHabitId, setEditingHabitId] = useState(null);
-  const [editHabitData, setEditHabitData] = useState({ name: '', goal: '', unit: '', type: 'countable', targetTime: '09:00', graceWindow: '30', reminderEnabled: false, reminderType: 'fixed', reminderTime: '09:00', reminderInterval: 2, reminderIntervalUnit: 'hours', reminderDays: [] });
+  const [editHabitData, setEditHabitData] = useState({
+    name: '',
+    goal: '',
+    unit: '',
+    type: 'countable',
+    targetTime: '09:00',
+    graceWindow: '30',
+    reminderEnabled: false,
+    reminderType: 'fixed',
+    reminderTime: '09:00',
+    reminderInterval: 2,
+    reminderIntervalUnit: 'hours',
+    reminderDays: [],
+    checkInTimes: ['12:00', '18:00'],
+    alertThreshold: 0.5,
+    messageTemplate: "You're {remaining} away from your goal. Let's get moving! 🚶"
+  });
   const [expandedHabitId, setExpandedHabitId] = useState(null);
   const [bigNumberInputs, setBigNumberInputs] = useState({});
   const [now, setNow] = useState(new Date());
@@ -521,6 +537,39 @@ export default function DailyRitualsSection() {
     setHabits(currentHabits => currentHabits.filter(h => h.id !== id));
   };
 
+  const addCheckInTime = () => {
+    const currentTimes = editHabitData.checkInTimes || [];
+    let nextTime = '18:00';
+    if (currentTimes.includes('18:00')) nextTime = '21:00';
+    else if (currentTimes.includes('12:00')) nextTime = '18:00';
+    setEditHabitData(prev => ({
+      ...prev,
+      checkInTimes: [...(prev.checkInTimes || []), nextTime]
+    }));
+  };
+
+  const removeCheckInTime = (indexToRemove) => {
+    setEditHabitData(prev => {
+      const currentTimes = prev.checkInTimes || [];
+      if (currentTimes.length <= 1) return prev;
+      return {
+        ...prev,
+        checkInTimes: currentTimes.filter((_, i) => i !== indexToRemove)
+      };
+    });
+  };
+
+  const updateCheckInTime = (index, val) => {
+    setEditHabitData(prev => {
+      const currentTimes = [...(prev.checkInTimes || [])];
+      currentTimes[index] = val;
+      return {
+        ...prev,
+        checkInTimes: currentTimes
+      };
+    });
+  };
+
   const startEditHabit = (habit) => {
     setEditingHabitId(habit.id);
     setEditHabitData({
@@ -535,7 +584,12 @@ export default function DailyRitualsSection() {
       reminderTime: habit.reminderTime || '09:00',
       reminderInterval: habit.reminderInterval || 2,
       reminderIntervalUnit: habit.reminderIntervalUnit || 'hours',
-      reminderDays: habit.reminderDays || []
+      reminderDays: habit.reminderDays || [],
+      checkInTimes: Array.isArray(habit.checkInTimes) && habit.checkInTimes.length > 0
+        ? [...habit.checkInTimes]
+        : ['12:00', '18:00'],
+      alertThreshold: habit.alertThreshold !== undefined ? habit.alertThreshold : 0.5,
+      messageTemplate: habit.messageTemplate || "You're {remaining} away from your goal. Let's get moving! 🚶"
     });
   };
 
@@ -555,7 +609,10 @@ export default function DailyRitualsSection() {
         reminderTime: editHabitData.reminderTime,
         reminderInterval: editHabitData.reminderInterval === '' ? 2 : parseInt(editHabitData.reminderInterval, 10),
         reminderIntervalUnit: editHabitData.reminderIntervalUnit || 'hours',
-        reminderDays: editHabitData.reminderDays || []
+        reminderDays: editHabitData.reminderDays || [],
+        checkInTimes: editHabitData.checkInTimes || ['12:00', '18:00'],
+        alertThreshold: editHabitData.alertThreshold !== undefined ? Number(editHabitData.alertThreshold) : 0.5,
+        messageTemplate: editHabitData.messageTemplate || "You're {remaining} away from your goal. Let's get moving! 🚶"
       };
 
       if (editHabitData.type === 'countable' || editHabitData.type === 'big_number') {
@@ -574,14 +631,14 @@ export default function DailyRitualsSection() {
   return (
     <div className="w-full max-w-md z-10 flex flex-col gap-4">
       <div className="flex justify-between items-center pr-14">
-        <h1 className="text-2xl font-bold text-white flex items-center gap-2">
+        <h1 className="text-2xl font-bold text-[var(--text-primary)] flex items-center gap-2">
           Rituals
         </h1>
       </div>
 
       <button
         onClick={() => setIsAdding(!isAdding)}
-        className="flex items-center justify-center gap-1.5 w-full bg-[#1e1e28] text-indigo-300 hover:bg-gray-800 py-3 rounded-xl text-sm font-medium transition-colors border border-gray-800/60 active:scale-95 shadow-sm"
+        className="flex items-center justify-center gap-1.5 w-full bg-[#1e1e28] text-indigo-300 hover:bg-gray-800 py-3 rounded-xl text-sm font-medium transition-colors border border-[var(--border)]/60 active:scale-95 shadow-sm"
       >
         {isAdding ? 'Cancel' : '+ Custom ritual'}
       </button>
@@ -593,7 +650,7 @@ export default function DailyRitualsSection() {
           <select
             value={newHabit.type}
             onChange={e => setNewHabit({ ...newHabit, type: e.target.value })}
-            className="w-full bg-gray-900 border border-gray-600 rounded px-3 py-2 text-sm text-white mb-2 focus:border-emerald-500 focus:outline-none"
+            className="w-full bg-gray-900 border border-gray-600 rounded px-3 py-2 text-sm text-[var(--text-primary)] mb-2 focus:border-emerald-500 focus:outline-none"
           >
             <option value="countable">+1 (water, pages)</option>
             <option value="one_time">Mark Done (exercise, shower)</option>
@@ -607,7 +664,7 @@ export default function DailyRitualsSection() {
             required
             value={newHabit.name}
             onChange={e => setNewHabit({ ...newHabit, name: e.target.value })}
-            className="w-full bg-gray-900 border border-gray-600 rounded px-3 py-2 text-sm text-white mb-2 focus:border-emerald-500 focus:outline-none"
+            className="w-full bg-gray-900 border border-gray-600 rounded px-3 py-2 text-sm text-[var(--text-primary)] mb-2 focus:border-emerald-500 focus:outline-none"
           />
 
           {(newHabit.type === 'countable' || newHabit.type === 'big_number') && (
@@ -619,7 +676,7 @@ export default function DailyRitualsSection() {
                 min="1"
                 value={newHabit.goal}
                 onChange={e => setNewHabit({ ...newHabit, goal: e.target.value })}
-                className="w-1/3 bg-gray-900 border border-gray-600 rounded px-3 py-2 text-sm text-white focus:border-emerald-500 focus:outline-none"
+                className="w-1/3 bg-gray-900 border border-gray-600 rounded px-3 py-2 text-sm text-[var(--text-primary)] focus:border-emerald-500 focus:outline-none"
               />
               <input
                 type="text"
@@ -627,7 +684,7 @@ export default function DailyRitualsSection() {
                 required
                 value={newHabit.unit}
                 onChange={e => setNewHabit({ ...newHabit, unit: e.target.value })}
-                className="w-2/3 bg-gray-900 border border-gray-600 rounded px-3 py-2 text-sm text-white focus:border-emerald-500 focus:outline-none"
+                className="w-2/3 bg-gray-900 border border-gray-600 rounded px-3 py-2 text-sm text-[var(--text-primary)] focus:border-emerald-500 focus:outline-none"
               />
             </div>
           )}
@@ -635,30 +692,30 @@ export default function DailyRitualsSection() {
           {newHabit.type === 'time_locked' && (
             <div className="flex gap-2 mb-3">
               <div className="w-1/2">
-                <label className="text-[10px] text-gray-400 uppercase tracking-wider block mb-1">Target Time</label>
+                <label className="text-[10px] text-[var(--text-secondary)] uppercase tracking-wider block mb-1">Target Time</label>
                 <input
                   type="time"
                   required
                   value={newHabit.targetTime}
                   onChange={e => setNewHabit({ ...newHabit, targetTime: e.target.value })}
-                  className="w-full bg-gray-900 border border-gray-600 rounded px-3 py-2 text-sm text-white focus:border-emerald-500 focus:outline-none [color-scheme:dark]"
+                  className="w-full bg-gray-900 border border-gray-600 rounded px-3 py-2 text-sm text-[var(--text-primary)] focus:border-emerald-500 focus:outline-none [color-scheme:dark]"
                 />
               </div>
               <div className="w-1/2">
-                <label className="text-[10px] text-gray-400 uppercase tracking-wider block mb-1">Grace Window (mins)</label>
+                <label className="text-[10px] text-[var(--text-secondary)] uppercase tracking-wider block mb-1">Grace Window (mins)</label>
                 <input
                   type="number"
                   required
                   min="1"
                   value={newHabit.graceWindow}
                   onChange={e => setNewHabit({ ...newHabit, graceWindow: e.target.value })}
-                  className="w-full bg-gray-900 border border-gray-600 rounded px-3 py-2 text-sm text-white focus:border-emerald-500 focus:outline-none"
+                  className="w-full bg-gray-900 border border-gray-600 rounded px-3 py-2 text-sm text-[var(--text-primary)] focus:border-emerald-500 focus:outline-none"
                 />
               </div>
             </div>
           )}
 
-          <button type="submit" className="w-full mt-2 bg-emerald-600 hover:bg-emerald-700 text-white py-2 rounded text-sm font-medium transition-all active:scale-95">
+          <button type="submit" className="w-full mt-2 bg-emerald-600 hover:bg-emerald-700 text-[var(--text-primary)] py-2 rounded text-sm font-medium transition-all active:scale-95">
             Add Ritual
           </button>
         </form>
@@ -690,11 +747,11 @@ export default function DailyRitualsSection() {
               >
                 {editingHabitId === habit.id ? (
                   <form onSubmit={saveEditHabit} className="animate-fade-in-down z-10">
-                    <h3 className="text-sm font-medium text-indigo-400 mb-3">Edit Ritual</h3>
+                    <h3 className="text-sm font-medium text-[var(--accent-purple)] mb-3">Edit Ritual</h3>
                     <select
                       value={editHabitData.type}
                       onChange={e => setEditHabitData({ ...editHabitData, type: e.target.value })}
-                      className="w-full bg-[#16161f] border-none rounded-xl px-3 py-3 text-sm text-white mb-2 focus:ring-1 focus:ring-indigo-500 focus:outline-none"
+                      className="w-full bg-[#16161f] border-none rounded-xl px-3 py-3 text-sm text-[var(--text-primary)] mb-2 focus:ring-1 focus:ring-indigo-500 focus:outline-none"
                     >
                       <option value="countable">+1 (water, pages)</option>
                       <option value="one_time">Mark Done (exercise, shower)</option>
@@ -708,7 +765,7 @@ export default function DailyRitualsSection() {
                       required
                       value={editHabitData.name}
                       onChange={e => setEditHabitData({ ...editHabitData, name: e.target.value })}
-                      className="w-full bg-[#16161f] border-none rounded-xl px-3 py-3 text-sm text-white mb-2 focus:ring-1 focus:ring-indigo-500 focus:outline-none"
+                      className="w-full bg-[#16161f] border-none rounded-xl px-3 py-3 text-sm text-[var(--text-primary)] mb-2 focus:ring-1 focus:ring-indigo-500 focus:outline-none"
                     />
 
                     {(editHabitData.type === 'countable' || editHabitData.type === 'big_number') && (
@@ -720,7 +777,7 @@ export default function DailyRitualsSection() {
                           min="1"
                           value={editHabitData.goal}
                           onChange={e => setEditHabitData({ ...editHabitData, goal: e.target.value })}
-                          className="w-1/3 bg-[#16161f] border-none rounded-xl px-3 py-3 text-sm text-white focus:ring-1 focus:ring-indigo-500 focus:outline-none"
+                          className="w-1/3 bg-[#16161f] border-none rounded-xl px-3 py-3 text-sm text-[var(--text-primary)] focus:ring-1 focus:ring-indigo-500 focus:outline-none"
                         />
                         <input
                           type="text"
@@ -728,7 +785,7 @@ export default function DailyRitualsSection() {
                           required
                           value={editHabitData.unit}
                           onChange={e => setEditHabitData({ ...editHabitData, unit: e.target.value })}
-                          className="w-2/3 bg-[#16161f] border-none rounded-xl px-3 py-3 text-sm text-white focus:ring-1 focus:ring-indigo-500 focus:outline-none"
+                          className="w-2/3 bg-[#16161f] border-none rounded-xl px-3 py-3 text-sm text-[var(--text-primary)] focus:ring-1 focus:ring-indigo-500 focus:outline-none"
                         />
                       </div>
                     )}
@@ -736,145 +793,248 @@ export default function DailyRitualsSection() {
                     {editHabitData.type === 'time_locked' && (
                       <div className="flex gap-2 mb-3">
                         <div className="w-1/2">
-                          <label className="text-[10px] text-gray-400 uppercase tracking-wider block mb-1">Target Time</label>
+                          <label className="text-[10px] text-[var(--text-secondary)] uppercase tracking-wider block mb-1">Target Time</label>
                           <input
                             type="time"
                             required
                             value={editHabitData.targetTime}
                             onChange={e => setEditHabitData({ ...editHabitData, targetTime: e.target.value })}
-                            className="w-full bg-[#16161f] border-none rounded-xl px-3 py-3 text-sm text-white focus:ring-1 focus:ring-indigo-500 focus:outline-none [color-scheme:dark]"
+                            className="w-full bg-[#16161f] border-none rounded-xl px-3 py-3 text-sm text-[var(--text-primary)] focus:ring-1 focus:ring-indigo-500 focus:outline-none [color-scheme:dark]"
                           />
                         </div>
                         <div className="w-1/2">
-                          <label className="text-[10px] text-gray-400 uppercase tracking-wider block mb-1">Grace Window (mins)</label>
+                          <label className="text-[10px] text-[var(--text-secondary)] uppercase tracking-wider block mb-1">Grace Window (mins)</label>
                           <input
                             type="number"
                             required
                             min="1"
                             value={editHabitData.graceWindow}
                             onChange={e => setEditHabitData({ ...editHabitData, graceWindow: e.target.value })}
-                            className="w-full bg-[#16161f] border-none rounded-xl px-3 py-3 text-sm text-white focus:ring-1 focus:ring-indigo-500 focus:outline-none"
+                            className="w-full bg-[#16161f] border-none rounded-xl px-3 py-3 text-sm text-[var(--text-primary)] focus:ring-1 focus:ring-indigo-500 focus:outline-none"
                           />
                         </div>
                       </div>
                     )}
 
-                    <div className="mb-3 p-3 bg-[#16161f] rounded-xl flex flex-col gap-3">
-                      <div className="flex items-center justify-between">
-                        <label className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-0">Enable Reminder</label>
-                        <button
-                          type="button"
-                          onClick={() => setEditHabitData({ ...editHabitData, reminderEnabled: !editHabitData.reminderEnabled })}
-                          className={`w-10 h-5 rounded-full transition-colors relative ${editHabitData.reminderEnabled ? 'bg-indigo-500' : 'bg-gray-700'}`}
-                        >
-                          <div className={`w-3 h-3 bg-white rounded-full absolute top-1 transition-transform ${editHabitData.reminderEnabled ? 'translate-x-6' : 'translate-x-1'}`}></div>
-                        </button>
-                      </div>
+                    {(() => {
+                      const isNumericRitual = editHabitData.type === 'countable' || editHabitData.type === 'big_number' || (parseInt(editHabitData.goal, 10) > 1);
+                      const currentTarget = parseInt(editHabitData.goal, 10) || 6000;
+                      const currentHabitObj = habits.find(h => h.id === editingHabitId);
+                      const currentCount = currentHabitObj ? (currentHabitObj.count || 0) : 1500;
+                      const currentUnit = editHabitData.unit ? ` ${editHabitData.unit}` : ' steps';
+                      const remainingCount = Math.max(0, currentTarget - currentCount);
+                      const remainingStr = `${remainingCount.toLocaleString()}${currentUnit}`;
+                      const percentStr = `${Math.round(currentTarget > 0 ? (currentCount / currentTarget) * 100 : 0)}%`;
+                      const thresholdPct = Math.round((editHabitData.alertThreshold !== undefined ? editHabitData.alertThreshold : 0.5) * 100);
+                      const resolvedPreviewMessage = (editHabitData.messageTemplate || "You're {remaining} away from your goal. Let's get moving! 🚶")
+                        .replace(/{remaining}/g, remainingStr)
+                        .replace(/{percent}/g, percentStr);
 
-                      {editHabitData.reminderEnabled && (
-                        <>
-                          <div className="animate-fade-in-down flex items-center justify-between pt-1">
-                            <label className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-0">Reminder Type</label>
-                            <select
-                              value={editHabitData.reminderType || 'fixed'}
-                              onChange={e => setEditHabitData({ ...editHabitData, reminderType: e.target.value })}
-                              className="bg-gray-800 border-none rounded-lg px-2 py-1 text-white text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                      return (
+                        <div className="mb-3 p-3 bg-[#16161f] rounded-xl flex flex-col gap-3">
+                          <div className="flex items-center justify-between">
+                            <label className="text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider mb-0">Enable Reminder</label>
+                            <button
+                              type="button"
+                              onClick={() => setEditHabitData({ ...editHabitData, reminderEnabled: !editHabitData.reminderEnabled })}
+                              className={`w-10 h-5 rounded-full transition-colors relative ${editHabitData.reminderEnabled ? 'bg-indigo-500' : 'bg-gray-700'}`}
                             >
-                              <option value="fixed">Fixed Time</option>
-                              <option value="interval">Time Interval</option>
-                            </select>
+                              <div className={`w-3 h-3 bg-white rounded-full absolute top-1 transition-transform ${editHabitData.reminderEnabled ? 'translate-x-6' : 'translate-x-1'}`}></div>
+                            </button>
                           </div>
 
-                          {(!editHabitData.reminderType || editHabitData.reminderType === 'fixed') && (
-                            <>
-                              <div className="animate-fade-in-down flex items-center justify-between pt-1">
-                                <label className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-0">Time</label>
-                                <input
-                                  type="time"
-                                  value={editHabitData.reminderTime}
-                                  onChange={e => setEditHabitData({ ...editHabitData, reminderTime: e.target.value })}
-                                  className="bg-gray-800 border-none rounded-lg px-3 py-1 text-white text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 [color-scheme:dark]"
-                                />
-                              </div>
-
-                              <div className="animate-fade-in-down flex flex-col gap-1.5 pt-2">
-                                <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-1">Reminder Days</label>
-                                <div className="flex justify-between gap-1">
-                                  {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, idx) => {
-                                    const selected = editHabitData.reminderDays?.includes(idx) || (!editHabitData.reminderDays || editHabitData.reminderDays.length === 0);
-                                    return (
-                                      <button
-                                        key={idx}
-                                        type="button"
-                                        onClick={() => {
-                                          let currentDays = editHabitData.reminderDays ? [...editHabitData.reminderDays] : [];
-                                          if (currentDays.length === 0) {
-                                            // When empty, it means 'every day'. So clicking a day toggles it off
-                                            currentDays = [0, 1, 2, 3, 4, 5, 6].filter(d => d !== idx);
-                                          } else {
-                                            if (currentDays.includes(idx)) {
-                                              currentDays = currentDays.filter(d => d !== idx);
-                                            } else {
-                                              currentDays.push(idx);
-                                            }
-                                          }
-                                          // If all days are selected, reset to empty array (daily)
-                                          if (currentDays.length === 7) {
-                                            currentDays = [];
-                                          }
-                                          setEditHabitData({ ...editHabitData, reminderDays: currentDays });
-                                        }}
-                                        className={`w-7 h-7 rounded-lg text-xs font-bold transition-all flex items-center justify-center ${
-                                          selected
-                                            ? 'bg-indigo-500 text-white shadow-sm'
-                                            : 'bg-gray-800 text-gray-400 hover:text-gray-300'
-                                        }`}
-                                      >
-                                        {day}
-                                      </button>
-                                    );
-                                  })}
-                                </div>
-                                <span className="text-[10px] text-gray-500 italic mt-0.5">
-                                  {(!editHabitData.reminderDays || editHabitData.reminderDays.length === 0)
-                                    ? 'Fires every day'
-                                    : `Fires on: ${editHabitData.reminderDays.map(d => ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][d]).join(', ')}`}
-                                </span>
-                              </div>
-                            </>
-                          )}
-
-                          {editHabitData.reminderType === 'interval' && (
-                            <div className="animate-fade-in-down flex items-center justify-between pt-1">
-                              <label className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-0">Every</label>
-                              <div className="flex gap-2">
-                                <input
-                                  type="number"
-                                  min="1"
-                                  value={editHabitData.reminderInterval === '' ? '' : editHabitData.reminderInterval}
-                                  onChange={e => setEditHabitData({ ...editHabitData, reminderInterval: e.target.value === '' ? '' : parseInt(e.target.value, 10) })}
-                                  className="bg-gray-800 w-16 border-none rounded-lg px-2 py-1 text-white text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500"
-                                />
+                          {editHabitData.reminderEnabled && (
+                            <div className="flex flex-col gap-3.5 pt-1">
+                              {/* REMINDER TYPE */}
+                              <div className="flex flex-col gap-1.5">
+                                <label className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider">Reminder Type</label>
                                 <select
-                                  value={editHabitData.reminderIntervalUnit || 'hours'}
-                                  onChange={e => setEditHabitData({ ...editHabitData, reminderIntervalUnit: e.target.value })}
-                                  className="bg-gray-800 border-none rounded-lg px-2 py-1 text-white text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                                  value={editHabitData.reminderType || 'fixed'}
+                                  onChange={e => setEditHabitData({ ...editHabitData, reminderType: e.target.value })}
+                                  className="w-full bg-[#12131c] border border-indigo-500/40 rounded-xl px-4 py-3 text-[var(--text-primary)] text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 cursor-pointer"
                                 >
-                                  <option value="hours">Hours</option>
-                                  <option value="minutes">Minutes</option>
+                                  <option value="fixed">Fixed Time</option>
+                                  <option value="interval">Time Interval</option>
+                                  <option value="goal_progress" disabled={!isNumericRitual}>
+                                    Goal / Progress Based 🎯 {!isNumericRitual ? '(Requires numeric target)' : ''}
+                                  </option>
                                 </select>
                               </div>
+
+                              {/* FIXED TIME */}
+                              {(!editHabitData.reminderType || editHabitData.reminderType === 'fixed') && (
+                                <>
+                                  <div className="animate-fade-in-down flex items-center justify-between pt-1">
+                                    <label className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider mb-0">Time</label>
+                                    <input
+                                      type="time"
+                                      value={editHabitData.reminderTime}
+                                      onChange={e => setEditHabitData({ ...editHabitData, reminderTime: e.target.value })}
+                                      className="bg-[#12131c] border border-[var(--border)] rounded-xl px-4 py-2.5 text-[var(--text-primary)] text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 [color-scheme:dark]"
+                                    />
+                                  </div>
+
+                                  <div className="animate-fade-in-down flex flex-col gap-1.5 pt-2">
+                                    <label className="text-[10px] font-bold text-[var(--text-secondary)] uppercase tracking-wider block mb-1">Reminder Days</label>
+                                    <div className="flex justify-between gap-1">
+                                      {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, idx) => {
+                                        const selected = editHabitData.reminderDays?.includes(idx) || (!editHabitData.reminderDays || editHabitData.reminderDays.length === 0);
+                                        return (
+                                          <button
+                                            key={idx}
+                                            type="button"
+                                            onClick={() => {
+                                              let currentDays = editHabitData.reminderDays ? [...editHabitData.reminderDays] : [];
+                                              if (currentDays.length === 0) {
+                                                currentDays = [0, 1, 2, 3, 4, 5, 6].filter(d => d !== idx);
+                                              } else {
+                                                if (currentDays.includes(idx)) {
+                                                  currentDays = currentDays.filter(d => d !== idx);
+                                                } else {
+                                                  currentDays.push(idx);
+                                                }
+                                              }
+                                              if (currentDays.length === 7) {
+                                                currentDays = [];
+                                              }
+                                              setEditHabitData({ ...editHabitData, reminderDays: currentDays });
+                                            }}
+                                            className={`w-7 h-7 rounded-lg text-xs font-bold transition-all flex items-center justify-center ${
+                                              selected
+                                                ? 'bg-indigo-500 text-[var(--text-primary)] shadow-sm'
+                                                : 'bg-gray-800 text-[var(--text-secondary)] hover:text-gray-300'
+                                            }`}
+                                          >
+                                            {day}
+                                          </button>
+                                        );
+                                      })}
+                                    </div>
+                                    <span className="text-[10px] text-gray-500 italic mt-0.5">
+                                      {(!editHabitData.reminderDays || editHabitData.reminderDays.length === 0)
+                                        ? 'Fires every day'
+                                        : `Fires on: ${editHabitData.reminderDays.map(d => ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][d]).join(', ')}`}
+                                    </span>
+                                  </div>
+                                </>
+                              )}
+
+                              {/* TIME INTERVAL */}
+                              {editHabitData.reminderType === 'interval' && (
+                                <div className="animate-fade-in-down flex items-center justify-between pt-1">
+                                  <label className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider mb-0">Every</label>
+                                  <div className="flex gap-2">
+                                    <input
+                                      type="number"
+                                      min="1"
+                                      value={editHabitData.reminderInterval === '' ? '' : editHabitData.reminderInterval}
+                                      onChange={e => setEditHabitData({ ...editHabitData, reminderInterval: e.target.value === '' ? '' : parseInt(e.target.value, 10) })}
+                                      className="bg-[#12131c] w-20 border border-[var(--border)] rounded-xl px-3 py-2 text-[var(--text-primary)] text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                                    />
+                                    <select
+                                      value={editHabitData.reminderIntervalUnit || 'hours'}
+                                      onChange={e => setEditHabitData({ ...editHabitData, reminderIntervalUnit: e.target.value })}
+                                      className="bg-[#12131c] border border-[var(--border)] rounded-xl px-3 py-2 text-[var(--text-primary)] text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                                    >
+                                      <option value="hours">Hours</option>
+                                      <option value="minutes">Minutes</option>
+                                    </select>
+                                  </div>
+                                </div>
+                              )}
+
+                              {/* GOAL / PROGRESS BASED */}
+                              {editHabitData.reminderType === 'goal_progress' && (
+                                <div className="animate-fade-in-down flex flex-col gap-4 pt-1">
+                                  {/* CHECK-IN TIMES */}
+                                  <div>
+                                    <label className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider block mb-2">Check-in times</label>
+                                    <div className="flex flex-col gap-2">
+                                      {(editHabitData.checkInTimes || ['12:00']).map((t, idx) => (
+                                        <div key={idx} className="flex items-center justify-between bg-[#12131c] border border-[var(--border)] rounded-xl px-4 py-3">
+                                          <input
+                                            type="time"
+                                            value={t}
+                                            onChange={e => updateCheckInTime(idx, e.target.value)}
+                                            className="bg-transparent text-[var(--text-primary)] font-medium text-sm focus:outline-none [color-scheme:dark] flex-1 cursor-pointer"
+                                          />
+                                          {(editHabitData.checkInTimes?.length || 1) > 1 && (
+                                            <button
+                                              type="button"
+                                              onClick={() => removeCheckInTime(idx)}
+                                              className="text-gray-500 hover:text-gray-300 p-1 transition-colors"
+                                              title="Remove check-in time"
+                                            >
+                                              ✕
+                                            </button>
+                                          )}
+                                        </div>
+                                      ))}
+                                      <button
+                                        type="button"
+                                        onClick={addCheckInTime}
+                                        className="w-full py-3 border border-dashed border-indigo-500/30 hover:border-indigo-500/60 rounded-xl text-[var(--accent-purple)] text-sm font-medium flex items-center justify-center gap-1.5 transition-colors bg-indigo-500/5 hover:bg-indigo-500/10 active:scale-[0.99]"
+                                      >
+                                        <span className="text-base leading-none">+</span>
+                                        <span>Add check-in time</span>
+                                      </button>
+                                    </div>
+                                  </div>
+
+                                  {/* ALERT THRESHOLD */}
+                                  <div>
+                                    <label className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider block mb-2">Alert Threshold</label>
+                                    <div className="bg-[#12131c] border border-[var(--border)] rounded-xl p-4">
+                                      <div className="flex justify-between items-center text-sm mb-3">
+                                        <span className="text-gray-300 font-medium">Remind if below</span>
+                                        <span className="font-bold text-[var(--accent-purple)]">
+                                          {thresholdPct}%
+                                        </span>
+                                      </div>
+                                      <input
+                                        type="range"
+                                        min="5"
+                                        max="100"
+                                        step="5"
+                                        value={thresholdPct}
+                                        onChange={e => setEditHabitData({ ...editHabitData, alertThreshold: parseInt(e.target.value, 10) / 100 })}
+                                        className="w-full h-1.5 rounded-lg appearance-none cursor-pointer accent-indigo-400"
+                                        style={{
+                                          background: `linear-gradient(to right, #818cf8 0%, #818cf8 ${thresholdPct}%, #2d2e3f ${thresholdPct}%, #2d2e3f 100%)`
+                                        }}
+                                      />
+                                    </div>
+                                  </div>
+
+                                  {/* MESSAGE */}
+                                  <div>
+                                    <label className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider block mb-2">Message</label>
+                                    <div className="bg-[#12131c] border border-[var(--border)] rounded-xl p-3.5 focus-within:border-indigo-500/60 transition-colors">
+                                      <textarea
+                                        rows={2}
+                                        value={editHabitData.messageTemplate || "You're {remaining} away from your goal. Let's get moving! 🚶"}
+                                        onChange={e => setEditHabitData({ ...editHabitData, messageTemplate: e.target.value })}
+                                        className="w-full bg-transparent text-indigo-100 text-sm font-mono focus:outline-none resize-none leading-relaxed"
+                                        placeholder="You're {remaining} away from your goal. Let's get moving! 🚶"
+                                      />
+                                    </div>
+                                    <p className="text-xs text-[var(--text-secondary)] mt-2 font-normal leading-relaxed">
+                                      Preview: "{resolvedPreviewMessage}"
+                                    </p>
+                                  </div>
+                                </div>
+                              )}
                             </div>
                           )}
-                        </>
-                      )}
-                    </div>
+                        </div>
+                      );
+                    })()}
 
-                    <div className="flex gap-2">
-                      <button type="submit" className="flex-1 bg-indigo-500 hover:bg-indigo-600 text-white py-3 rounded-xl text-sm font-medium transition-all active:scale-95">
+                    <div className="flex gap-3 mt-4">
+                      <button type="submit" className="flex-1 bg-indigo-500 hover:bg-indigo-600 text-[var(--text-primary)] py-3.5 rounded-2xl text-sm font-semibold transition-all active:scale-95 shadow-md">
                         Save
                       </button>
-                      <button type="button" onClick={() => setEditingHabitId(null)} className="px-6 bg-gray-700 hover:bg-gray-600 text-white py-3 rounded-xl text-sm font-medium transition-all active:scale-95">
+                      <button type="button" onClick={() => setEditingHabitId(null)} className="flex-1 bg-[var(--bg-card)] hover:bg-[#202230] border border-[var(--border)] text-gray-300 py-3.5 rounded-2xl text-sm font-semibold transition-all active:scale-95">
                         Cancel
                       </button>
                     </div>
@@ -883,12 +1043,15 @@ export default function DailyRitualsSection() {
                   <>
                     <div className="flex justify-between items-center z-10">
                       <div className="flex flex-col flex-1 min-w-0 pr-3">
-                        <div className="text-white font-medium text-base truncate">
+                        <div className="text-[var(--text-primary)] font-medium text-base truncate">
                           {habit.name}
                         </div>
-                        <div className="text-sm text-gray-400 truncate mt-0.5">
+                        <div className="text-sm text-[var(--text-secondary)] truncate mt-0.5">
                           {habit.type === 'countable' && <span>{habit.count} / {habit.goal} {habit.unit}</span>}
                           {habit.type === 'countable' && habit.reminderEnabled && habit.reminderType === 'interval' && <span> · every {habit.reminderInterval || 2}{habit.reminderIntervalUnit === 'minutes' ? 'm' : 'h'}</span>}
+                          {habit.reminderEnabled && habit.reminderType === 'goal_progress' && (
+                            <span> · 🎯 {(habit.checkInTimes || []).map(t => formatTime12h(t)).join(', ')}</span>
+                          )}
 
                           {habit.type === 'big_number' && <span>{habit.count} / {habit.goal} {habit.unit}</span>}
 
@@ -900,7 +1063,7 @@ export default function DailyRitualsSection() {
 
                       <div className="flex-shrink-0 relative">
                         {habit.paused ? (
-                          <div className="px-4 py-2 rounded-lg font-medium text-sm flex items-center justify-center bg-gray-800 text-gray-400">
+                          <div className="px-4 py-2 rounded-lg font-medium text-sm flex items-center justify-center bg-gray-800 text-[var(--text-secondary)]">
                             Paused
                           </div>
                         ) : (
@@ -911,7 +1074,7 @@ export default function DailyRitualsSection() {
                                 const status = getTimeLockedStatus(habit, now);
                                 if (isCompleted) {
                                   return (
-                                    <div className="px-4 py-2 bg-emerald-900/30 text-emerald-400 rounded-lg font-medium text-sm flex items-center justify-center cursor-pointer active:scale-95 transition-transform" onClick={() => handleUndo(habit.id)}>
+                                    <div className="px-4 py-2 bg-emerald-900/30 text-[var(--success)] rounded-lg font-medium text-sm flex items-center justify-center cursor-pointer active:scale-95 transition-transform" onClick={() => handleUndo(habit.id)}>
                                       Done
                                     </div>
                                   );
@@ -919,7 +1082,7 @@ export default function DailyRitualsSection() {
                                 if (status === 'before') {
                                   const { start } = getWindowBounds(habit.targetTime, habit.graceWindow || 30, now);
                                   return (
-                                    <div className="px-4 py-2 bg-[#2a2a35] text-gray-400 rounded-lg font-medium text-sm flex items-center justify-center gap-1.5 whitespace-nowrap">
+                                    <div className="px-4 py-2 bg-[#2a2a35] text-[var(--text-secondary)] rounded-lg font-medium text-sm flex items-center justify-center gap-1.5 whitespace-nowrap">
                                       <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
                                       {formatTime12h(`${start.getHours()}:${start.getMinutes()}`)}
                                     </div>
@@ -927,7 +1090,7 @@ export default function DailyRitualsSection() {
                                 }
                                 if (status === 'missed') {
                                   return (
-                                    <div className="px-4 py-2 bg-red-900/30 text-red-400 rounded-lg font-medium text-sm flex items-center justify-center whitespace-nowrap">
+                                    <div className="px-4 py-2 bg-red-900/30 text-[var(--danger)] rounded-lg font-medium text-sm flex items-center justify-center whitespace-nowrap">
                                       Missed
                                     </div>
                                   );
@@ -935,7 +1098,7 @@ export default function DailyRitualsSection() {
                                 return (
                                   <button
                                     onClick={() => handleTap(habit.id)}
-                                    className="px-4 py-2 bg-emerald-900/30 text-emerald-400 hover:bg-emerald-900/50 rounded-lg font-medium text-sm flex items-center justify-center transition-colors active:scale-95 whitespace-nowrap"
+                                    className="px-4 py-2 bg-emerald-900/30 text-[var(--success)] hover:bg-emerald-900/50 rounded-lg font-medium text-sm flex items-center justify-center transition-colors active:scale-95 whitespace-nowrap"
                                   >
                                     Mark done
                                   </button>
@@ -957,13 +1120,13 @@ export default function DailyRitualsSection() {
                                   -1
                                 </button>
                                 {isCompleted ? (
-                                  <div className="px-4 py-2 bg-emerald-900/30 text-emerald-400 rounded-lg font-medium text-sm flex items-center justify-center cursor-pointer active:scale-95 transition-transform" onClick={() => handleUndo(habit.id)}>
+                                  <div className="px-4 py-2 bg-emerald-900/30 text-[var(--success)] rounded-lg font-medium text-sm flex items-center justify-center cursor-pointer active:scale-95 transition-transform" onClick={() => handleUndo(habit.id)}>
                                     Done
                                   </div>
                                 ) : (
                                   <button
                                     onClick={() => handleTap(habit.id)}
-                                    className="px-4 py-2 bg-indigo-500/20 text-indigo-400 hover:bg-indigo-500/30 rounded-lg font-medium text-sm flex items-center justify-center transition-colors active:scale-95 min-w-[3rem]"
+                                    className="px-4 py-2 bg-indigo-500/20 text-[var(--accent-purple)] hover:bg-indigo-500/30 rounded-lg font-medium text-sm flex items-center justify-center transition-colors active:scale-95 min-w-[3rem]"
                                   >
                                     +1
                                   </button>
@@ -973,13 +1136,13 @@ export default function DailyRitualsSection() {
 
                             {habit.type === 'one_time' && (
                               isCompleted ? (
-                                <div className="px-4 py-2 bg-emerald-900/30 text-emerald-400 rounded-lg font-medium text-sm flex items-center justify-center cursor-pointer active:scale-95 transition-transform" onClick={() => handleUndo(habit.id)}>
+                                <div className="px-4 py-2 bg-emerald-900/30 text-[var(--success)] rounded-lg font-medium text-sm flex items-center justify-center cursor-pointer active:scale-95 transition-transform" onClick={() => handleUndo(habit.id)}>
                                   Done
                                 </div>
                               ) : (
                                 <button
                                   onClick={() => handleTap(habit.id)}
-                                  className="px-4 py-2 bg-emerald-900/30 text-emerald-400 hover:bg-emerald-900/50 rounded-lg font-medium text-sm flex items-center justify-center transition-colors active:scale-95 whitespace-nowrap"
+                                  className="px-4 py-2 bg-emerald-900/30 text-[var(--success)] hover:bg-emerald-900/50 rounded-lg font-medium text-sm flex items-center justify-center transition-colors active:scale-95 whitespace-nowrap"
                                 >
                                   Mark done
                                 </button>
@@ -999,7 +1162,7 @@ export default function DailyRitualsSection() {
                                 )}
                                 {isCompleted ? (
                                   <div
-                                    className="px-4 py-2 bg-emerald-900/30 text-emerald-400 rounded-lg font-medium text-sm flex items-center justify-center cursor-pointer active:scale-95 transition-transform"
+                                    className="px-4 py-2 bg-emerald-900/30 text-[var(--success)] rounded-lg font-medium text-sm flex items-center justify-center cursor-pointer active:scale-95 transition-transform"
                                     onClick={() => setBigNumberInputs(prev => ({ ...prev, [habit.id]: prev[habit.id] !== undefined ? undefined : habit.count }))}
                                     title="Click to edit or adjust"
                                   >
@@ -1008,7 +1171,7 @@ export default function DailyRitualsSection() {
                                 ) : (
                                   <button
                                     onClick={() => setBigNumberInputs(prev => ({ ...prev, [habit.id]: prev[habit.id] !== undefined ? undefined : (habit.count > 0 ? habit.count : '') }))}
-                                    className="px-4 py-2 bg-indigo-500/20 text-indigo-400 hover:bg-indigo-500/30 rounded-lg font-medium text-sm flex items-center justify-center transition-colors active:scale-95 whitespace-nowrap"
+                                    className="px-4 py-2 bg-indigo-500/20 text-[var(--accent-purple)] hover:bg-indigo-500/30 rounded-lg font-medium text-sm flex items-center justify-center transition-colors active:scale-95 whitespace-nowrap"
                                   >
                                     {bigNumberInputs[habit.id] !== undefined ? 'Cancel' : (habit.count > 0 ? 'Edit' : 'Log')}
                                   </button>
@@ -1025,7 +1188,7 @@ export default function DailyRitualsSection() {
                             : "absolute top-full right-0 mt-2 w-36 bg-[#16161f] border border-gray-700/60 rounded-xl shadow-2xl overflow-hidden z-[60] animate-fade-in-down origin-top-right"
                           }>
                             {habit.count > 0 && (
-                              <button onClick={(e) => { e.stopPropagation(); setActiveMenuId(null); handleResetHabit(habit.id); }} className="w-full text-left px-4 py-3 text-sm text-amber-400 hover:bg-gray-800 transition-colors flex items-center gap-2">
+                              <button onClick={(e) => { e.stopPropagation(); setActiveMenuId(null); handleResetHabit(habit.id); }} className="w-full text-left px-4 py-3 text-sm text-[var(--warning)] hover:bg-gray-800 transition-colors flex items-center gap-2">
                                 <span>🔄</span> Reset today
                               </button>
                             )}
@@ -1035,7 +1198,7 @@ export default function DailyRitualsSection() {
                             <button onClick={(e) => { e.stopPropagation(); setActiveMenuId(null); setPauseModalId(habit.id); }} className="w-full text-left px-4 py-3 text-sm text-gray-200 hover:bg-gray-800 transition-colors flex items-center gap-2">
                               <span>⏸</span> Pause
                             </button>
-                            <button onClick={(e) => { e.stopPropagation(); setActiveMenuId(null); handleDeleteHabit(habit.id); }} className="w-full text-left px-4 py-3 text-sm text-red-400 hover:bg-gray-800 transition-colors flex items-center gap-2">
+                            <button onClick={(e) => { e.stopPropagation(); setActiveMenuId(null); handleDeleteHabit(habit.id); }} className="w-full text-left px-4 py-3 text-sm text-[var(--danger)] hover:bg-gray-800 transition-colors flex items-center gap-2">
                               <span>🗑</span> Delete
                             </button>
                           </div>
@@ -1052,17 +1215,17 @@ export default function DailyRitualsSection() {
                           placeholder={`Log ${habit.unit || 'amount'}...`}
                           value={bigNumberInputs[habit.id] ?? ''}
                           onChange={(e) => setBigNumberInputs({ ...bigNumberInputs, [habit.id]: e.target.value })}
-                          className="flex-1 bg-[#16161f] border-none rounded-xl px-4 py-2 text-sm text-white focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                          className="flex-1 bg-[#16161f] border-none rounded-xl px-4 py-2 text-sm text-[var(--text-primary)] focus:outline-none focus:ring-1 focus:ring-indigo-500"
                           autoFocus
                         />
-                        <button type="submit" className="bg-indigo-500 hover:bg-indigo-600 text-white px-5 py-2 rounded-xl font-semibold text-sm transition-colors">
+                        <button type="submit" className="bg-indigo-500 hover:bg-indigo-600 text-[var(--text-primary)] px-5 py-2 rounded-xl font-semibold text-sm transition-colors">
                           Save
                         </button>
                         {habit.count > 0 && (
                           <button
                             type="button"
                             onClick={() => handleResetHabit(habit.id)}
-                            className="bg-red-500/20 text-red-400 hover:bg-red-500/30 px-3 py-2 rounded-xl font-semibold text-sm transition-colors"
+                            className="bg-red-500/20 text-[var(--danger)] hover:bg-red-500/30 px-3 py-2 rounded-xl font-semibold text-sm transition-colors"
                           >
                             Reset
                           </button>
@@ -1096,18 +1259,18 @@ export default function DailyRitualsSection() {
               alt="Sleepy Neo"
               className="w-[100px] mb-4 filter grayscale-[60%] opacity-80 neo-gentle-rock"
             />
-            <h3 className="text-xl font-bold text-white mb-2">Pause {habits.find(h => h.id === pauseModalId)?.name}?</h3>
-            <p className="text-sm text-teal-400/80 mb-6 font-medium">Life happens. Neo holds your streak while you rest.</p>
+            <h3 className="text-xl font-bold text-[var(--text-primary)] mb-2">Pause {habits.find(h => h.id === pauseModalId)?.name}?</h3>
+            <p className="text-sm text-[var(--accent-teal)]/80 mb-6 font-medium">Life happens. Neo holds your streak while you rest.</p>
 
             <div className="w-full text-left mb-6">
-              <label className="text-xs font-bold text-gray-400 uppercase tracking-wider block mb-2">Resume on</label>
+              <label className="text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider block mb-2">Resume on</label>
               <input
                 type="date"
                 min={getMinResumeDate()}
                 max={getMaxResumeDate()}
                 value={resumeDateInput}
                 onChange={(e) => setResumeDateInput(e.target.value)}
-                className="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-teal-500 [color-scheme:dark]"
+                className="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3 text-[var(--text-primary)] focus:outline-none focus:border-teal-500 [color-scheme:dark]"
               />
             </div>
 
@@ -1120,7 +1283,7 @@ export default function DailyRitualsSection() {
               </button>
               <button
                 onClick={handlePauseSubmit}
-                className="flex-1 py-3 px-4 bg-teal-600 hover:bg-teal-500 text-white font-bold rounded-xl transition-colors shadow-lg shadow-teal-900/50"
+                className="flex-1 py-3 px-4 bg-teal-600 hover:bg-teal-500 text-[var(--text-primary)] font-bold rounded-xl transition-colors shadow-lg shadow-teal-900/50"
               >
                 ⏸ Pause it
               </button>

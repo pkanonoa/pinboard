@@ -77,12 +77,12 @@ export default function BadgeCelebration() {
         <h2 className="text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-amber-200 to-amber-500 mb-2">
           Badge Unlocked!
         </h2>
-        <h3 className="text-xl font-bold text-white mb-2">{badge.name}</h3>
-        <p className="text-gray-400 mb-8">{badge.description}</p>
+        <h3 className="text-xl font-bold text-[var(--text-primary)] mb-2">{badge.name}</h3>
+        <p className="text-[var(--text-secondary)] mb-8">{badge.description}</p>
         
         <button 
           onClick={handleDismissBadge}
-          className="w-full bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-white font-bold py-3 px-6 rounded-xl transition-all active:scale-95 shadow-lg"
+          className="w-full bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-[var(--text-primary)] font-bold py-3 px-6 rounded-xl transition-all active:scale-95 shadow-lg"
         >
           Awesome!
         </button>

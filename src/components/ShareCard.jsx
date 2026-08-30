@@ -5,6 +5,8 @@ import neoImg from '../assets/neo.png';
  * ShareCard — pure presentational component.
  * Uses ONLY inline styles — no Tailwind classes — so html2canvas works reliably.
  * Receives all data as props; does zero data fetching.
+ * Note: Colors are intentionally hardcoded to the Dark Theme scheme so that 
+ * shared cards always look identical, regardless of the user's active app theme.
  */
 const ShareCard = forwardRef(function ShareCard(
   { userName, weekLabel, bestStreak, pointsThisWeek, habitsDone, habitTotal, levelName, mvpHabit },

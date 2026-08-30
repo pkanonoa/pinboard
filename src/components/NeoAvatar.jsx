@@ -8,6 +8,7 @@ import neoProgressbarImg from '../assets/neo-progressbar.png';
 import { useVoiceLogger } from '../hooks/useVoiceLogger';
 import { updateHabitInStorage, syncStateToBackend } from '../utils';
 import { syncMonthlyGoalProgress } from '../utils';
+import { useTheme } from '../hooks/useTheme';
 
 const INSPIRATIONAL_QUOTES = [
   "Small daily wins create massive yearly results! 🏆",
@@ -47,6 +48,7 @@ export default function NeoAvatar({ habits = [], tasks = [], allGoalsOnTrack = f
   const [isSuggestionsOpen, setIsSuggestionsOpen] = useState(false);
   const speechTimeoutRef = useRef(null);
   const longPressTimerRef = useRef(null);
+  const { theme } = useTheme();
 
   // Keep fresh references for intervals and timers
   const tasksRef = useRef(tasks);
@@ -290,7 +292,10 @@ export default function NeoAvatar({ habits = [], tasks = [], allGoalsOnTrack = f
         confetti({
           particleCount: 150,
           spread: 80,
-          origin: { y: 0.4 }
+          origin: { y: 0.4 },
+          colors: theme === 'light' 
+            ? ['#0d9488', '#7c3aed', '#d97706', '#dc2626', '#16a34a', '#0f172a'] 
+            : undefined
         });
         localStorage.setItem('pinboard_confetti_date', today);
       }
@@ -439,15 +444,15 @@ export default function NeoAvatar({ habits = [], tasks = [], allGoalsOnTrack = f
           animate={{ y: 0, opacity: 1 }}
           exit={{ y: '100%', opacity: 0 }}
           transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-          className="fixed bottom-0 left-0 right-0 z-[110] bg-[#0d0e17] border-t border-gray-800 shadow-2xl rounded-t-3xl max-h-[80vh] flex flex-col p-5 pb-safe pointer-events-auto"
+          className="fixed bottom-0 left-0 right-0 z-[110] bg-[var(--bg-card)] border-t border-[var(--border)] shadow-2xl rounded-t-3xl max-h-[80vh] flex flex-col p-5 pb-safe pointer-events-auto"
         >
-          <div className="flex items-center justify-between pb-4 border-b border-gray-800/80 mb-4">
-            <h2 className="text-lg font-bold text-white flex items-center gap-2">
+          <div className="flex items-center justify-between pb-4 border-b border-[var(--border)]/80 mb-4">
+            <h2 className="text-lg font-bold text-[var(--text-primary)] flex items-center gap-2">
               <span>🧅</span> Neo's suggestions
             </h2>
             <button 
               onClick={() => setIsSuggestionsOpen(false)}
-              className="p-1.5 bg-gray-800/80 hover:bg-gray-700/80 rounded-full text-gray-400 hover:text-white transition-colors"
+              className="p-1.5 bg-gray-800/80 hover:bg-gray-700/80 rounded-full text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M6 18L18 6M6 6l12 12"></path>
@@ -466,22 +471,22 @@ export default function NeoAvatar({ habits = [], tasks = [], allGoalsOnTrack = f
                 s.priority <= 4 ? 'bg-teal-500/10' :
                 s.priority === 6 ? 'bg-green-500/10' : 'bg-indigo-500/10';
               const btnColor =
-                s.priority <= 2 ? 'text-amber-400 border-amber-500/30 hover:bg-amber-500/10' :
-                s.priority <= 4 ? 'text-teal-400 border-teal-500/30 hover:bg-teal-500/10' :
-                s.priority === 6 ? 'text-green-400 border-green-500/30 hover:bg-green-500/10' : 'text-indigo-400 border-indigo-500/30 hover:bg-indigo-500/10';
+                s.priority <= 2 ? 'text-[var(--warning)] border-amber-500/30 hover:bg-amber-500/10' :
+                s.priority <= 4 ? 'text-[var(--accent-teal)] border-teal-500/30 hover:bg-teal-500/10' :
+                s.priority === 6 ? 'text-green-400 border-green-500/30 hover:bg-green-500/10' : 'text-[var(--accent-purple)] border-indigo-500/30 hover:bg-indigo-500/10';
 
               return (
                 <div
                   key={s.id}
-                  className={`bg-[#141522] border border-gray-800/60 border-l-4 ${borderColor} rounded-2xl p-3.5`}
+                  className={`bg-[var(--bg-card)] border border-[var(--border)]/60 border-l-4 ${borderColor} rounded-2xl p-3.5`}
                 >
                   <div className="flex items-start gap-3">
                     <div className={`w-9 h-9 rounded-xl ${iconBg} flex items-center justify-center text-lg shrink-0 mt-0.5`}>
                        {s.icon}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold text-white leading-snug">{s.title}</p>
-                      <p className="text-xs text-gray-400 mt-0.5 leading-relaxed">{s.body}</p>
+                      <p className="text-sm font-semibold text-[var(--text-primary)] leading-snug">{s.title}</p>
+                      <p className="text-xs text-[var(--text-secondary)] mt-0.5 leading-relaxed">{s.body}</p>
                       <div className="flex items-center gap-2 mt-2.5">
                         <button
                           onClick={() => {
@@ -526,7 +531,9 @@ export default function NeoAvatar({ habits = [], tasks = [], allGoalsOnTrack = f
             ? 'bg-red-500/20 text-red-100 border-red-500/30 backdrop-blur-md' 
             : speechType === 'listening' 
             ? 'bg-red-500/30 text-red-100 border-red-500/50 backdrop-blur-md animate-pulse' 
-            : 'bg-white/10 text-white border-white/20 backdrop-blur-md drop-shadow-lg'
+            : theme === 'light' 
+            ? 'bg-[var(--bg-card)] text-[var(--text-primary)] border-[var(--border)]' 
+            : 'bg-white/10 text-[var(--text-primary)] border-white/20 backdrop-blur-md drop-shadow-lg'
         }`}
       >
         {speech}
@@ -535,6 +542,7 @@ export default function NeoAvatar({ habits = [], tasks = [], allGoalsOnTrack = f
             speechType === 'success' ? 'border-t-emerald-500/30' : 
             speechType === 'fail' ? 'border-t-red-500/30' : 
             speechType === 'listening' ? 'border-t-red-500/50' : 
+            theme === 'light' ? 'border-t-[var(--bg-card)]' :
             'border-t-white/20'
           }`}
         ></div>
@@ -558,7 +566,7 @@ export default function NeoAvatar({ habits = [], tasks = [], allGoalsOnTrack = f
         {suggestions && suggestions.length > 0 && (
           <span className="absolute -top-1 -right-1 flex h-5 w-5 z-50">
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
-            <span className="relative inline-flex rounded-full h-5 w-5 bg-amber-500 border border-[#0d0e17] flex items-center justify-center text-[10px] font-black text-white shadow-md">
+            <span className="relative inline-flex rounded-full h-5 w-5 bg-amber-500 border border-[#0d0e17] flex items-center justify-center text-[10px] font-black text-[var(--text-primary)] shadow-md">
               {suggestions.length}
             </span>
           </span>
@@ -572,7 +580,9 @@ export default function NeoAvatar({ habits = [], tasks = [], allGoalsOnTrack = f
               src={state === 6 ? neoProgressbarImg : state === 1 ? neoSadImg : neoImg}
               alt="Neo"
               draggable="false"
-              className={`w-full h-full object-contain ${state === 5 ? 'drop-shadow-[0_0_18px_#f5c518]'
+              className={`w-full h-full object-contain ${
+                theme === 'light' ? (state >= 5 ? 'drop-shadow-[0_8px_20px_rgba(0,0,0,0.15)]' : '') :
+                state === 5 ? 'drop-shadow-[0_0_18px_#f5c518]'
                   : state === 6 ? 'drop-shadow-[0_0_22px_#34d399]'
                     : ''
                 }`}
