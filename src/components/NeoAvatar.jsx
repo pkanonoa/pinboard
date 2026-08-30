@@ -605,7 +605,7 @@ export default function NeoAvatar({
     <div className="fixed bottom-[80px] right-2 flex flex-col items-end justify-end select-none z-45 pointer-events-none">
       {/* Speech Bubble (Glassmorphism) */}
       <div
-        className={`absolute bottom-[105px] right-2 mb-2 px-4 py-2.5 rounded-2xl text-xs font-semibold shadow-2xl max-w-[210px] text-center transition-all duration-300 pointer-events-none leading-snug border ${speech ? "opacity-100 scale-100" : "opacity-0 scale-95"} ${
+        className={`relative mb-2 px-4 py-2.5 rounded-2xl text-xs font-semibold shadow-2xl max-w-[210px] text-center transition-all duration-300 pointer-events-none leading-snug border origin-bottom-right ${speech ? "opacity-100 scale-100" : "opacity-0 scale-95"} ${
           speechType === "success"
             ? "bg-emerald-500/20 text-emerald-100 border-emerald-500/30 backdrop-blur-md"
             : speechType === "fail"

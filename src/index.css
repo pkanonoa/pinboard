@@ -305,7 +305,6 @@
   background-color: transparent;
   /* Use a pseudo-element to get the background opacity without affecting text */
   position: relative;
-  z-index: 1;
 }
 
 .toast-glass::before {
