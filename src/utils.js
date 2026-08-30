@@ -2,6 +2,67 @@ export const getLocalYMD = (date = new Date()) => {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
 };
 
+/**
+ * Shared habit update function — used by both voice logger and UI buttons.
+ * action: 'increment' | 'set' | 'complete'
+ * value: number (used for set/increment; ignored for complete)
+ * Returns updated habits array.
+ */
+export const updateHabitInStorage = (habitId, action, value = 1) => {
+  try {
+    const savedStr = localStorage.getItem('pinboard_rituals_data');
+    if (!savedStr) return [];
+
+    const savedData = JSON.parse(savedStr);
+    const habits = savedData.habits || [];
+    const todayStr = getLocalYMD();
+
+    const updated = habits.map(habit => {
+      if (habit.id !== habitId) return habit;
+      if (habit.paused) return habit;
+
+      let newCount = habit.count;
+      let newStreak = habit.streak;
+      let newLastCompletedDate = habit.lastCompletedDate;
+      const wasCompleted = habit.count >= habit.goal && habit.lastCompletedDate === todayStr;
+
+      if (action === 'increment') {
+        newCount = habit.count + value;
+      } else if (action === 'set') {
+        newCount = value;
+      } else if (action === 'complete') {
+        newCount = habit.goal; // mark as fully done
+      }
+
+      // Clamp to 0
+      newCount = Math.max(0, newCount);
+
+      const isNowComplete = newCount >= habit.goal;
+
+      if (isNowComplete && !wasCompleted) {
+        newStreak = habit.streak + 1;
+        newLastCompletedDate = todayStr;
+        logCompletion('habit', habitId);
+      }
+
+      return {
+        ...habit,
+        count: newCount,
+        streak: newStreak,
+        lastCompletedDate: newLastCompletedDate,
+      };
+    });
+
+    localStorage.setItem('pinboard_rituals_data', JSON.stringify({ ...savedData, habits: updated }));
+    window.dispatchEvent(new Event('pinboard_rituals_updated'));
+    return updated;
+  } catch (e) {
+    console.error('updateHabitInStorage error', e);
+    return [];
+  }
+};
+
+
 export const LEVELS = [
   { max: 100, name: 'Beginner' },
   { max: 500, name: 'Getting There' },
