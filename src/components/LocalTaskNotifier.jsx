@@ -1,11 +1,9 @@
-import React, { useEffect, useRef, useState } from "react";
-import { AnimatePresence, motion } from "framer-motion";
+import React, { useEffect, useRef } from "react";
 import { saveNotification } from "../db";
 import { playNotificationSound } from "../utils/audioUtils";
 
 export default function LocalTaskNotifier() {
   const notifiedTasksRef = useRef(new Set());
-  const [activeToast, setActiveToast] = useState(null);
 
   useEffect(() => {
     // Listen for service worker background notification messages
@@ -29,11 +27,7 @@ export default function LocalTaskNotifier() {
       // 0. Play sweet crystal "cling" chime
       playNotificationSound();
 
-      // 1. Show in-app toast
-      setActiveToast({ title, body, icon: iconEmoji });
-      setTimeout(() => setActiveToast(null), 8000); // Hide after 8 seconds
-
-      // 2. Add to Notification Bell (IndexedDB)
+      // 1. Add to Notification Bell / Drawer (IndexedDB)
       const notifRecord = {
         id: `${type}_${tag}_${Date.now()}`,
         title,
@@ -372,51 +366,5 @@ export default function LocalTaskNotifier() {
     };
   }, []);
 
-  return (
-    <AnimatePresence>
-      {activeToast && (
-        <motion.div
-          initial={{ opacity: 0, y: -50, scale: 0.95 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
-          exit={{ opacity: 0, y: -20, scale: 0.95 }}
-          drag="y"
-          dragConstraints={{ top: -100, bottom: 0 }}
-          onDragEnd={(e, { offset, velocity }) => {
-            if (offset.y < -50 || velocity.y < -500) {
-              setActiveToast(null);
-            }
-          }}
-          className="toast-glass fixed top-4 left-3 right-3 z-[150] text-[var(--text-primary)] p-3.5 rounded-[1.25rem] shadow-2xl border border-[var(--border)] flex flex-col gap-2 cursor-grab active:cursor-grabbing max-w-md mx-auto"
-        >
-          {/* Header Row */}
-          <div className="flex items-center gap-2 px-1">
-            <div className="w-5 h-5 rounded-md overflow-hidden shrink-0 shadow-sm border border-[var(--border)] flex items-center justify-center bg-[var(--bg-card)]">
-              <img src="/logo.jpg" alt="Pinboard" className="w-full h-full object-cover" />
-            </div>
-            <span className="text-[12px] font-bold text-[var(--text-primary)] tracking-wide">
-              Pinboard
-            </span>
-            <span className="text-[11px] text-[var(--text-secondary)] shrink-0 font-medium">&bull; now</span>
-            
-            <div className="ml-auto flex items-center gap-2 text-[var(--text-secondary)]">
-              <svg className="w-3.5 h-3.5 opacity-80" fill="currentColor" viewBox="0 0 24 24"><path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.63-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.64 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2zm-2 1H8v-6c0-2.48 1.51-4.5 4-4.5s4 2.02 4 4.5v6z"/></svg>
-              <div className="w-5 h-5 rounded-full bg-[var(--bg-card)]/70 border border-[var(--border)] flex items-center justify-center">
-                <svg className="w-3 h-3 opacity-70" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7"></path></svg>
-              </div>
-            </div>
-          </div>
-          
-          {/* Content Row */}
-          <div className="flex flex-col px-1 pb-1">
-            <div className="text-[14px] font-bold text-[var(--text-primary)] leading-snug">
-              {activeToast.title || "Notification"}
-            </div>
-            <div className="text-[13px] text-[var(--text-secondary)] leading-snug line-clamp-2 mt-0.5">
-              {activeToast.body}
-            </div>
-          </div>
-        </motion.div>
-      )}
-    </AnimatePresence>
-  );
+  return null;
 }
