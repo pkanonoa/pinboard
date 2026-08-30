@@ -362,35 +362,33 @@ export default function WeeklyReviewScreen({ onClose }) {
         </div>
       )}
 
-      {/* Sticky Close Button */}
-      <button
-        onClick={handleClose}
-        className="fixed top-4 right-4 z-[210] w-9 h-9 flex items-center justify-center rounded-full bg-[var(--bg-card)]/80 hover:bg-[var(--bg-card)] backdrop-blur-md border border-[var(--border)]/80 text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-all active:scale-90 text-sm shadow-md"
-        aria-label="Close"
-      >
-        ✕
-      </button>
-
-      {/* ── Full Scrollable Container ── */}
-      <div className="w-full max-w-md h-full overflow-y-auto px-4 pt-10 pb-40 space-y-3">
-        {/* ── Header ── */}
-        <div className="flex flex-col items-center pb-3 px-2 text-center">
-          <span className="text-xs text-[var(--text-muted)] font-medium tracking-wide mb-1">
-            {headerLabel}
-          </span>
-          <h1 className="text-2xl font-black text-[var(--text-primary)] mb-4">
-            Your Weekly Recap
-          </h1>
-          <div className={`${neoAnim}`} style={{ width: 120, height: 120 }}>
-            <img
-              src={neoImg}
-              alt="Neo"
-              className="w-full h-full object-contain"
-              draggable={false}
-            />
-          </div>
+      {/* ── Fixed Transparent Frosted Glass Header ── */}
+      <div className="absolute top-0 left-0 right-0 z-30 flex flex-col items-center pt-8 pb-3 px-5 bg-[var(--bg-primary)]/80 backdrop-blur-md border-b border-[var(--border)]/30 max-w-md mx-auto pointer-events-none">
+        <button
+          onClick={handleClose}
+          className="pointer-events-auto absolute top-4 right-4 w-9 h-9 flex items-center justify-center rounded-full bg-[var(--bg-card)]/80 hover:bg-[var(--bg-card)] backdrop-blur-md border border-[var(--border)]/80 text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-all active:scale-90 text-sm shadow-md"
+          aria-label="Close"
+        >
+          ✕
+        </button>
+        <span className="text-xs text-[var(--text-muted)] font-medium tracking-wide mb-1">
+          {headerLabel}
+        </span>
+        <h1 className="text-2xl font-black text-[var(--text-primary)] mb-3">
+          Your Weekly Recap
+        </h1>
+        <div className={`${neoAnim}`} style={{ width: 110, height: 110 }}>
+          <img
+            src={neoImg}
+            alt="Neo"
+            className="w-full h-full object-contain"
+            draggable={false}
+          />
         </div>
+      </div>
 
+      {/* ── Scrollable Content Area (Cards slide smoothly underneath frosted header) ── */}
+      <div className="w-full max-w-md h-full overflow-y-auto px-4 pt-[235px] pb-40 space-y-3">
         {/* 1. Overall Score */}
         <div className="bg-[var(--bg-card)] border border-[var(--border)]/60 rounded-2xl p-5 flex flex-col items-center gap-3">
           <h2 className="text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider self-start">
