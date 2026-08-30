@@ -356,16 +356,24 @@ export default function LocalTaskNotifier() {
           initial={{ opacity: 0, y: -50, scale: 0.9 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: -20, scale: 0.9 }}
-          className="fixed top-6 left-1/2 -translate-x-1/2 z-[100] bg-indigo-600 text-[var(--text-primary)] px-5 py-3 rounded-2xl shadow-2xl flex items-center gap-3 border border-indigo-400 max-w-[90vw]"
+          drag="x"
+          dragConstraints={{ left: 0, right: 0 }}
+          dragElastic={0.7}
+          onDragEnd={(e, { offset }) => {
+            if (offset.x < -100 || offset.x > 100) {
+              setActiveToast(null);
+            }
+          }}
+          className="toast-glass fixed top-6 left-1/2 -translate-x-1/2 z-[100] text-[var(--text-primary)] px-5 py-3 rounded-2xl shadow-2xl flex items-center gap-3 border border-[var(--border)] w-[calc(100%-2rem)] max-w-md cursor-grab active:cursor-grabbing"
         >
-          <span className="text-2xl animate-bounce">
+          <span className="text-2xl animate-bounce shrink-0">
             {activeToast.icon || "⏰"}
           </span>
-          <div className="flex flex-col">
-            <span className="text-xs font-bold text-indigo-200 uppercase tracking-wider">
+          <div className="flex flex-col min-w-0">
+            <span className="text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider truncate">
               {activeToast.title || "Notification"}
             </span>
-            <span className="text-sm font-semibold">{activeToast.body}</span>
+            <span className="text-sm font-semibold leading-snug">{activeToast.body}</span>
           </div>
         </motion.div>
       )}

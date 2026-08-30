@@ -168,11 +168,12 @@ export default function MoreSection({ setCurrentTab, onOpenWeeklyReview }) {
         </div>
       </div>
 
-      <div className="bg-[var(--bg-card)] border border-[var(--border)]/60 rounded-2xl p-4 shadow-sm">
-        <h3 className="text-sm font-semibold text-[var(--text-primary)] mb-4">
-          Debug Tools
-        </h3>
-        <button
+      {window.location.hostname === 'localhost' && (
+        <div className="bg-[var(--bg-card)] border border-[var(--border)]/60 rounded-2xl p-4 shadow-sm mt-6">
+          <h3 className="text-sm font-semibold text-[var(--text-primary)] mb-4">
+            Debug Tools
+          </h3>
+          <button
           onClick={() => {
             if (!("Notification" in window)) {
               alert("Notifications not supported in this browser.");
@@ -222,8 +223,9 @@ export default function MoreSection({ setCurrentTab, onOpenWeeklyReview }) {
           className="w-full bg-[var(--bg-card)] hover:bg-[var(--bg-card-hover)] text-[var(--text-primary)] py-3 rounded-xl font-medium transition-colors"
         >
           Test OS Notification
-        </button>
-      </div>
+          </button>
+        </div>
+      )}
     </div>
   );
 }
