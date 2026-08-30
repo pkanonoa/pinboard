@@ -52,7 +52,7 @@ export default function LocalTaskNotifier() {
       if ("Notification" in window && Notification.permission === "granted") {
         const options = {
           body,
-          icon: "/pwa-192x192.png",
+          icon: "/logo.jpg",
           badge: "/logo.jpg",
           tag,
           vibrate: [200, 100, 200],
@@ -390,39 +390,29 @@ export default function LocalTaskNotifier() {
         >
           {/* Header Row */}
           <div className="flex items-center gap-2 px-1">
-            <div className="w-5 h-5 rounded overflow-hidden shrink-0 shadow-sm border border-[var(--border)]">
-              <img src="/pwa-192x192.png" alt="App" className="w-full h-full object-cover" />
+            <div className="w-5 h-5 rounded-md overflow-hidden shrink-0 shadow-sm border border-[var(--border)] flex items-center justify-center bg-[var(--bg-card)]">
+              <img src="/logo.jpg" alt="Pinboard" className="w-full h-full object-cover" />
             </div>
-            <span className="text-[11px] font-bold text-[var(--text-primary)] tracking-wide truncate max-w-[80px]">
+            <span className="text-[12px] font-bold text-[var(--text-primary)] tracking-wide">
               Pinboard
             </span>
             <span className="text-[11px] text-[var(--text-secondary)] shrink-0 font-medium">&bull; now</span>
             
             <div className="ml-auto flex items-center gap-2 text-[var(--text-secondary)]">
-              <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.63-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.64 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2zm-2 1H8v-6c0-2.48 1.51-4.5 4-4.5s4 2.02 4 4.5v6z"/></svg>
-              <div className="w-5 h-5 rounded-full bg-[var(--bg-card)]/50 border border-[var(--border)] flex items-center justify-center">
+              <svg className="w-3.5 h-3.5 opacity-80" fill="currentColor" viewBox="0 0 24 24"><path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.63-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.64 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2zm-2 1H8v-6c0-2.48 1.51-4.5 4-4.5s4 2.02 4 4.5v6z"/></svg>
+              <div className="w-5 h-5 rounded-full bg-[var(--bg-card)]/70 border border-[var(--border)] flex items-center justify-center">
                 <svg className="w-3 h-3 opacity-70" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7"></path></svg>
               </div>
             </div>
           </div>
           
           {/* Content Row */}
-          <div className="flex items-start gap-3 px-1 pb-1">
-            <div className="flex-1 min-w-0">
-              <div className="text-[14px] font-bold text-[var(--text-primary)] truncate">
-                {activeToast.title || "Notification"}
-              </div>
-              <div className="text-[13px] text-[var(--text-secondary)] leading-snug line-clamp-2 mt-0.5">
-                {activeToast.body}
-              </div>
+          <div className="flex flex-col px-1 pb-1">
+            <div className="text-[14px] font-bold text-[var(--text-primary)] leading-snug">
+              {activeToast.title || "Notification"}
             </div>
-            {/* Big Right Icon (Similar to the 2nd image) */}
-            <div className="w-11 h-11 rounded-xl bg-[var(--bg-card)] border border-[var(--border)] flex items-center justify-center shrink-0 shadow-sm overflow-hidden">
-               {activeToast.icon ? (
-                 <span className="text-2xl animate-bounce">{activeToast.icon}</span>
-               ) : (
-                 <img src="/pwa-192x192.png" alt="Icon" className="w-full h-full object-cover" />
-               )}
+            <div className="text-[13px] text-[var(--text-secondary)] leading-snug line-clamp-2 mt-0.5">
+              {activeToast.body}
             </div>
           </div>
         </motion.div>

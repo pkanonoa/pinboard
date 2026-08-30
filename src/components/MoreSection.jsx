@@ -194,7 +194,7 @@ export default function MoreSection({ setCurrentTab, onOpenWeeklyReview }) {
                 const title = "Test OS Notification!";
                 const options = {
                   body: "If you see this, native notifications and sound are working!",
-                  icon: "/pwa-192x192.png",
+                  icon: "/logo.jpg",
                   badge: "/logo.jpg",
                   vibrate: [200, 100, 200],
                   silent: false,
