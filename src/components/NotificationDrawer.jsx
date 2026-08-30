@@ -7,6 +7,7 @@ import {
   cleanOldNotifications,
   clearAllNotifications,
 } from "../db";
+import { getLocalYMD } from "../utils";
 import NotificationManager from "./NotificationManager";
 
 const iconMap = {
@@ -41,12 +42,11 @@ export default function NotificationDrawer({ isOpen, onClose, setCurrentTab }) {
     try {
       await cleanOldNotifications();
       const allNotifs = await getNotifications();
-      const now = Date.now();
-      const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
+      const today = getLocalYMD();
 
-      // Show notifications from the last 7 days
+      // Show notifications from today (older notifications cleared daily)
       const notifs = allNotifs.filter((n) => {
-        return now - n.timestamp <= SEVEN_DAYS_MS;
+        return getLocalYMD(new Date(n.timestamp)) === today;
       });
 
       // sort newest first
@@ -227,7 +227,7 @@ export default function NotificationDrawer({ isOpen, onClose, setCurrentTab }) {
 
             <div className="p-3 text-center border-t border-[var(--border)]/60 bg-[var(--bg-primary)]/40 backdrop-blur-md pb-safe">
               <p className="text-xs text-[var(--text-secondary)] font-medium">
-                Notifications are saved for the last 7 days.
+                Older notifications are cleared daily.
               </p>
             </div>
           </motion.div>
