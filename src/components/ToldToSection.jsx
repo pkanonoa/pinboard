@@ -137,10 +137,10 @@ export default function ToldToSection() {
       {!isAdding && (
         <button
           onClick={() => setIsAdding(true)}
-          className="fixed bottom-28 right-6 w-14 h-14 bg-indigo-500 hover:bg-indigo-600 text-white rounded-full shadow-[0_8px_30px_rgb(0,0,0,0.2)] flex items-center justify-center transition-transform active:scale-95 z-[50]"
+          className="fixed bottom-20 right-4 z-[50] w-12 h-12 flex items-center justify-center bg-[var(--bg-card)] rounded-full shadow-[0_8px_30px_rgb(0,0,0,0.2)] border border-[var(--border)] hover:bg-[var(--bg-card-hover)] active:scale-95 transition-all"
         >
           <svg
-            className="w-6 h-6"
+            className="w-5 h-5 text-[var(--accent-purple)]"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -179,6 +179,7 @@ export default function ToldToSection() {
                 <input
                   type="datetime-local"
                   value={dueDate}
+                  min={new Date().toISOString().slice(0, 16)}
                   onChange={(e) => setDueDate(e.target.value)}
                   className="w-1/2 bg-[var(--bg-primary)]/50 border border-[var(--border)]/30 rounded-xl px-3 py-3 text-[var(--text-secondary)] placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-colors text-sm"
                 />
@@ -230,14 +231,24 @@ export default function ToldToSection() {
                   </p>
                   {(task.person || task.dueDate) && (
                     <div className="flex items-center gap-1 mt-1 text-sm text-[var(--text-secondary)]">
-                      {task.dueDate && (
-                        <span>
-                          {new Date(task.dueDate).toLocaleTimeString([], {
-                            hour: "numeric",
-                            minute: "2-digit",
-                          })}
-                        </span>
-                      )}
+                      {task.dueDate && (() => {
+                        const d = new Date(task.dueDate);
+                        const today = new Date();
+                        const isToday = d.toDateString() === today.toDateString();
+                        const isTomorrow = d.toDateString() === new Date(today.getTime() + 86400000).toDateString();
+                        const dateLabel = isToday
+                          ? "Today"
+                          : isTomorrow
+                          ? "Tomorrow"
+                          : d.toLocaleDateString([], { month: "short", day: "numeric" });
+                        const timeLabel = d.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+                        return (
+                          <span className="flex items-center gap-1">
+                            <span>📅</span>
+                            <span>{dateLabel}, {timeLabel}</span>
+                          </span>
+                        );
+                      })()}
                       {task.dueDate && task.person && <span>·</span>}
                       {task.person && <span>from {task.person}</span>}
                     </div>

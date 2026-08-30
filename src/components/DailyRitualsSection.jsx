@@ -788,10 +788,10 @@ export default function DailyRitualsSection() {
       {!isAdding && (
         <button
           onClick={() => setIsAdding(true)}
-          className="fixed bottom-28 right-6 w-14 h-14 bg-indigo-500 hover:bg-indigo-600 text-white rounded-full shadow-[0_8px_30px_rgb(0,0,0,0.2)] flex items-center justify-center transition-transform active:scale-95 z-[50]"
+          className="fixed bottom-20 right-4 z-[50] w-12 h-12 flex items-center justify-center bg-[var(--bg-card)] rounded-full shadow-[0_8px_30px_rgb(0,0,0,0.2)] border border-[var(--border)] hover:bg-[var(--bg-card-hover)] active:scale-95 transition-all"
         >
           <svg
-            className="w-6 h-6"
+            className="w-5 h-5 text-[var(--accent-purple)]"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
