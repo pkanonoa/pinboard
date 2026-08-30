@@ -1,6 +1,6 @@
 import React from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Mic, RefreshCw, ClipboardList, Target, Settings, ChevronRight } from "lucide-react";
+import { X, Mic, RefreshCw, ClipboardList, Target, Settings, ChevronRight, Bell } from "lucide-react";
 
 export default function UserManualModal({ isOpen, onClose }) {
   if (!isOpen) return null;
@@ -26,14 +26,10 @@ export default function UserManualModal({ isOpen, onClose }) {
           className="relative w-full max-w-lg bg-[var(--bg-card)] border border-[var(--border)] rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[85vh]"
         >
           {/* Header */}
-          <div className="flex items-center justify-between px-6 py-4 border-b border-[var(--border)]/60 bg-[var(--bg-card)] shrink-0 z-10 sticky top-0">
+          <div className="flex items-center justify-between px-6 py-4 border-b border-[var(--border)]/60 shrink-0">
             <div>
-              <h2 className="text-xl font-extrabold text-[var(--text-primary)]">
-                User Manual
-              </h2>
-              <p className="text-xs text-[var(--text-secondary)] mt-0.5">
-                Tips, tricks, and hidden gestures
-              </p>
+              <h2 className="text-xl font-extrabold text-[var(--text-primary)]">User Manual</h2>
+              <p className="text-xs text-[var(--text-secondary)] mt-0.5">Tips, tricks, and hidden gestures</p>
             </div>
             <button
               onClick={onClose}
@@ -44,119 +40,92 @@ export default function UserManualModal({ isOpen, onClose }) {
           </div>
 
           {/* Content */}
-          <div className="p-6 overflow-y-auto custom-scrollbar flex flex-col gap-8 pb-10">
+          <div className="p-6 overflow-y-auto flex flex-col gap-7 pb-10">
+
             {/* Section 1: Neo */}
             <section>
               <div className="flex items-center gap-3 mb-3">
-                <div className="w-10 h-10 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-500">
-                  <Mic className="w-5 h-5" />
-                </div>
-                <h3 className="text-lg font-bold text-[var(--text-primary)]">
-                  Neo: AI Voice Assistant
-                </h3>
+                <div className="w-9 h-9 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-lg">🧅</div>
+                <h3 className="text-base font-bold text-[var(--text-primary)]">Neo — Your Smart Companion</h3>
               </div>
-              <div className="text-[14px] text-[var(--text-secondary)] leading-relaxed space-y-3 pl-13">
-                <p>
-                  Neo is your smart companion (the little onion!). You can use Neo to interact with the app completely hands-free.
-                </p>
-                <div className="bg-[var(--bg-primary)] p-4 rounded-2xl border border-[var(--border)]/50">
-                  <p className="font-semibold text-[var(--text-primary)] mb-2 text-xs uppercase tracking-wider">How to use it</p>
-                  <ul className="space-y-2 text-[13px]">
-                    <li className="flex gap-2"><ChevronRight className="w-4 h-4 text-emerald-500 shrink-0" /> <span><strong>Hold (Long Press) Neo</strong> on the Home tab to start speaking.</span></li>
-                    <li className="flex gap-2"><ChevronRight className="w-4 h-4 text-emerald-500 shrink-0" /> <span><strong>"I just drank water"</strong> → Logs +1 to your water ritual.</span></li>
-                    <li className="flex gap-2"><ChevronRight className="w-4 h-4 text-emerald-500 shrink-0" /> <span><strong>"Remind me to call mom at 5 PM"</strong> → Creates a scheduled task.</span></li>
-                  </ul>
+              <div className="text-[13.5px] text-[var(--text-secondary)] leading-relaxed space-y-2">
+                <p>Neo is the floating onion on your <strong className="text-[var(--text-primary)]">Home</strong> tab. He reacts to your progress in real time — the more rituals you complete, the happier he gets!</p>
+                <div className="bg-[var(--bg-primary)] p-3.5 rounded-2xl border border-[var(--border)]/50 space-y-1.5">
+                  <p className="font-semibold text-[var(--text-primary)] mb-2 text-xs uppercase tracking-wider">Gestures</p>
+                  <div className="flex gap-2 items-start"><ChevronRight className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" /><span><strong>Tap Neo</strong> — Shows a motivational quote or opens Smart Suggestions if you have any.</span></div>
+                  <div className="flex gap-2 items-start"><ChevronRight className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" /><span><strong>Hold (Long Press) Neo</strong> — Activates voice mode! You can speak to log a ritual (e.g. <em>"I drank 2 glasses of water"</em>) and Neo will update your progress automatically.</span></div>
                 </div>
+                <p className="text-xs text-[var(--text-muted)]">When listening, the speech bubble will turn red and pulse. Neo's speech bubble also dismisses if you tap anywhere else on the screen.</p>
               </div>
             </section>
 
             {/* Section 2: Rituals */}
             <section>
               <div className="flex items-center gap-3 mb-3">
-                <div className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-500">
-                  <RefreshCw className="w-5 h-5" />
-                </div>
-                <h3 className="text-lg font-bold text-[var(--text-primary)]">
-                  Rituals (Habits)
-                </h3>
+                <div className="w-9 h-9 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center"><RefreshCw className="w-5 h-5 text-emerald-500" /></div>
+                <h3 className="text-base font-bold text-[var(--text-primary)]">Rituals (Habits)</h3>
               </div>
-              <div className="text-[14px] text-[var(--text-secondary)] leading-relaxed space-y-3 pl-13">
-                <p>
-                  <strong className="text-[var(--text-primary)]">Hidden Gesture (Quick Edit):</strong> On the Home tab, <strong>Long Press (press and hold)</strong> any ritual card to bring up a hidden menu to instantly edit or delete it!
-                </p>
-                <p>
-                  <strong className="text-[var(--text-primary)]">Setting Notifications:</strong> Go to the More Tab → Rituals Management → Edit. Turn on <strong>Reminders</strong> to choose:
-                </p>
-                <ul className="list-disc pl-5 space-y-1 text-[13px]">
-                  <li><strong>Intervals:</strong> Reminds you repeatedly (e.g., every 2 hours).</li>
-                  <li><strong>Fixed Time:</strong> Reminds you once daily (e.g., 8:00 AM).</li>
-                  <li><strong>Goal Check-in:</strong> Reminds you only if you're falling behind!</li>
-                </ul>
+              <div className="text-[13.5px] text-[var(--text-secondary)] leading-relaxed space-y-2">
+                <p>Go to the <strong className="text-[var(--text-primary)]">Rituals</strong> tab to manage your daily habits.</p>
+                <div className="bg-[var(--bg-primary)] p-3.5 rounded-2xl border border-[var(--border)]/50 space-y-1.5">
+                  <p className="font-semibold text-[var(--text-primary)] mb-2 text-xs uppercase tracking-wider">Ritual Types</p>
+                  <div className="flex gap-2 items-start"><ChevronRight className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" /><span><strong>Mark Done</strong> — Simple one-tap completion (e.g. Exercise, Shower).</span></div>
+                  <div className="flex gap-2 items-start"><ChevronRight className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" /><span><strong>Counter</strong> — Log a number (e.g. Drink 8 glasses of water).</span></div>
+                  <div className="flex gap-2 items-start"><ChevronRight className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" /><span><strong>Big Number</strong> — For large targets (e.g. 10,000 steps).</span></div>
+                  <div className="flex gap-2 items-start"><ChevronRight className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" /><span><strong>Time-Locked</strong> — Only completable during specific hours (e.g. Wake Up Early).</span></div>
+                </div>
+                <p><strong className="text-[var(--text-primary)]">Reorder:</strong> In <strong>More → Rituals Management</strong>, drag the handles to reorder your rituals.</p>
+                <p><strong className="text-[var(--text-primary)]">Quick complete from Home:</strong> Mark rituals as done right from the Home tab without switching tabs.</p>
               </div>
             </section>
 
-            {/* Section 3: Tasks */}
+            {/* Section 3: Ritual Notifications */}
             <section>
               <div className="flex items-center gap-3 mb-3">
-                <div className="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-500">
-                  <ClipboardList className="w-5 h-5" />
-                </div>
-                <h3 className="text-lg font-bold text-[var(--text-primary)]">
-                  Tasks & Todos
-                </h3>
+                <div className="w-9 h-9 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center"><Bell className="w-5 h-5 text-amber-500" /></div>
+                <h3 className="text-base font-bold text-[var(--text-primary)]">Setting Reminders</h3>
               </div>
-              <div className="text-[14px] text-[var(--text-secondary)] leading-relaxed space-y-3 pl-13">
-                <p>
-                  When creating or editing a task, tap the <strong>Due Date & Time</strong> field. If you select a specific time, the app will automatically send you a push notification exactly when the task is due.
-                </p>
-                <p>
-                  You'll also get a <strong>Daily Digest</strong> notification every evening summarizing your pending tasks.
-                </p>
+              <div className="text-[13.5px] text-[var(--text-secondary)] leading-relaxed space-y-2">
+                <p>Edit any ritual and toggle on <strong className="text-[var(--text-primary)]">Reminders</strong> to choose one of three reminder modes:</p>
+                <div className="bg-[var(--bg-primary)] p-3.5 rounded-2xl border border-[var(--border)]/50 space-y-2">
+                  <div className="flex gap-2 items-start"><ChevronRight className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" /><span><strong>Interval</strong> — Repeating nudges (e.g. every 2 hours between 8AM–10PM). Great for water or stretch breaks.</span></div>
+                  <div className="flex gap-2 items-start"><ChevronRight className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" /><span><strong>Fixed Time</strong> — A single daily reminder at a set time (e.g. 7:00 AM). Can be restricted to specific days of the week.</span></div>
+                  <div className="flex gap-2 items-start"><ChevronRight className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" /><span><strong>Goal / Progress Check-in</strong> — Reminds you at custom times only when you're below your daily goal threshold.</span></div>
+                </div>
+                <p><strong className="text-[var(--text-primary)]">For Tasks:</strong> Set a due date & time when creating a task — you'll get an automatic push notification at that exact moment.</p>
               </div>
             </section>
 
             {/* Section 4: Goals */}
             <section>
               <div className="flex items-center gap-3 mb-3">
-                <div className="w-10 h-10 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-500">
-                  <Target className="w-5 h-5" />
-                </div>
-                <h3 className="text-lg font-bold text-[var(--text-primary)]">
-                  Monthly Goals
-                </h3>
+                <div className="w-9 h-9 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center"><Target className="w-5 h-5 text-purple-500" /></div>
+                <h3 className="text-base font-bold text-[var(--text-primary)]">Monthly Goals</h3>
               </div>
-              <div className="text-[14px] text-[var(--text-secondary)] leading-relaxed space-y-3 pl-13">
-                <p>
-                  <strong className="text-[var(--text-primary)]">Linking Rituals:</strong> You can link a Goal to a Daily Ritual! For example, link your "Read 5 Books" goal to your daily "Read 10 pages" ritual. Every time you log pages daily, your monthly goal updates automatically.
-                </p>
-                <p>
-                  Pinboard monitors your goal pace. If you start falling behind, Neo will send you a gentle notification to pick it up!
-                </p>
+              <div className="text-[13.5px] text-[var(--text-secondary)] leading-relaxed space-y-2">
+                <p>Goals in the <strong className="text-[var(--text-primary)]">Goals</strong> tab are big monthly targets. You can link a goal to one or more rituals so that completing a ritual automatically logs progress toward the goal.</p>
+                <p>The app tracks your pace. If you're falling behind where you should be for the month, Neo will send you a reminder notification.</p>
               </div>
             </section>
 
-            {/* Section 5: Settings */}
+            {/* Section 5: Settings tips */}
             <section>
               <div className="flex items-center gap-3 mb-3">
-                <div className="w-10 h-10 rounded-xl bg-slate-500/10 border border-slate-500/20 flex items-center justify-center text-slate-500">
-                  <Settings className="w-5 h-5" />
-                </div>
-                <h3 className="text-lg font-bold text-[var(--text-primary)]">
-                  Pro Tips
-                </h3>
+                <div className="w-9 h-9 rounded-xl bg-slate-500/10 border border-slate-500/20 flex items-center justify-center"><Settings className="w-5 h-5 text-[var(--text-secondary)]" /></div>
+                <h3 className="text-base font-bold text-[var(--text-primary)]">Pro Tips</h3>
               </div>
-              <div className="text-[14px] text-[var(--text-secondary)] leading-relaxed space-y-3 pl-13">
-                <p>
-                  <strong className="text-[var(--text-primary)]">Enable Notifications:</strong> If notifications aren't showing up, scroll down in the More tab and tap <strong>Enable Notifications</strong>. Make sure your browser/phone grants permission!
-                </p>
-                <p>
-                  <strong className="text-[var(--text-primary)]">Install the App:</strong> For the best experience, open your browser menu (Chrome/Safari) and tap <strong>"Add to Home Screen"</strong> or <strong>"Install App"</strong>. Notifications work best when installed!
-                </p>
+              <div className="text-[13.5px] text-[var(--text-secondary)] leading-relaxed space-y-2">
+                <p><strong className="text-[var(--text-primary)]">Enable Notifications:</strong> Go to More → App & Account → Enable Notifications. Your browser must grant permission for reminders to work.</p>
+                <p><strong className="text-[var(--text-primary)]">Install the App:</strong> Open your browser menu and tap <strong>"Add to Home Screen"</strong> or <strong>"Install App"</strong>. Background notifications work best when the app is installed as a PWA.</p>
+                <p><strong className="text-[var(--text-primary)]">Themes:</strong> Switch between <strong>Light</strong>, <strong>Dark</strong>, and <strong>AMOLED</strong> modes from the More tab.</p>
               </div>
             </section>
+
           </div>
         </motion.div>
       </div>
     </AnimatePresence>
   );
 }
+
+

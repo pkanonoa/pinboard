@@ -890,7 +890,7 @@ export default function DailyRitualsSection() {
                 </button>
                 <button
                   type="submit"
-                  className="w-2/3 bg-emerald-600/90 hover:bg-emerald-700 text-white font-medium py-3 rounded-xl transition-all active:scale-95 flex justify-center items-center shadow-lg"
+                  className="w-2/3 bg-indigo-500/90 hover:bg-indigo-600 text-white font-medium py-3 rounded-xl transition-all active:scale-95 flex justify-center items-center shadow-lg"
                 >
                   Add Ritual
                 </button>

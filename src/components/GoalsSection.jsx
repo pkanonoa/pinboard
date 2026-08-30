@@ -470,7 +470,7 @@ export default function GoalsSection() {
                   {availableHabits.map((h) => (
                     <label
                       key={h.id}
-                      className="flex items-center gap-3 text-[14px] text-[var(--text-secondary)] p-2 cursor-pointer hover:bg-[var(--bg-card)]/50 rounded-lg transition-colors"
+                      className="flex items-center gap-3 text-[14px] text-[var(--text-primary)] font-medium p-2 cursor-pointer hover:bg-[var(--bg-card)]/50 rounded-lg transition-colors"
                     >
                       <input
                         type="checkbox"
