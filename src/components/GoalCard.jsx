@@ -105,7 +105,7 @@ export default function GoalCard({
 
   return (
     <div
-      className={`rounded-2xl transition-all duration-300 overflow-hidden bg-[var(--bg-card)] select-none ${isExpanded ? "shadow-xl shadow-black/20" : ""}`}
+      className={`rounded-2xl transition-all duration-300 overflow-hidden bg-[var(--bg-card)] border border-[var(--border)]/60 shadow-sm select-none ${isExpanded ? "shadow-xl shadow-black/20" : ""}`}
     >
       {/* Summary View (Always visible, click to expand) */}
       <div

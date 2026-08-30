@@ -921,7 +921,7 @@ export default function DailyRitualsSection() {
             return (
               <div
                 key={habit.id}
-                className={`p-4 rounded-2xl flex flex-col gap-3 relative transition-all duration-300 bg-[var(--bg-card)] select-none ${habit.paused ? "opacity-50 grayscale" : ""} ${activeMenuId === habit.id ? "z-[60]" : "z-10"}`}
+                className={`p-4 rounded-2xl flex flex-col gap-3 relative transition-all duration-300 bg-[var(--bg-card)] border border-[var(--border)]/60 shadow-sm select-none ${habit.paused ? "opacity-50 grayscale" : ""} ${activeMenuId === habit.id ? "z-[60]" : "z-10"}`}
                 onTouchStart={() => !editingHabitId && startLongPress(habit.id)}
                 onTouchEnd={clearLongPress}
                 onMouseDown={() => !editingHabitId && startLongPress(habit.id)}

@@ -214,7 +214,7 @@ export default function ToldToSection() {
             pendingTasks.map((task) => (
               <div
                 key={task.id}
-                className="flex items-center gap-4 p-4 bg-[var(--bg-card)] rounded-xl transition-all duration-300 ease-in-out"
+                className="flex items-center gap-4 p-4 bg-[var(--bg-card)] border border-[var(--border)]/60 shadow-sm rounded-2xl transition-all duration-300 ease-in-out"
               >
                 <div
                   className="w-[22px] h-[22px] rounded-md border-2 border-[var(--border)] flex items-center justify-center cursor-pointer flex-shrink-0 hover:border-gray-500 transition-colors"
@@ -272,7 +272,7 @@ export default function ToldToSection() {
             {completedTasks.map((task) => (
               <div
                 key={task.id}
-                className="flex items-center gap-4 p-4 bg-[var(--bg-card)] rounded-xl transition-all duration-300 ease-in-out cursor-pointer select-none active:scale-[0.98]"
+                className="flex items-center gap-4 p-4 bg-[var(--bg-card)] border border-[var(--border)]/60 shadow-sm rounded-2xl transition-all duration-300 ease-in-out cursor-pointer select-none active:scale-[0.98]"
                 onTouchStart={() => startLongPress(task.id)}
                 onTouchEnd={clearLongPress}
                 onMouseDown={() => startLongPress(task.id)}
