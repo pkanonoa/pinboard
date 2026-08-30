@@ -19,6 +19,7 @@ import { getNotifications, cleanOldNotifications } from './db';
 import { syncStateToBackend } from './utils';
 import { maybeResetDismissals } from './utils/smartSuggestions';
 import LocalTaskNotifier from './components/LocalTaskNotifier';
+import { useTheme } from './hooks/useTheme';
 
 function App() {
   const [currentTab, setCurrentTab] = useState('dashboard');
@@ -27,6 +28,7 @@ function App() {
   const [onboarded, setOnboarded] = useState(true);
   const [touchStartXY, setTouchStartXY] = useState(null);
   const [showWeeklyReview, setShowWeeklyReview] = useState(false);
+  const { theme, setTheme } = useTheme();
 
   const handleSetCurrentTab = (tab) => {
     if (tab !== currentTab) {
@@ -91,8 +93,24 @@ function App() {
     };
     document.addEventListener('visibilitychange', handleVisibilityChange);
 
-    const savedTheme = localStorage.getItem('pinboard_theme') || 'darker';
-    document.documentElement.setAttribute('data-theme', savedTheme);
+    // Initial system theme detection
+    if (!localStorage.getItem('pinboard_theme') && !isOnboarded) {
+      if (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) {
+        setTheme('light');
+      } else {
+        setTheme('dark');
+      }
+    }
+
+    const systemThemeListener = (e) => {
+      if (!localStorage.getItem('pinboard_theme')) {
+        setTheme(e.matches ? 'dark' : 'light');
+      }
+    };
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    if (mediaQuery.addEventListener) {
+      mediaQuery.addEventListener('change', systemThemeListener);
+    }
     
     // Cleanup old notifications and check unread count
     cleanOldNotifications().then(() => {
@@ -121,6 +139,9 @@ function App() {
       window.removeEventListener('NEW_NOTIFICATION_LOCAL', checkUnread);
       if ('serviceWorker' in navigator) {
         navigator.serviceWorker.removeEventListener('message', swMessageListener);
+      }
+      if (mediaQuery.removeEventListener) {
+        mediaQuery.removeEventListener('change', systemThemeListener);
       }
     };
   }, []);
@@ -191,7 +212,7 @@ function App() {
       {/* Bell Icon */}
       <button 
         onClick={() => setIsDrawerOpen(true)}
-        className="fixed top-4 right-4 z-[35] w-9 h-9 flex items-center justify-center bg-[#1a1b26] rounded-full shadow-md border border-gray-800 hover:bg-gray-800 active:scale-95 transition-all"
+        className="fixed top-4 right-4 z-[35] w-9 h-9 flex items-center justify-center bg-[var(--bg-card)] rounded-full shadow-md border border-[var(--border)] hover:bg-[var(--bg-card-hover)] active:scale-95 transition-all"
         title="Notifications"
       >
         <Bell className="w-4.5 h-4.5 text-indigo-300" strokeWidth={2} />
@@ -215,7 +236,7 @@ function App() {
       <InstallPrompt />
 
       {/* Bottom Navigation */}
-      <div className="fixed bottom-0 left-0 right-0 h-16 bg-gray-900 border-t border-gray-800 flex items-center justify-around z-50 px-2 pb-safe">
+      <div className={`fixed bottom-0 left-0 right-0 h-16 flex items-center justify-around z-50 px-2 pb-safe bg-[var(--bg-card)] border-t border-[var(--border)] ${theme === 'light' ? 'backdrop-blur-md bg-opacity-90' : ''}`}>
         <button 
           onClick={() => handleSetCurrentTab('dashboard')}
           className={`flex flex-col items-center justify-center w-full h-full space-y-1 transition-colors active:scale-95 ${currentTab === 'dashboard' ? 'text-blue-400' : 'text-gray-500 hover:text-gray-400'}`}
@@ -246,7 +267,7 @@ function App() {
         </button>
         <button 
           onClick={() => handleSetCurrentTab('more')}
-          className={`flex flex-col items-center justify-center w-full h-full space-y-1 transition-colors active:scale-95 ${currentTab === 'more' ? 'text-white' : 'text-gray-500 hover:text-gray-400'}`}
+          className={`flex flex-col items-center justify-center w-full h-full space-y-1 transition-colors active:scale-95 ${currentTab === 'more' ? 'text-[var(--text-primary)]' : 'text-gray-500 hover:text-gray-400'}`}
         >
           <MoreHorizontal className="w-6 h-6" strokeWidth={2} />
           <span className="text-[10px] font-medium">More</span>

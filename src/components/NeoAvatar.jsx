@@ -517,12 +517,27 @@ export default function NeoAvatar({ habits = [], tasks = [], allGoalsOnTrack = f
   return (
     <div className="fixed bottom-[80px] right-2 flex flex-col items-end justify-end select-none z-45 pointer-events-none">
 
-      {/* Speech Bubble */}
+      {/* Speech Bubble (Glassmorphism) */}
       <div
-        className={`absolute bottom-[105px] right-2 mb-2 bg-white text-gray-900 px-3.5 py-2 rounded-2xl text-xs font-semibold shadow-xl max-w-[210px] text-center transition-all duration-300 pointer-events-none leading-snug ${speech ? 'opacity-100 scale-100' : 'opacity-0 scale-95'} ${speechType === 'success' ? '!bg-[rgba(34,197,94,0.15)] !text-emerald-100' : speechType === 'fail' ? '!bg-[rgba(239,68,68,0.12)] !text-red-200' : speechType === 'listening' ? '!bg-red-500/20 !text-red-100 border border-red-500/40 animate-pulse' : 'text-gray-900'}`}
+        className={`absolute bottom-[105px] right-2 mb-2 px-4 py-2.5 rounded-2xl text-xs font-semibold shadow-2xl max-w-[210px] text-center transition-all duration-300 pointer-events-none leading-snug border ${speech ? 'opacity-100 scale-100' : 'opacity-0 scale-95'} ${
+          speechType === 'success' 
+            ? 'bg-emerald-500/20 text-emerald-100 border-emerald-500/30 backdrop-blur-md' 
+            : speechType === 'fail' 
+            ? 'bg-red-500/20 text-red-100 border-red-500/30 backdrop-blur-md' 
+            : speechType === 'listening' 
+            ? 'bg-red-500/30 text-red-100 border-red-500/50 backdrop-blur-md animate-pulse' 
+            : 'bg-white/10 text-white border-white/20 backdrop-blur-md drop-shadow-lg'
+        }`}
       >
         {speech}
-        <div className={`absolute right-6 bottom-0 transform translate-y-[90%] w-0 h-0 border-l-[6px] border-r-[6px] border-t-[8px] border-l-transparent border-r-transparent ${speechType === 'success' ? 'border-t-[rgba(34,197,94,0.15)]' : speechType === 'fail' ? 'border-t-[rgba(239,68,68,0.12)]' : speechType === 'listening' ? 'border-t-[rgba(239,68,68,0.2)]' : 'border-t-white'}`}></div>
+        <div 
+          className={`absolute right-6 bottom-0 transform translate-y-[95%] w-0 h-0 border-l-[6px] border-r-[6px] border-t-[8px] border-l-transparent border-r-transparent ${
+            speechType === 'success' ? 'border-t-emerald-500/30' : 
+            speechType === 'fail' ? 'border-t-red-500/30' : 
+            speechType === 'listening' ? 'border-t-red-500/50' : 
+            'border-t-white/20'
+          }`}
+        ></div>
       </div>
 
       {/* Main Avatar Container */}
