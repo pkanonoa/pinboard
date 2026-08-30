@@ -210,8 +210,17 @@ export default function NeoAvatar({ habits = [], tasks = [], allGoalsOnTrack = f
       const currentTasks = tasksRef.current || [];
       const currentHabits = habitsRef.current || [];
 
+      const firstWelcomeShown = localStorage.getItem('neo_first_welcome_shown') === 'true';
       let msg;
-      if (!hasGreetedThisPeriod) {
+      let displayTime = 5500;
+
+      if (!firstWelcomeShown) {
+        localStorage.setItem('neo_first_welcome_shown', 'true');
+        // Set the period key too so they don't get double greeted with a normal greeting right after
+        localStorage.setItem(periodKey, '1');
+        msg = `Welcome to Pinboard, ${userName}! 🎉 Neo is so excited to help you build habits and conquer your days! Let's make today your first victory! 🧅✨`;
+        displayTime = 9000;
+      } else if (!hasGreetedThisPeriod) {
         localStorage.setItem(periodKey, '1');
         msg = buildFullGreeting(period, stateRef.current, currentTasks, currentHabits);
       } else {
@@ -220,7 +229,7 @@ export default function NeoAvatar({ habits = [], tasks = [], allGoalsOnTrack = f
 
       setSpeech(msg);
       if (speechTimeoutRef.current) clearTimeout(speechTimeoutRef.current);
-      speechTimeoutRef.current = setTimeout(() => setSpeech(null), 5500);
+      speechTimeoutRef.current = setTimeout(() => setSpeech(null), displayTime);
     }, 400);
 
     // Automatic motivational quote timer: fires every 15 minutes
