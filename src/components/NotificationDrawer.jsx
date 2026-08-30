@@ -82,16 +82,16 @@ export default function NotificationDrawer({ isOpen, onClose, setCurrentTab }) {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm"
+            className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm"
           />
           <motion.div
             initial={{ y: "-100%" }}
             animate={{ y: 0 }}
             exit={{ y: "-100%" }}
             transition={{ type: "spring", damping: 25, stiffness: 200 }}
-            className="fixed top-0 left-0 right-0 z-50 bg-[var(--bg-primary)] border-b border-[var(--border)] shadow-2xl rounded-b-3xl max-h-[80vh] flex flex-col pt-safe"
+            className="fixed top-0 left-0 right-0 z-50 bg-[var(--bg-primary)]/80 backdrop-blur-xl border-b border-[var(--border)] shadow-2xl rounded-b-3xl max-h-[80vh] flex flex-col pt-safe"
           >
-            <div className="flex items-center justify-between p-5 pb-4 border-b border-[var(--border)]">
+            <div className="flex items-center justify-between p-5 pb-4 border-b border-[var(--border)]/60 bg-[var(--bg-primary)]/30 backdrop-blur-md">
               <h2 className="text-xl font-bold text-[var(--text-primary)] flex items-center gap-2">
                 <svg
                   className="w-5 h-5 text-[var(--accent-purple)]"
@@ -110,7 +110,7 @@ export default function NotificationDrawer({ isOpen, onClose, setCurrentTab }) {
               </h2>
               <button
                 onClick={onClose}
-                className="p-2 bg-[var(--bg-card)] rounded-full hover:bg-[var(--bg-card-hover)] text-[var(--text-secondary)] transition-colors"
+                className="p-2 bg-[var(--bg-card)]/80 rounded-full hover:bg-[var(--bg-card)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors border border-[var(--border)]/50"
               >
                 <svg
                   className="w-5 h-5"
@@ -156,7 +156,7 @@ export default function NotificationDrawer({ isOpen, onClose, setCurrentTab }) {
                       <div
                         key={notif.id}
                         onClick={() => handleNotificationClick(notif.type)}
-                        className="relative flex items-start gap-3 p-3 bg-[var(--bg-card)] rounded-xl cursor-pointer hover:bg-[var(--bg-card-hover)] transition-colors border border-[var(--border)]/50"
+                        className="relative flex items-start gap-3 p-3 bg-[var(--bg-card)]/80 backdrop-blur-md rounded-xl cursor-pointer hover:bg-[var(--bg-card)] transition-all border border-[var(--border)]/60 shadow-sm"
                       >
                         <div className="text-2xl mt-1">
                           {iconMap[notif.type] || "🔔"}
@@ -197,7 +197,7 @@ export default function NotificationDrawer({ isOpen, onClose, setCurrentTab }) {
               )}
             </div>
 
-            <div className="p-3 text-center border-t border-[var(--border)] pb-safe">
+            <div className="p-3 text-center border-t border-[var(--border)]/60 bg-[var(--bg-primary)]/30 backdrop-blur-md pb-safe">
               <p className="text-[10px] text-[var(--text-muted)] font-medium">
                 Older notifications are cleared daily.
               </p>
