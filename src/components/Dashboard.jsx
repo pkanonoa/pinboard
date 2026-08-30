@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
-import { Target, Repeat, ClipboardList } from 'lucide-react';
+import React, { useState, useEffect, useMemo } from 'react';
+import { Target, Repeat, ClipboardList, X } from 'lucide-react';
 import { getLocalYMD, getUserStats, logCompletion } from '../utils';
 import { checkAndUnlockBadges } from '../utils/badgeUtils';
+import { generateSuggestions, dismissSuggestion } from '../utils/smartSuggestions';
 import NeoAvatar from './NeoAvatar';
 
 const DEFAULT_SAMPLE_HABITS = [
@@ -15,6 +16,11 @@ export default function Dashboard({ setCurrentTab }) {
   const [habits, setHabits] = useState([]);
   const [monthlyGoals, setMonthlyGoals] = useState([]);
   const [stats, setStats] = useState(() => getUserStats());
+  const [completionLog, setCompletionLog] = useState([]);
+  const [dismissedIds, setDismissedIds] = useState(() => {
+    try { return new Set(JSON.parse(localStorage.getItem('pinboard_dismissed_suggestions') || '[]')); }
+    catch (e) { return new Set(); }
+  });
   const [promptDismissed, setPromptDismissed] = useState(() => {
     const dismissedAt = localStorage.getItem('goalPromptDismissedAt');
     if (dismissedAt) {
@@ -27,9 +33,7 @@ export default function Dashboard({ setCurrentTab }) {
   const loadAllData = () => {
     const savedTasks = localStorage.getItem('pinboard_tasks');
     if (savedTasks) {
-      try {
-        setTasks(JSON.parse(savedTasks));
-      } catch (e) {}
+      try { setTasks(JSON.parse(savedTasks)); } catch (e) {}
     }
 
     const savedRitualsStr = localStorage.getItem('pinboard_rituals_data');
@@ -44,11 +48,14 @@ export default function Dashboard({ setCurrentTab }) {
     if (savedGoals) {
       try {
         const parsed = JSON.parse(savedGoals);
-        if (Array.isArray(parsed)) {
-          setMonthlyGoals(parsed);
-        }
+        if (Array.isArray(parsed)) setMonthlyGoals(parsed);
       } catch (e) {}
     }
+
+    try {
+      const log = JSON.parse(localStorage.getItem('pinboard_completion_log') || '[]');
+      setCompletionLog(Array.isArray(log) ? log : []);
+    } catch (e) { setCompletionLog([]); }
 
     setStats(getUserStats());
   };
@@ -108,6 +115,35 @@ export default function Dashboard({ setCurrentTab }) {
       goalProgressPct = activeGoal.isCompleted ? 100 : 0;
     }
   }
+
+  // Smart suggestions (useMemo, only when ≥14 days of data)
+  const suggestions = useMemo(
+    () => generateSuggestions(habits, completionLog),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [habits, completionLog, dismissedIds]
+  );
+  const visibleSuggestions = suggestions.slice(0, 2);
+
+  const handleDismissSuggestion = (id) => {
+    dismissSuggestion(id);
+    setDismissedIds(prev => new Set([...prev, id]));
+  };
+
+  // Route action button taps
+  const handleSuggestionAction = (suggestion) => {
+    if (suggestion.action.type === 'dismiss') {
+      handleDismissSuggestion(suggestion.id);
+      return;
+    }
+    // For 'add_reminder', 'pause', 'adjust_goal' — navigate to rituals
+    // so the user can find the habit and act on it.
+    setCurrentTab('rituals');
+    // Broadcast the target habit id so DailyRitualsSection can highlight it
+    if (suggestion.habitId) {
+      window.dispatchEvent(new CustomEvent('neo_highlight_habit', { detail: { habitId: suggestion.habitId, action: suggestion.action.type } }));
+    }
+    handleDismissSuggestion(suggestion.id);
+  };
 
   // Today's Rituals list
   const displayHabits = habits.length > 0 ? habits.slice(0, 3) : DEFAULT_SAMPLE_HABITS;
@@ -196,6 +232,68 @@ export default function Dashboard({ setCurrentTab }) {
 
       {/* Floating Neo */}
       <NeoAvatar habits={habits} tasks={tasks} allGoalsOnTrack={allGoalsOnTrack} />
+
+      {/* Smart Suggestions */}
+      {visibleSuggestions.length > 0 && (
+        <div className="flex flex-col gap-2">
+          {visibleSuggestions.map(s => {
+            const borderColor =
+              s.priority <= 2 ? 'border-l-amber-500' :
+              s.priority <= 4 ? 'border-l-teal-500' :
+              s.priority === 6 ? 'border-l-green-500' : 'border-l-indigo-500';
+            const iconBg =
+              s.priority <= 2 ? 'bg-amber-500/10' :
+              s.priority <= 4 ? 'bg-teal-500/10' :
+              s.priority === 6 ? 'bg-green-500/10' : 'bg-indigo-500/10';
+            const btnColor =
+              s.priority <= 2 ? 'text-amber-400 border-amber-500/30 hover:bg-amber-500/10' :
+              s.priority <= 4 ? 'text-teal-400 border-teal-500/30 hover:bg-teal-500/10' :
+              s.priority === 6 ? 'text-green-400 border-green-500/30 hover:bg-green-500/10' : 'text-indigo-400 border-indigo-500/30 hover:bg-indigo-500/10';
+
+            return (
+              <div
+                key={s.id}
+                className={`bg-[#141522] border border-gray-800/60 border-l-4 ${borderColor} rounded-2xl p-3.5 animate-fade-in-down`}
+              >
+                <div className="flex items-start gap-3">
+                  <div className={`w-9 h-9 rounded-xl ${iconBg} flex items-center justify-center text-lg shrink-0 mt-0.5`}>
+                    {s.icon}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold text-white leading-snug">{s.title}</p>
+                    <p className="text-xs text-gray-400 mt-0.5 leading-relaxed">{s.body}</p>
+                    <div className="flex items-center gap-2 mt-2.5">
+                      {s.action.type !== 'dismiss' && (
+                        <button
+                          onClick={() => handleSuggestionAction(s)}
+                          className={`text-xs font-semibold px-3 py-1 rounded-lg border transition-colors active:scale-95 ${btnColor}`}
+                        >
+                          {s.action.label}
+                        </button>
+                      )}
+                      {s.action.type === 'dismiss' && (
+                        <button
+                          onClick={() => handleSuggestionAction(s)}
+                          className={`text-xs font-semibold px-3 py-1 rounded-lg border transition-colors active:scale-95 ${btnColor}`}
+                        >
+                          {s.action.label}
+                        </button>
+                      )}
+                      <button
+                        onClick={() => handleDismissSuggestion(s.id)}
+                        className="ml-auto p-1.5 text-gray-500 hover:text-gray-300 transition-colors rounded-lg hover:bg-white/5 active:scale-90"
+                        aria-label="Dismiss"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
 
       {/* Stat Tiles */}
       <div className="grid grid-cols-3 gap-3 mt-1">

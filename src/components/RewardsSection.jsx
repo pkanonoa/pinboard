@@ -1,10 +1,94 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { BADGE_DEFINITIONS } from '../utils/badgeUtils';
 import { getUserStats } from '../utils';
+import ShareCard from './ShareCard';
+import { useShareCard } from '../hooks/useShareCard';
 
 export default function RewardsSection() {
   const [points, setPoints] = useState(0);
   const [earnedBadges, setEarnedBadges] = useState([]);
+  const shareCardRef = useRef(null);
+  const [shareData, setShareData] = useState(null);
+  const { shareCard, isGenerating } = useShareCard(shareCardRef);
+
+  useEffect(() => {
+    if (shareData) {
+      const run = async () => {
+        await new Promise(r => setTimeout(r, 150));
+        await shareCard();
+        setShareData(null);
+      };
+      run();
+    }
+  }, [shareData]);
+
+  const handleShareClick = () => {
+    // 1. dates
+    const now = new Date();
+    const dayOfWeek = now.getDay(); // 0=Sun
+    const diffToMon = (dayOfWeek + 6) % 7;
+    const mon = new Date(now);
+    mon.setDate(now.getDate() - diffToMon);
+    mon.setHours(0, 0, 0, 0);
+    const sun = new Date(mon);
+    sun.setDate(mon.getDate() + 6);
+    sun.setHours(23, 59, 59, 999);
+
+    const fmtShort = (d) => d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    const weekLabel = `${fmtShort(mon)} – ${fmtShort(sun)}`;
+
+    // 2. load raw data
+    const userName = localStorage.getItem('pinboard_user_name') || 'User';
+    const completionLog = JSON.parse(localStorage.getItem('pinboard_completion_log') || '[]');
+    const ritualsData = JSON.parse(localStorage.getItem('pinboard_rituals_data') || '{}');
+    const habits = ritualsData.habits || [];
+
+    // 3. streaks & points
+    const bestStreak = habits.length > 0 ? Math.max(...habits.map(h => h.streak || 0)) : 0;
+    const weekLogs = completionLog.filter(l => new Date(l.timestamp) >= mon);
+    const pointsThisWeek = weekLogs.reduce((sum, l) => sum + (l.type === 'task' ? 10 : 5), 0);
+
+    // 4. habits count & total possible
+    const nonPausedHabits = habits.filter(h => !h.paused);
+    const habitTotal = nonPausedHabits.length * 7;
+    const habitDayMap = {};
+    for (const log of weekLogs) {
+      if (log.type === 'habit') {
+        const day = new Date(log.timestamp).toISOString().slice(0, 10);
+        if (!habitDayMap[log.id]) habitDayMap[log.id] = new Set();
+        habitDayMap[log.id].add(day);
+      }
+    }
+    const habitsDone = Object.values(habitDayMap).reduce((acc, s) => acc + s.size, 0);
+
+    // 5. MVP Habit
+    let mvpHabit = null;
+    let maxDays = -1;
+    for (const h of nonPausedHabits) {
+      const days = (habitDayMap[h.id] || new Set()).size;
+      if (days > maxDays) {
+        maxDays = days;
+        mvpHabit = {
+          name: h.name,
+          days: days
+        };
+      }
+    }
+
+    const statsObj = getUserStats();
+    const levelName = statsObj.currentLevel.name;
+
+    setShareData({
+      userName,
+      weekLabel,
+      bestStreak,
+      pointsThisWeek,
+      habitsDone,
+      habitTotal,
+      levelName,
+      mvpHabit
+    });
+  };
 
   useEffect(() => {
     const badgesStr = localStorage.getItem('pinboard_earned_badges');
@@ -39,6 +123,13 @@ export default function RewardsSection() {
 
   return (
     <div className="w-full max-w-md z-10 flex flex-col gap-6 pt-6 pb-8">
+      {/* Off-screen rendering container for share card capture */}
+      {shareData && (
+        <div style={{ position: 'absolute', left: '-9999px', top: '-9999px', zIndex: -100 }}>
+          <ShareCard ref={shareCardRef} {...shareData} />
+        </div>
+      )}
+
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold text-white flex items-center gap-2">
           Rewards
@@ -67,10 +158,18 @@ export default function RewardsSection() {
           </div>
           
           {nextLevel ? (
-            <p className="text-xs text-indigo-200 font-medium">{pointsToNext.toLocaleString()} pts to {nextLevel.name}</p>
+            <p className="text-xs text-indigo-200 font-medium mb-3.5">{pointsToNext.toLocaleString()} pts to {nextLevel.name}</p>
           ) : (
-            <p className="text-xs text-amber-300 font-bold uppercase tracking-widest">Max Level Reached!</p>
+            <p className="text-xs text-amber-300 font-bold uppercase tracking-widest mb-3.5">Max Level Reached!</p>
           )}
+
+          <button
+            onClick={handleShareClick}
+            disabled={isGenerating}
+            className="inline-flex items-center gap-1.5 px-4 py-1.5 text-xs font-semibold text-indigo-300 hover:text-white bg-white/5 hover:bg-white/10 rounded-full border border-white/10 active:scale-95 transition-all"
+          >
+            {isGenerating ? 'Generating...' : 'Share progress 📤'}
+          </button>
         </div>
       </div>
 

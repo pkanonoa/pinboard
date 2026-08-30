@@ -1,5 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import neoImg from '../assets/neo.png';
+import { getUserStats } from '../utils';
+import ShareCard from './ShareCard';
+import { useShareCard } from '../hooks/useShareCard';
 
 // ── helpers ──────────────────────────────────────────────────────────────────
 
@@ -121,7 +124,9 @@ function buildWeeklyData() {
     bestWeekEver: Math.max(pointsThisWeek, bestWeekEver),
     isNewRecord: pointsThisWeek > bestWeekEver && bestWeekEver > 0,
     goalsPulse,
-    nonPausedHabits
+    nonPausedHabits,
+    totalCompletions,
+    totalPossible
   };
 }
 
@@ -173,7 +178,8 @@ export default function WeeklyReviewScreen({ onClose }) {
   const data = useRef(buildWeeklyData()).current;
   const {
     overallScore, bestHabit, bestDays, worstHabit, worstDays,
-    streakDeltas, pointsThisWeek, lastWeekPoints, bestWeekEver, isNewRecord, goalsPulse
+    streakDeltas, pointsThisWeek, lastWeekPoints, bestWeekEver, isNewRecord, goalsPulse,
+    totalCompletions, totalPossible
   } = data;
 
   const [intention, setIntention] = useState(
@@ -183,6 +189,48 @@ export default function WeeklyReviewScreen({ onClose }) {
     () => localStorage.getItem('pinboard_prev_weekly_intention') || ''
   );
   const [intentionSkipped, setIntentionSkipped] = useState(false);
+
+  const shareCardRef = useRef(null);
+  const [shareData, setShareData] = useState(null);
+  const { shareCard, isGenerating } = useShareCard(shareCardRef);
+
+  useEffect(() => {
+    if (shareData) {
+      const run = async () => {
+        await new Promise(r => setTimeout(r, 150));
+        await shareCard();
+        setShareData(null);
+      };
+      run();
+    }
+  }, [shareData]);
+
+  const handleShareClick = () => {
+    const userName = localStorage.getItem('pinboard_user_name') || 'User';
+    const weekLabel = `${fmtShort(mon)} – ${fmtShort(sun)}`;
+    const stats = getUserStats();
+    const levelName = stats.currentLevel.name;
+    const bestStreak = streakDeltas.length > 0 ? Math.max(...streakDeltas.map(s => s.streak)) : 0;
+
+    let mvpHabit = null;
+    if (bestHabit) {
+      mvpHabit = {
+        name: bestHabit.name,
+        days: bestDays
+      };
+    }
+
+    setShareData({
+      userName,
+      weekLabel,
+      bestStreak,
+      pointsThisWeek,
+      habitsDone: totalCompletions,
+      habitTotal: totalPossible,
+      levelName,
+      mvpHabit
+    });
+  };
 
   // Save snapshot of streaks on mount (for next week's delta)
   useEffect(() => {
@@ -218,6 +266,13 @@ export default function WeeklyReviewScreen({ onClose }) {
 
   return (
     <div className="fixed inset-0 z-[200] flex flex-col bg-[#0d0e17] overflow-hidden animate-slide-up">
+      {/* Off-screen rendering container for share card capture */}
+      {shareData && (
+        <div style={{ position: 'absolute', left: '-9999px', top: '-9999px', zIndex: -100 }}>
+          <ShareCard ref={shareCardRef} {...shareData} />
+        </div>
+      )}
+
       {/* ── Header ── */}
       <div className="relative flex flex-col items-center pt-10 pb-4 px-5">
         <button
@@ -235,7 +290,7 @@ export default function WeeklyReviewScreen({ onClose }) {
       </div>
 
       {/* ── Scrollable Content ── */}
-      <div className="flex-1 overflow-y-auto px-4 pb-32 space-y-3">
+      <div className="flex-1 overflow-y-auto px-4 pb-36 space-y-3">
 
         {/* 1. Overall Score */}
         <div className="bg-[#141522] border border-gray-800/60 rounded-2xl p-5 flex flex-col items-center gap-3">
@@ -392,10 +447,17 @@ export default function WeeklyReviewScreen({ onClose }) {
       </div>
 
       {/* ── Close Button ── */}
-      <div className="fixed bottom-0 left-0 right-0 p-4 bg-[#0d0e17]/95 backdrop-blur-sm border-t border-gray-800/60">
+      <div className="fixed bottom-0 left-0 right-0 p-4 bg-[#0d0e17]/95 backdrop-blur-sm border-t border-gray-800/60 flex flex-col gap-2.5">
+        <button
+          onClick={handleShareClick}
+          disabled={isGenerating}
+          className="w-full py-3 bg-teal-500 hover:bg-teal-600 disabled:bg-teal-700 text-white font-bold rounded-2xl transition-all active:scale-95 shadow-lg shadow-teal-900/40 text-sm flex items-center justify-center gap-1.5"
+        >
+          {isGenerating ? 'Generating card...' : '📤 Share my week'}
+        </button>
         <button
           onClick={handleClose}
-          className="w-full py-3.5 bg-indigo-500 hover:bg-indigo-600 text-white font-bold rounded-2xl transition-all active:scale-95 shadow-lg shadow-indigo-900/40 text-sm"
+          className="w-full py-3 bg-indigo-500 hover:bg-indigo-600 text-white font-bold rounded-2xl transition-all active:scale-95 shadow-lg shadow-indigo-900/40 text-sm"
         >
           Close review
         </button>
@@ -403,3 +465,4 @@ export default function WeeklyReviewScreen({ onClose }) {
     </div>
   );
 }
+

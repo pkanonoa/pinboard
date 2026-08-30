@@ -205,7 +205,10 @@ export const syncStateToBackend = async () => {
 
     const dailyReviewTime = localStorage.getItem('pinboard_daily_review_time') || '20:00';
     const timezoneOffset = new Date().getTimezoneOffset() * -1;
-    console.log('Sending timezoneOffset:', timezoneOffset);
+
+    // Skip backend sync in local dev — /api/sync-state is a Vercel function only
+    const isLocal = ['localhost', '127.0.0.1'].includes(window.location.hostname);
+    if (isLocal) return;
 
     await fetch('/api/sync-state', {
       method: 'POST',
