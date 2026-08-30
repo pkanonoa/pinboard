@@ -602,10 +602,10 @@ export default function NeoAvatar({
   };
 
   return (
-    <div className="relative flex flex-col items-center justify-center select-none z-40 pointer-events-none w-full my-4">
+    <div className="fixed bottom-[80px] right-3 flex flex-col items-end justify-end select-none z-45 pointer-events-none">
       {/* Speech Bubble (Glassmorphism) */}
       <div
-        className={`absolute bottom-full mb-2 px-4 py-2.5 rounded-2xl text-xs font-semibold shadow-2xl max-w-[210px] text-center transition-all duration-300 pointer-events-none leading-snug border origin-bottom ${speech ? "opacity-100 scale-100" : "opacity-0 scale-95"} ${
+        className={`relative mb-2 px-4 py-2.5 rounded-2xl text-xs font-semibold shadow-2xl max-w-[210px] text-center transition-all duration-300 pointer-events-none leading-snug border origin-bottom-right ${speech ? "opacity-100 scale-100" : "opacity-0 scale-95"} ${
           speechType === "success"
             ? "bg-emerald-950/95 text-emerald-100 border-emerald-500/40 backdrop-blur-md"
             : speechType === "fail"
@@ -617,7 +617,7 @@ export default function NeoAvatar({
       >
         {speech}
         <div
-          className={`absolute left-1/2 bottom-0 transform -translate-x-1/2 translate-y-[95%] w-0 h-0 border-l-[6px] border-r-[6px] border-t-[8px] border-l-transparent border-r-transparent ${
+          className={`absolute right-6 bottom-0 transform translate-y-[95%] w-0 h-0 border-l-[6px] border-r-[6px] border-t-[8px] border-l-transparent border-r-transparent ${
             speechType === "success"
               ? "border-t-emerald-950/95"
               : speechType === "fail"
