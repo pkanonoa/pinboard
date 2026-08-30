@@ -73,10 +73,10 @@ export async function cleanOldNotifications() {
     const transaction = db.transaction(STORE_NAME, "readwrite");
     const store = transaction.objectStore(STORE_NAME);
     const now = Date.now();
-    const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
+    const ONE_DAY_MS = 24 * 60 * 60 * 1000;
 
     notifications.forEach((n) => {
-      if (now - n.timestamp > SEVEN_DAYS_MS) {
+      if (now - n.timestamp > ONE_DAY_MS) {
         store.delete(n.id);
       }
     });
