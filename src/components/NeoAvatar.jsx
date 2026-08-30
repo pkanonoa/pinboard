@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import confetti from 'canvas-confetti';
 import neoImg from '../assets/neo.png';
 import neoSadImg from '../assets/neo-sad.png';
@@ -34,9 +35,10 @@ const getPeriodGreeting = (period, name) => {
   return `Hey there${n}!`;
 };
 
-export default function NeoAvatar({ habits = [], tasks = [], allGoalsOnTrack = false }) {
+export default function NeoAvatar({ habits = [], tasks = [], allGoalsOnTrack = false, suggestions = [], onSuggestionAction = () => {}, onDismissSuggestion = () => {} }) {
   const [speech, setSpeech] = useState(null);
   const [bounce, setBounce] = useState(false);
+  const [isSuggestionsOpen, setIsSuggestionsOpen] = useState(false);
   const speechTimeoutRef = useRef(null);
 
   // Keep fresh references for intervals and timers
@@ -297,15 +299,19 @@ export default function NeoAvatar({ habits = [], tasks = [], allGoalsOnTrack = f
     return () => window.removeEventListener('neo-bounce', handleBounce);
   }, []);
 
-  // On Tap: immediately trigger a notification on demand
+  // On Tap: open suggestions if available, otherwise show quote
   const handleTap = () => {
-    triggerNotification();
+    if (suggestions && suggestions.length > 0) {
+      setIsSuggestionsOpen(true);
+    } else {
+      triggerNotification();
+    }
   };
 
   const bestStreak = habits.length > 0 ? Math.max(...habits.map(h => h.streak || 0)) : 0;
 
   return (
-    <div className="fixed bottom-[80px] right-2 flex flex-col items-end justify-end select-none z-40 pointer-events-none">
+    <div className="fixed bottom-[80px] right-2 flex flex-col items-end justify-end select-none z-45 pointer-events-none">
 
       {/* Speech Bubble */}
       <div
@@ -321,6 +327,16 @@ export default function NeoAvatar({ habits = [], tasks = [], allGoalsOnTrack = f
         onClick={handleTap}
         style={{ width: '96px', height: '96px' }}
       >
+        {/* Glowing Suggestions Badge Dot */}
+        {suggestions && suggestions.length > 0 && (
+          <span className="absolute -top-1 -right-1 flex h-5 w-5 z-50">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+            <span className="relative inline-flex rounded-full h-5 w-5 bg-amber-500 border border-[#0d0e17] flex items-center justify-center text-[10px] font-black text-white shadow-md">
+              {suggestions.length}
+            </span>
+          </span>
+        )}
+
         <div className={`${animationClass} w-full h-full relative`}>
           <div className={`w-full h-full transition-transform duration-600 ${bounce ? 'neo-bounce-once' : ''}`}>
 
@@ -390,6 +406,100 @@ export default function NeoAvatar({ habits = [], tasks = [], allGoalsOnTrack = f
           </div>
         </div>
       </div>
+
+      {/* Suggestions Drawer/Modal Overlay */}
+      <AnimatePresence>
+        {isSuggestionsOpen && suggestions && suggestions.length > 0 && (
+          <>
+            {/* Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsSuggestionsOpen(false)}
+              className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm pointer-events-auto"
+            />
+            
+            {/* suggestions bottom sheet/drawer */}
+            <motion.div
+              initial={{ y: '100%', opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: '100%', opacity: 0 }}
+              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+              className="fixed bottom-0 left-0 right-0 z-[110] bg-[#0d0e17] border-t border-gray-800 shadow-2xl rounded-t-3xl max-h-[80vh] flex flex-col p-5 pb-safe pointer-events-auto"
+            >
+              <div className="flex items-center justify-between pb-4 border-b border-gray-800/80 mb-4">
+                <h2 className="text-lg font-bold text-white flex items-center gap-2">
+                  <span>🧅</span> Neo's suggestions
+                </h2>
+                <button 
+                  onClick={() => setIsSuggestionsOpen(false)}
+                  className="p-1.5 bg-gray-800/80 hover:bg-gray-700/80 rounded-full text-gray-400 hover:text-white transition-colors"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M6 18L18 6M6 6l12 12"></path>
+                  </svg>
+                </button>
+              </div>
+
+              <div className="flex-1 overflow-y-auto pr-1 flex flex-col gap-3 pb-8">
+                {suggestions.map(s => {
+                  const borderColor =
+                    s.priority <= 2 ? 'border-l-amber-500' :
+                    s.priority <= 4 ? 'border-l-teal-500' :
+                    s.priority === 6 ? 'border-l-green-500' : 'border-l-indigo-500';
+                  const iconBg =
+                    s.priority <= 2 ? 'bg-amber-500/10' :
+                    s.priority <= 4 ? 'bg-teal-500/10' :
+                    s.priority === 6 ? 'bg-green-500/10' : 'bg-indigo-500/10';
+                  const btnColor =
+                    s.priority <= 2 ? 'text-amber-400 border-amber-500/30 hover:bg-amber-500/10' :
+                    s.priority <= 4 ? 'text-teal-400 border-teal-500/30 hover:bg-teal-500/10' :
+                    s.priority === 6 ? 'text-green-400 border-green-500/30 hover:bg-green-500/10' : 'text-indigo-400 border-indigo-500/30 hover:bg-indigo-500/10';
+
+                  return (
+                    <div
+                      key={s.id}
+                      className={`bg-[#141522] border border-gray-800/60 border-l-4 ${borderColor} rounded-2xl p-3.5`}
+                    >
+                      <div className="flex items-start gap-3">
+                        <div className={`w-9 h-9 rounded-xl ${iconBg} flex items-center justify-center text-lg shrink-0 mt-0.5`}>
+                          {s.icon}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-semibold text-white leading-snug">{s.title}</p>
+                          <p className="text-xs text-gray-400 mt-0.5 leading-relaxed">{s.body}</p>
+                          <div className="flex items-center gap-2 mt-2.5">
+                            <button
+                              onClick={() => {
+                                onSuggestionAction(s);
+                                setIsSuggestionsOpen(false);
+                              }}
+                              className={`text-xs font-semibold px-3 py-1 rounded-lg border transition-colors active:scale-95 ${btnColor}`}
+                            >
+                              {s.action.label}
+                            </button>
+                            <button
+                              onClick={() => onDismissSuggestion(s.id)}
+                              className="ml-auto p-1.5 text-gray-500 hover:text-gray-300 transition-colors rounded-lg hover:bg-white/5 active:scale-90"
+                              aria-label="Dismiss"
+                            >
+                              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M6 18L18 6M6 6l12 12"></path>
+                              </svg>
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
     </div>
   );
 }

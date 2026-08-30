@@ -279,69 +279,14 @@ export default function Dashboard({ setCurrentTab }) {
       </div>
 
       {/* Floating Neo */}
-      <NeoAvatar habits={habits} tasks={tasks} allGoalsOnTrack={allGoalsOnTrack} />
-
-      {/* Smart Suggestions */}
-      {visibleSuggestions.length > 0 && (
-        <div className="flex flex-col gap-2">
-          {visibleSuggestions.map(s => {
-            const borderColor =
-              s.priority <= 2 ? 'border-l-amber-500' :
-              s.priority <= 4 ? 'border-l-teal-500' :
-              s.priority === 6 ? 'border-l-green-500' : 'border-l-indigo-500';
-            const iconBg =
-              s.priority <= 2 ? 'bg-amber-500/10' :
-              s.priority <= 4 ? 'bg-teal-500/10' :
-              s.priority === 6 ? 'bg-green-500/10' : 'bg-indigo-500/10';
-            const btnColor =
-              s.priority <= 2 ? 'text-amber-400 border-amber-500/30 hover:bg-amber-500/10' :
-              s.priority <= 4 ? 'text-teal-400 border-teal-500/30 hover:bg-teal-500/10' :
-              s.priority === 6 ? 'text-green-400 border-green-500/30 hover:bg-green-500/10' : 'text-indigo-400 border-indigo-500/30 hover:bg-indigo-500/10';
-
-            return (
-              <div
-                key={s.id}
-                className={`bg-[#141522] border border-gray-800/60 border-l-4 ${borderColor} rounded-2xl p-3.5 animate-fade-in-down`}
-              >
-                <div className="flex items-start gap-3">
-                  <div className={`w-9 h-9 rounded-xl ${iconBg} flex items-center justify-center text-lg shrink-0 mt-0.5`}>
-                    {s.icon}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold text-white leading-snug">{s.title}</p>
-                    <p className="text-xs text-gray-400 mt-0.5 leading-relaxed">{s.body}</p>
-                    <div className="flex items-center gap-2 mt-2.5">
-                      {s.action.type !== 'dismiss' && (
-                        <button
-                          onClick={() => handleSuggestionAction(s)}
-                          className={`text-xs font-semibold px-3 py-1 rounded-lg border transition-colors active:scale-95 ${btnColor}`}
-                        >
-                          {s.action.label}
-                        </button>
-                      )}
-                      {s.action.type === 'dismiss' && (
-                        <button
-                          onClick={() => handleSuggestionAction(s)}
-                          className={`text-xs font-semibold px-3 py-1 rounded-lg border transition-colors active:scale-95 ${btnColor}`}
-                        >
-                          {s.action.label}
-                        </button>
-                      )}
-                      <button
-                        onClick={() => handleDismissSuggestion(s.id)}
-                        className="ml-auto p-1.5 text-gray-500 hover:text-gray-300 transition-colors rounded-lg hover:bg-white/5 active:scale-90"
-                        aria-label="Dismiss"
-                      >
-                        <X className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      )}
+      <NeoAvatar
+        habits={habits}
+        tasks={tasks}
+        allGoalsOnTrack={allGoalsOnTrack}
+        suggestions={visibleSuggestions}
+        onSuggestionAction={handleSuggestionAction}
+        onDismissSuggestion={handleDismissSuggestion}
+      />
 
       {/* Stat Tiles */}
       <div className="grid grid-cols-3 gap-3 mt-1">
