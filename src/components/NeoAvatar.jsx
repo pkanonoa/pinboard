@@ -57,7 +57,15 @@ export default function NeoAvatar({ habits = [], tasks = [], allGoalsOnTrack = f
   let state = 1;
   let animationClass = "neo-gentle-rock";
 
-  // State 6: All habits done + all goals on track → progressbar neo
+  // Check if they are a new user who has never logged any completions
+  let hasAnyCompletion = false;
+  try {
+    const logStr = localStorage.getItem('pinboard_completion_log');
+    if (logStr) {
+      hasAnyCompletion = JSON.parse(logStr).length > 0;
+    }
+  } catch (e) {}
+
   if (pct === 1 && totalHabits > 0 && allGoalsOnTrack) {
     state = 6;
     animationClass = "neo-proud-pulse";
@@ -71,6 +79,10 @@ export default function NeoAvatar({ habits = [], tasks = [], allGoalsOnTrack = f
     state = 3;
     animationClass = "neo-faster-float";
   } else if (pct > 0) {
+    state = 2;
+    animationClass = "neo-gentle-float";
+  } else if (!hasAnyCompletion) {
+    // New user with no completions yet - start in happy/welcoming mode
     state = 2;
     animationClass = "neo-gentle-float";
   }
