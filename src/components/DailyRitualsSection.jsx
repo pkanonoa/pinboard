@@ -1519,7 +1519,7 @@ export default function DailyRitualsSection() {
                                 }
                                 if (status === "missed") {
                                   return (
-                                    <div className="px-4 py-2 bg-red-900/30 text-[var(--danger)] rounded-lg font-medium text-sm flex items-center justify-center whitespace-nowrap">
+                                    <div className="px-4 py-2 bg-red-500/10 text-[var(--danger)] rounded-lg font-medium text-sm flex items-center justify-center whitespace-nowrap">
                                       Missed
                                     </div>
                                   );
@@ -1527,7 +1527,7 @@ export default function DailyRitualsSection() {
                                 return (
                                   <button
                                     onClick={() => handleTap(habit.id)}
-                                    className="px-4 py-2 bg-emerald-900/30 text-[var(--success)] hover:bg-emerald-900/50 rounded-lg font-medium text-sm flex items-center justify-center transition-colors active:scale-95 whitespace-nowrap"
+                                    className="px-4 py-2 bg-emerald-500/10 text-[var(--success)] hover:bg-emerald-500/20 rounded-lg font-medium text-sm flex items-center justify-center transition-colors active:scale-95 whitespace-nowrap"
                                   >
                                     Mark done
                                   </button>
@@ -1550,7 +1550,7 @@ export default function DailyRitualsSection() {
                                 </button>
                                 {isCompleted ? (
                                   <div
-                                    className="px-4 py-2 bg-emerald-900/30 text-[var(--success)] rounded-lg font-medium text-sm flex items-center justify-center cursor-pointer active:scale-95 transition-transform"
+                                    className="px-4 py-2 bg-emerald-500/10 text-[var(--success)] rounded-lg font-medium text-sm flex items-center justify-center cursor-pointer active:scale-95 transition-transform"
                                     onClick={() => handleUndo(habit.id)}
                                   >
                                     Done
@@ -1569,7 +1569,7 @@ export default function DailyRitualsSection() {
                             {habit.type === "one_time" &&
                               (isCompleted ? (
                                 <div
-                                  className="px-4 py-2 bg-emerald-900/30 text-[var(--success)] rounded-lg font-medium text-sm flex items-center justify-center cursor-pointer active:scale-95 transition-transform"
+                                  className="px-4 py-2 bg-emerald-500/10 text-[var(--success)] rounded-lg font-medium text-sm flex items-center justify-center cursor-pointer active:scale-95 transition-transform"
                                   onClick={() => handleUndo(habit.id)}
                                 >
                                   Done
@@ -1577,7 +1577,7 @@ export default function DailyRitualsSection() {
                               ) : (
                                 <button
                                   onClick={() => handleTap(habit.id)}
-                                  className="px-4 py-2 bg-emerald-900/30 text-[var(--success)] hover:bg-emerald-900/50 rounded-lg font-medium text-sm flex items-center justify-center transition-colors active:scale-95 whitespace-nowrap"
+                                  className="px-4 py-2 bg-emerald-500/10 text-[var(--success)] hover:bg-emerald-500/20 rounded-lg font-medium text-sm flex items-center justify-center transition-colors active:scale-95 whitespace-nowrap"
                                 >
                                   Mark done
                                 </button>

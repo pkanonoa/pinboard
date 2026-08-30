@@ -511,11 +511,11 @@ export default function Dashboard({ setCurrentTab }) {
                 </span>
 
                 {isMissed ? (
-                  <span className="bg-red-950/40 border border-red-800/40 text-[var(--danger)] text-xs px-2.5 py-0.5 rounded-lg font-medium">
+                  <span className="bg-red-500/10 border border-red-500/20 text-[var(--danger)] text-xs px-2.5 py-0.5 rounded-lg font-medium">
                     Missed
                   </span>
                 ) : isDone ? (
-                  <span className="bg-emerald-950/40 border border-emerald-800/40 text-[var(--success)] text-xs px-2.5 py-0.5 rounded-lg font-medium">
+                  <span className="bg-emerald-500/10 border border-emerald-500/20 text-[var(--success)] text-xs px-2.5 py-0.5 rounded-lg font-medium">
                     Done
                   </span>
                 ) : ritual.type === "counter" || ritual.goal > 1 ? (
@@ -525,7 +525,7 @@ export default function Dashboard({ setCurrentTab }) {
                 ) : (
                   <button
                     onClick={() => handleQuickMarkDone(ritual.id)}
-                    className="bg-emerald-950/40 hover:bg-emerald-900/60 border border-emerald-800/40 text-[var(--success)] text-xs px-3 py-1 rounded-lg font-medium transition-colors active:scale-95"
+                    className="bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 text-[var(--success)] text-xs px-3 py-1 rounded-lg font-medium transition-colors active:scale-95"
                   >
                     Mark done
                   </button>

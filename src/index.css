@@ -303,8 +303,7 @@
 
 .toast-glass {
   background-color: transparent;
-  /* Use a pseudo-element to get the background opacity without affecting text */
-  position: relative;
+  /* Elements using this class must be positioned (relative, absolute, or fixed) so the pseudo-element sizes correctly */
 }
 
 .toast-glass::before {
