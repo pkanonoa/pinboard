@@ -1,12 +1,23 @@
 import React, { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { saveNotification } from "../db";
+import { playNotificationSound } from "../utils/audioUtils";
 
 export default function LocalTaskNotifier() {
   const notifiedTasksRef = useRef(new Set());
   const [activeToast, setActiveToast] = useState(null);
 
   useEffect(() => {
+    // Listen for service worker background notification messages
+    const handleSwMessage = (event) => {
+      if (event.data?.type === "NEW_NOTIFICATION") {
+        playNotificationSound();
+      }
+    };
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.addEventListener("message", handleSwMessage);
+    }
+
     const dispatchNotification = ({
       title,
       body,
@@ -15,6 +26,9 @@ export default function LocalTaskNotifier() {
       deepLink = "#rituals",
       tag,
     }) => {
+      // 0. Play sweet crystal "cling" chime
+      playNotificationSound();
+
       // 1. Show in-app toast
       setActiveToast({ title, body, icon: iconEmoji });
       setTimeout(() => setActiveToast(null), 8000); // Hide after 8 seconds
@@ -39,7 +53,11 @@ export default function LocalTaskNotifier() {
         const options = {
           body,
           icon: "/pwa-192x192.png",
+          badge: "/logo.jpg",
           tag,
+          vibrate: [200, 100, 200],
+          silent: false,
+          renotify: true,
         };
 
         if (
@@ -346,34 +364,66 @@ export default function LocalTaskNotifier() {
     checkTasks();
     const interval = setInterval(checkTasks, 10000);
 
-    return () => clearInterval(interval);
+    return () => {
+      clearInterval(interval);
+      if ("serviceWorker" in navigator) {
+        navigator.serviceWorker.removeEventListener("message", handleSwMessage);
+      }
+    };
   }, []);
 
   return (
     <AnimatePresence>
       {activeToast && (
         <motion.div
-          initial={{ opacity: 0, y: -50, scale: 0.9 }}
+          initial={{ opacity: 0, y: -50, scale: 0.95 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
-          exit={{ opacity: 0, y: -20, scale: 0.9 }}
-          drag="x"
-          dragConstraints={{ left: 0, right: 0 }}
-          dragElastic={0.7}
-          onDragEnd={(e, { offset }) => {
-            if (offset.x < -100 || offset.x > 100) {
+          exit={{ opacity: 0, y: -20, scale: 0.95 }}
+          drag="y"
+          dragConstraints={{ top: -100, bottom: 0 }}
+          onDragEnd={(e, { offset, velocity }) => {
+            if (offset.y < -50 || velocity.y < -500) {
               setActiveToast(null);
             }
           }}
-          className="toast-glass fixed top-6 left-1/2 -translate-x-1/2 z-[100] text-[var(--text-primary)] px-5 py-3 rounded-2xl shadow-2xl flex items-center gap-3 border border-[var(--border)] w-[calc(100%-2rem)] max-w-md cursor-grab active:cursor-grabbing"
+          className="toast-glass fixed top-4 left-3 right-3 z-[150] text-[var(--text-primary)] p-3.5 rounded-[1.25rem] shadow-2xl border border-[var(--border)] flex flex-col gap-2 cursor-grab active:cursor-grabbing max-w-md mx-auto"
         >
-          <span className="text-2xl animate-bounce shrink-0">
-            {activeToast.icon || "⏰"}
-          </span>
-          <div className="flex flex-col min-w-0">
-            <span className="text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider truncate">
-              {activeToast.title || "Notification"}
+          {/* Header Row */}
+          <div className="flex items-center gap-2 px-1">
+            <div className="w-5 h-5 rounded overflow-hidden shrink-0 shadow-sm border border-[var(--border)]">
+              <img src="/pwa-192x192.png" alt="App" className="w-full h-full object-cover" />
+            </div>
+            <span className="text-[11px] font-bold text-[var(--text-primary)] tracking-wide truncate max-w-[80px]">
+              Pinboard
             </span>
-            <span className="text-sm font-semibold leading-snug">{activeToast.body}</span>
+            <span className="text-[11px] text-[var(--text-secondary)] shrink-0 font-medium">&bull; now</span>
+            
+            <div className="ml-auto flex items-center gap-2 text-[var(--text-secondary)]">
+              <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.63-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.64 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2zm-2 1H8v-6c0-2.48 1.51-4.5 4-4.5s4 2.02 4 4.5v6z"/></svg>
+              <div className="w-5 h-5 rounded-full bg-[var(--bg-card)]/50 border border-[var(--border)] flex items-center justify-center">
+                <svg className="w-3 h-3 opacity-70" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7"></path></svg>
+              </div>
+            </div>
+          </div>
+          
+          {/* Content Row */}
+          <div className="flex items-start gap-3 px-1 pb-1">
+            <div className="flex-1 min-w-0">
+              <div className="text-[14px] font-bold text-[var(--text-primary)] truncate">
+                {activeToast.title || "Notification"}
+              </div>
+              <div className="text-[13px] text-[var(--text-secondary)] leading-snug line-clamp-2 mt-0.5">
+                {activeToast.body}
+              </div>
+            </div>
+            {/* Big Right Icon (Similar to the 2nd image) */}
+            <div className="w-11 h-11 rounded-xl bg-[var(--bg-card)] border border-[var(--border)] flex items-center justify-center shrink-0 shadow-sm overflow-hidden">
+               {activeToast.icon ? (
+                 <span className="text-2xl animate-bounce">{activeToast.icon}</span>
+               ) : (
+                 <img src="/pwa-192x192.png" alt="Icon" className="w-full h-full object-cover" />
+               )}
+            </div>
           </div>
         </motion.div>
       )}

@@ -9,6 +9,7 @@ import {
   CalendarDays,
 } from "lucide-react";
 import { getUserStats } from "../utils";
+import { playNotificationSound } from "../utils/audioUtils";
 
 export default function MoreSection({ setCurrentTab, onOpenWeeklyReview }) {
   const [points, setPoints] = useState(0);
@@ -189,10 +190,14 @@ export default function MoreSection({ setCurrentTab, onOpenWeeklyReview }) {
               }
 
               function fireTestNotif() {
+                playNotificationSound();
                 const title = "Test OS Notification!";
                 const options = {
-                  body: "If you see this, native notifications are working!",
+                  body: "If you see this, native notifications and sound are working!",
                   icon: "/pwa-192x192.png",
+                  badge: "/logo.jpg",
+                  vibrate: [200, 100, 200],
+                  silent: false,
                 };
                 try {
                   if (

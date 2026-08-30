@@ -138,6 +138,8 @@ self.addEventListener('push', event => {
     renotify: true,
     requireInteraction: false,
     silent: false,
+    vibrate: [200, 100, 200],
+    timestamp: Date.now(),
     data: {
       url: data.url || '/',
       taskId: data.taskId || null,
