@@ -135,13 +135,58 @@ export default function Dashboard({ setCurrentTab }) {
       handleDismissSuggestion(suggestion.id);
       return;
     }
-    // For 'add_reminder', 'pause', 'adjust_goal' — navigate to rituals
-    // so the user can find the habit and act on it.
-    setCurrentTab('rituals');
-    // Broadcast the target habit id so DailyRitualsSection can highlight it
-    if (suggestion.habitId) {
-      window.dispatchEvent(new CustomEvent('neo_highlight_habit', { detail: { habitId: suggestion.habitId, action: suggestion.action.type } }));
+
+    if (suggestion.action.label === 'Unpause' && suggestion.habitId) {
+      // 1. Unpause habit instantly
+      const savedDataStr = localStorage.getItem('pinboard_rituals_data');
+      if (savedDataStr) {
+        try {
+          const savedData = JSON.parse(savedDataStr);
+          savedData.habits = (savedData.habits || []).map(h => {
+            if (h.id === suggestion.habitId) {
+              return { ...h, paused: false, pausedAt: null, resumeDate: null };
+            }
+            return h;
+          });
+          localStorage.setItem('pinboard_rituals_data', JSON.stringify(savedData));
+        } catch (e) {
+          console.error(e);
+        }
+      }
+
+      // 2. Unpause linked goals instantly
+      try {
+        const savedGoals = localStorage.getItem('pinboard_goals');
+        if (savedGoals) {
+          const goals = JSON.parse(savedGoals);
+          let changed = false;
+          const updatedGoals = goals.map(g => {
+            if ((g.linkedHabitId === suggestion.habitId || g.linkedHabitIds?.includes(suggestion.habitId)) && g.paused) {
+              changed = true;
+              return { ...g, paused: false, pausedAt: null };
+            }
+            return g;
+          });
+          if (changed) {
+            localStorage.setItem('pinboard_goals', JSON.stringify(updatedGoals));
+            window.dispatchEvent(new Event('pinboard_goals_updated'));
+          }
+        }
+      } catch (e) {}
+
+      // 3. Dispatch global reload event and refresh dashboard state
+      window.dispatchEvent(new Event('pinboard_rituals_updated'));
+      loadAllData();
+      handleDismissSuggestion(suggestion.id);
+      return;
     }
+
+    // For other actions (e.g. 'add_reminder', 'adjust_goal'):
+    // Save to pending edit queue so DailyRitualsSection opens it immediately on mount
+    if (suggestion.habitId) {
+      sessionStorage.setItem('pinboard_pending_edit_habit', suggestion.habitId);
+    }
+    setCurrentTab('rituals');
     handleDismissSuggestion(suggestion.id);
   };
 

@@ -101,11 +101,9 @@ export default function DailyRitualsSection() {
     return 'open';
   };
 
-  // Load from local storage and handle daily reset
-  useEffect(() => {
+  const loadAndResetHabits = () => {
     const savedDataStr = localStorage.getItem('pinboard_rituals_data');
     let loadedHabits = DEFAULT_HABITS;
-    // Default to '' not today — if the field is missing, always reset
     let loadedResetDate = '';
 
     if (savedDataStr) {
@@ -121,11 +119,9 @@ export default function DailyRitualsSection() {
     const todayStr = getLocalYMD();
     const yesterdayStr = getYesterdayYMD();
 
-    // Reset counts if it's a new day (or lastResetDate was missing)
     if (loadedResetDate !== todayStr) {
       loadedHabits = loadedHabits.map(habit => {
         let newStreak = habit.streak;
-        // Break streak if not completed yesterday or today
         if (habit.lastCompletedDate !== yesterdayStr && habit.lastCompletedDate !== todayStr) {
           newStreak = 0;
         }
@@ -134,16 +130,45 @@ export default function DailyRitualsSection() {
           count: 0,
           streak: newStreak,
           failedDate: null,
-          // Clear lastCompletedDate if it's from a previous day so "Done" state resets too
           lastCompletedDate: habit.lastCompletedDate === todayStr ? todayStr : null,
         };
       });
       loadedResetDate = todayStr;
     }
 
+    // Check if there is a pending edit request (e.g. from a Smart Suggestion action)
+    const pendingEditId = sessionStorage.getItem('pinboard_pending_edit_habit');
+    if (pendingEditId) {
+      sessionStorage.removeItem('pinboard_pending_edit_habit');
+      const habit = loadedHabits.find(h => h.id === pendingEditId);
+      if (habit) {
+        setEditingHabitId(habit.id);
+        setEditHabitData({
+          name: habit.name,
+          type: habit.type || 'countable',
+          goal: habit.goal || '',
+          unit: habit.unit || '',
+          targetTime: habit.targetTime || '09:00',
+          graceWindow: habit.graceWindow || '30',
+          reminderEnabled: habit.reminderEnabled || false,
+          reminderType: habit.reminderType || 'fixed',
+          reminderTime: habit.reminderTime || '09:00',
+          reminderInterval: habit.reminderInterval || 2,
+          reminderIntervalUnit: habit.reminderIntervalUnit || 'hours'
+        });
+        setExpandedHabitId(habit.id);
+      }
+    }
 
     setHabits(loadedHabits);
     setLastResetDate(loadedResetDate);
+  };
+
+  // Load from local storage and handle daily reset
+  useEffect(() => {
+    loadAndResetHabits();
+
+    window.addEventListener('pinboard_rituals_updated', loadAndResetHabits);
 
     // Track last reset date so the interval can detect day rollover
     let lastKnownDate = getLocalYMD();
@@ -171,7 +196,6 @@ export default function DailyRitualsSection() {
       // ─────────────────────────────────────────────────────────────────
 
       setHabits(current => {
-
         let changed = false;
         let unpausedCount = 0;
         let unpausedHabitIds = [];
@@ -228,7 +252,10 @@ export default function DailyRitualsSection() {
       });
     }, 60000);
 
-    return () => clearInterval(interval);
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('pinboard_rituals_updated', loadAndResetHabits);
+    };
   }, []);
 
   // Global click listener to close menu
