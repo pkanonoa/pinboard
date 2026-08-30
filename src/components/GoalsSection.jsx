@@ -327,28 +327,28 @@ export default function GoalsSection() {
         </h1>
       </div>
 
-      <button
-        onClick={() => {
-          if (isAdding) {
-            setIsAdding(false);
-            setEditingGoalId(null);
-            setNewGoal({
-              name: "",
-              category: "Body",
-              target: "",
-              unit: "",
-              trackingType: "count_toward",
-              linkedHabitIds: [],
-              dueDate: "",
-            });
-          } else {
+      {!isAdding && (
+        <button
+          onClick={() => {
             setIsAdding(true);
-          }
-        }}
-        className="flex items-center justify-center gap-1.5 w-full bg-[var(--bg-card)] text-[var(--accent-purple)] hover:bg-[var(--bg-card)] py-3 rounded-xl text-sm font-medium transition-colors border border-[var(--border)]/60 active:scale-95 shadow-sm"
-      >
-        {isAdding ? "Cancel" : "+ New goal"}
-      </button>
+          }}
+          className="fixed bottom-28 right-6 w-14 h-14 bg-indigo-500 hover:bg-indigo-600 text-white rounded-full shadow-[0_8px_30px_rgb(0,0,0,0.2)] flex items-center justify-center transition-transform active:scale-95 z-[50]"
+        >
+          <svg
+            className="w-6 h-6"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="2"
+              d="M12 4v16m8-8H4"
+            ></path>
+          </svg>
+        </button>
+      )}
 
       {isAdding && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-md p-4 animate-fade-in overflow-y-auto">

@@ -59,6 +59,34 @@ export default function UserManualModal({ isOpen, onClose }) {
               </div>
             </section>
 
+            {/* Section: Hidden Gestures */}
+            <section>
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-9 h-9 rounded-xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center text-lg">👆</div>
+                <h3 className="text-base font-bold text-[var(--text-primary)]">Hidden Gestures & Shortcuts</h3>
+              </div>
+              <div className="text-[13.5px] text-[var(--text-secondary)] leading-relaxed space-y-3">
+
+                <div className="bg-[var(--bg-primary)] p-3.5 rounded-2xl border border-[var(--border)]/50 space-y-2">
+                  <p className="font-semibold text-[var(--text-primary)] text-xs uppercase tracking-wider mb-1">🔄 Rituals Tab</p>
+                  <div className="flex gap-2 items-start"><ChevronRight className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" /><span><strong>Long Press a ritual card</strong> → Opens a hidden action menu with <em>Edit</em>, <em>Pause</em>, <em>Reset today</em>, and <em>Delete</em> options.</span></div>
+                  <div className="flex gap-2 items-start"><ChevronRight className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" /><span><strong>Tap "Done"</strong> on a completed ritual → Undoes your progress.</span></div>
+                </div>
+
+                <div className="bg-[var(--bg-primary)] p-3.5 rounded-2xl border border-[var(--border)]/50 space-y-2">
+                  <p className="font-semibold text-[var(--text-primary)] text-xs uppercase tracking-wider mb-1">📋 Tasks Tab</p>
+                  <div className="flex gap-2 items-start"><ChevronRight className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" /><span><strong>Long Press a task</strong> → Reveals a hidden <em>Delete</em> button on the right side of the task.</span></div>
+                  <div className="flex gap-2 items-start"><ChevronRight className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" /><span><strong>Tap a task checkbox</strong> → Marks it complete and archives it in the Completed section.</span></div>
+                </div>
+
+                <div className="bg-[var(--bg-primary)] p-3.5 rounded-2xl border border-[var(--border)]/50 space-y-2">
+                  <p className="font-semibold text-[var(--text-primary)] text-xs uppercase tracking-wider mb-1">📱 Navigation</p>
+                  <div className="flex gap-2 items-start"><ChevronRight className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" /><span><strong>Swipe left/right</strong> anywhere on screen → Switches between tabs (Home → Goals → Tasks → Rituals → More).</span></div>
+                </div>
+
+              </div>
+            </section>
+
             {/* Section 2: Rituals */}
             <section>
               <div className="flex items-center gap-3 mb-3">
