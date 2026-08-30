@@ -299,6 +299,23 @@ export default function NeoAvatar({ habits = [], tasks = [], allGoalsOnTrack = f
     return () => window.removeEventListener('neo-bounce', handleBounce);
   }, []);
 
+  // Dismiss speech bubble when clicking anywhere outside Neo
+  useEffect(() => {
+    const handleDocumentClick = (e) => {
+      const neoElement = document.getElementById('neo-avatar-container');
+      if (neoElement && !neoElement.contains(e.target)) {
+        setSpeech(null);
+      }
+    };
+
+    if (speech) {
+      document.addEventListener('click', handleDocumentClick);
+    }
+    return () => {
+      document.removeEventListener('click', handleDocumentClick);
+    };
+  }, [speech]);
+
   // On Tap: open suggestions if available, otherwise show quote
   const handleTap = () => {
     if (suggestions && suggestions.length > 0) {
@@ -323,6 +340,7 @@ export default function NeoAvatar({ habits = [], tasks = [], allGoalsOnTrack = f
 
       {/* Main Avatar Container */}
       <div
+        id="neo-avatar-container"
         className="relative cursor-pointer mt-2 pointer-events-auto"
         onClick={handleTap}
         style={{ width: '96px', height: '96px' }}
