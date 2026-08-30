@@ -1,25 +1,39 @@
-import React, { useState, useEffect, useRef } from 'react';
-import confetti from 'canvas-confetti';
-import neoImg from '../assets/neo.png';
-import { syncStateToBackend } from '../utils';
+import React, { useState, useEffect, useRef } from "react";
+import confetti from "canvas-confetti";
+import neoImg from "../assets/neo.png";
+import { syncStateToBackend } from "../utils";
 
 const HABIT_OPTIONS = [
-  { id: 'h_water', name: 'Drink Water', emoji: '💧', type: 'countable', goal: 8, unit: 'glasses' },
-  { id: 'h_exercise', name: 'Exercise', emoji: '💪', type: 'one_time' },
-  { id: 'h_sleep', name: 'Sleep Early', emoji: '😴', type: 'time_locked' },
-  { id: 'h_wake', name: 'Wake Up Early', emoji: '⏰', type: 'time_locked' },
-  { id: 'h_read', name: 'Read', emoji: '📚', type: 'one_time' },
-  { id: 'h_meditate', name: 'Meditate', emoji: '🧘', type: 'one_time' },
-  { id: 'h_walk', name: 'Daily Walk', emoji: '🚶', type: 'one_time' },
-  { id: 'h_meds', name: 'Take Medicine', emoji: '💊', type: 'countable', goal: 1, unit: 'dose' }
+  {
+    id: "h_water",
+    name: "Drink Water",
+    emoji: "💧",
+    type: "countable",
+    goal: 8,
+    unit: "glasses",
+  },
+  { id: "h_exercise", name: "Exercise", emoji: "💪", type: "one_time" },
+  { id: "h_sleep", name: "Sleep Early", emoji: "😴", type: "time_locked" },
+  { id: "h_wake", name: "Wake Up Early", emoji: "⏰", type: "time_locked" },
+  { id: "h_read", name: "Read", emoji: "📚", type: "one_time" },
+  { id: "h_meditate", name: "Meditate", emoji: "🧘", type: "one_time" },
+  { id: "h_walk", name: "Daily Walk", emoji: "🚶", type: "one_time" },
+  {
+    id: "h_meds",
+    name: "Take Medicine",
+    emoji: "💊",
+    type: "countable",
+    goal: 1,
+    unit: "dose",
+  },
 ];
 
 export default function OnboardingScreen({ onComplete }) {
   const [step, setStep] = useState(1);
-  const [name, setName] = useState('');
+  const [name, setName] = useState("");
   const [selectedHabits, setSelectedHabits] = useState([]);
-  const [wakeTime, setWakeTime] = useState('06:00');
-  const [sleepTime, setSleepTime] = useState('23:00');
+  const [wakeTime, setWakeTime] = useState("06:00");
+  const [sleepTime, setSleepTime] = useState("23:00");
   const [neoBounce, setNeoBounce] = useState(false);
   const nameInputRef = useRef(null);
 
@@ -41,17 +55,18 @@ export default function OnboardingScreen({ onComplete }) {
     triggerBounce();
 
     if (step === 3) {
-      const needsTime = selectedHabits.includes('h_sleep') || selectedHabits.includes('h_wake');
+      const needsTime =
+        selectedHabits.includes("h_sleep") || selectedHabits.includes("h_wake");
       setStep(needsTime ? 4 : 5);
     } else {
-      setStep(prev => prev + 1);
+      setStep((prev) => prev + 1);
     }
   };
 
   const toggleHabit = (id) => {
-    setSelectedHabits(prev => {
+    setSelectedHabits((prev) => {
       if (prev.includes(id)) {
-        return prev.filter(h => h !== id);
+        return prev.filter((h) => h !== id);
       } else {
         triggerBounce();
         return [...prev, id];
@@ -62,7 +77,7 @@ export default function OnboardingScreen({ onComplete }) {
   const requestNotifications = async () => {
     try {
       const permission = await Notification.requestPermission();
-      if (permission === 'granted') {
+      if (permission === "granted") {
         setTimeout(() => handleNext(), 1500);
       } else {
         handleNext();
@@ -79,11 +94,11 @@ export default function OnboardingScreen({ onComplete }) {
   };
 
   const finishOnboarding = () => {
-    localStorage.setItem('pinboard_onboarded', 'true');
-    localStorage.setItem('pinboard_user_name', name);
+    localStorage.setItem("pinboard_onboarded", "true");
+    localStorage.setItem("pinboard_user_name", name);
 
-    const habitsToSave = selectedHabits.map(id => {
-      const option = HABIT_OPTIONS.find(o => o.id === id);
+    const habitsToSave = selectedHabits.map((id) => {
+      const option = HABIT_OPTIONS.find((o) => o.id === id);
       const habitObj = {
         id: `habit_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
         name: option.name,
@@ -93,30 +108,33 @@ export default function OnboardingScreen({ onComplete }) {
         lastCompletedDate: null,
         failedDate: null,
         reminderEnabled: false,
-        reminderType: 'fixed',
-        reminderTime: '09:00',
+        reminderType: "fixed",
+        reminderTime: "09:00",
         reminderInterval: 2,
-        reminderIntervalUnit: 'hours'
+        reminderIntervalUnit: "hours",
       };
 
-      if (option.type === 'countable') {
+      if (option.type === "countable") {
         habitObj.goal = option.goal;
         habitObj.unit = option.unit;
-      } else if (option.type === 'one_time') {
+      } else if (option.type === "one_time") {
         habitObj.goal = 1;
-      } else if (option.type === 'time_locked') {
+      } else if (option.type === "time_locked") {
         habitObj.goal = 1;
         habitObj.graceWindow = 30; // 30 minutes window as requested
-        if (id === 'h_sleep') habitObj.targetTime = sleepTime;
-        if (id === 'h_wake') habitObj.targetTime = wakeTime;
+        if (id === "h_sleep") habitObj.targetTime = sleepTime;
+        if (id === "h_wake") habitObj.targetTime = wakeTime;
       }
       return habitObj;
     });
 
-    localStorage.setItem('pinboard_rituals_data', JSON.stringify({
-      habits: habitsToSave,
-      lastResetDate: new Date().toISOString().split('T')[0]
-    }));
+    localStorage.setItem(
+      "pinboard_rituals_data",
+      JSON.stringify({
+        habits: habitsToSave,
+        lastResetDate: new Date().toISOString().split("T")[0],
+      }),
+    );
 
     syncStateToBackend();
     onComplete();
@@ -124,36 +142,36 @@ export default function OnboardingScreen({ onComplete }) {
 
   return (
     <div className="fixed inset-0 z-[100] bg-[var(--bg-primary)] text-[var(--text-primary)] flex flex-col items-center justify-center p-6 overflow-hidden">
-
       {/* Progress Dots */}
       <div className="absolute top-8 left-0 right-0 flex justify-center gap-2">
-        {[1, 2, 3, 4, 5, 6].map(i => (
+        {[1, 2, 3, 4, 5, 6].map((i) => (
           <div
             key={i}
-            className={`h-1.5 rounded-full transition-all duration-300 ${step >= i ? 'w-6 bg-teal-400' : 'w-2 bg-gray-700'
-              } ${step === 4 && i === 4 && (!selectedHabits.includes('h_sleep') && !selectedHabits.includes('h_wake')) ? 'hidden' : ''}`}
+            className={`h-1.5 rounded-full transition-all duration-300 ${
+              step >= i ? "w-6 bg-teal-400" : "w-2 bg-[var(--bg-card-hover)]"
+            } ${step === 4 && i === 4 && !selectedHabits.includes("h_sleep") && !selectedHabits.includes("h_wake") ? "hidden" : ""}`}
           />
         ))}
       </div>
 
       <style>{`
-        @keyframes floatNeo {
-          0%, 100% { transform: translateY(0); }
-          50% { transform: translateY(-8px); }
-        }
-        @keyframes bounceNeo {
-          0%, 100% { transform: translateY(0); }
-          50% { transform: translateY(-20px); }
-        }
-        @keyframes celebrateNeo {
-          0%, 100% { transform: scale(1) rotate(0deg); }
-          25% { transform: scale(1.1) rotate(-5deg); }
-          75% { transform: scale(1.1) rotate(5deg); }
-        }
-        .neo-float { animation: floatNeo 2.5s ease-in-out infinite; }
-        .neo-bounce { animation: bounceNeo 400ms cubic-bezier(0.28, 0.84, 0.42, 1); }
-        .neo-celebrate { animation: celebrateNeo 1.5s ease-in-out infinite; }
-      `}</style>
+ @keyframes floatNeo {
+ 0%, 100% { transform: translateY(0); }
+ 50% { transform: translateY(-8px); }
+ }
+ @keyframes bounceNeo {
+ 0%, 100% { transform: translateY(0); }
+ 50% { transform: translateY(-20px); }
+ }
+ @keyframes celebrateNeo {
+ 0%, 100% { transform: scale(1) rotate(0deg); }
+ 25% { transform: scale(1.1) rotate(-5deg); }
+ 75% { transform: scale(1.1) rotate(5deg); }
+ }
+ .neo-float { animation: floatNeo 2.5s ease-in-out infinite; }
+ .neo-bounce { animation: bounceNeo 400ms cubic-bezier(0.28, 0.84, 0.42, 1); }
+ .neo-celebrate { animation: celebrateNeo 1.5s ease-in-out infinite; }
+ `}</style>
 
       {/* STEP 1: WELCOME */}
       {step === 1 && (
@@ -161,8 +179,14 @@ export default function OnboardingScreen({ onComplete }) {
           <h1 className="text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-teal-400 mb-2">
             Pinboard
           </h1>
-          <p className="text-[var(--text-secondary)] font-medium mb-10 text-lg">Your habits. Your rules.</p>
-          <img src={neoImg} alt="Neo" className="w-[180px] mb-12 neo-float drop-shadow-2xl" />
+          <p className="text-[var(--text-secondary)] font-medium mb-10 text-lg">
+            Your habits. Your rules.
+          </p>
+          <img
+            src={neoImg}
+            alt="Neo"
+            className="w-[180px] mb-12 neo-float drop-shadow-2xl"
+          />
           <button
             onClick={handleNext}
             className="w-full bg-teal-500 hover:bg-teal-400 text-teal-950 font-bold text-lg py-4 rounded-2xl shadow-[0_0_20px_rgba(20,184,166,0.3)] transition-transform active:scale-95"
@@ -176,24 +200,31 @@ export default function OnboardingScreen({ onComplete }) {
       {step === 2 && (
         <div className="flex flex-col items-center animate-fade-in text-center w-full max-w-sm">
           <div className="flex w-full justify-between items-center mb-8">
-            <h2 className="text-3xl font-bold text-left leading-tight w-2/3">What should Neo call you?</h2>
-            <img src={neoImg} alt="Neo" className={`w-[110px] ${neoBounce ? 'neo-bounce' : 'neo-float'}`} />
+            <h2 className="text-3xl font-bold text-left leading-tight w-2/3">
+              What should Neo call you?
+            </h2>
+            <img
+              src={neoImg}
+              alt="Neo"
+              className={`w-[110px] ${neoBounce ? "neo-bounce" : "neo-float"}`}
+            />
           </div>
           <input
             ref={nameInputRef}
             type="text"
             placeholder="Your name..."
             value={name}
-            onChange={e => setName(e.target.value)}
-            className="w-full bg-transparent border-b-2 border-gray-700 focus:border-teal-400 text-center text-3xl py-3 outline-none text-[var(--text-primary)] transition-colors mb-12 placeholder-gray-600"
+            onChange={(e) => setName(e.target.value)}
+            className="w-full bg-transparent border-b-2 border-[var(--border)] focus:border-teal-400 text-center text-3xl py-3 outline-none text-[var(--text-primary)] transition-colors mb-12 placeholder-gray-600"
           />
           <button
             onClick={handleNext}
             disabled={name.trim().length < 2}
-            className={`w-full font-bold text-lg py-4 rounded-2xl transition-all duration-300 active:scale-95 ${name.trim().length >= 2
-                ? 'bg-teal-500 text-teal-950 shadow-[0_0_20px_rgba(20,184,166,0.3)]'
-                : 'bg-gray-800 text-gray-500'
-              }`}
+            className={`w-full font-bold text-lg py-4 rounded-2xl transition-all duration-300 active:scale-95 ${
+              name.trim().length >= 2
+                ? "bg-teal-500 text-teal-950 shadow-[0_0_20px_rgba(20,184,166,0.3)]"
+                : "bg-[var(--bg-card)] text-[var(--text-muted)]"
+            }`}
           >
             Continue
           </button>
@@ -206,25 +237,36 @@ export default function OnboardingScreen({ onComplete }) {
           <div className="flex items-center justify-between mb-6">
             <div>
               <h2 className="text-2xl font-bold mb-1">Pick habits to track</h2>
-              <p className="text-[var(--text-secondary)] text-sm">Choose at least one to start.</p>
+              <p className="text-[var(--text-secondary)] text-sm">
+                Choose at least one to start.
+              </p>
             </div>
-            <img src={neoImg} alt="Neo" className={`w-[70px] ${neoBounce ? 'neo-bounce' : 'neo-float'}`} />
+            <img
+              src={neoImg}
+              alt="Neo"
+              className={`w-[70px] ${neoBounce ? "neo-bounce" : "neo-float"}`}
+            />
           </div>
 
           <div className="grid grid-cols-2 gap-3 mb-10 overflow-y-auto">
-            {HABIT_OPTIONS.map(habit => {
+            {HABIT_OPTIONS.map((habit) => {
               const isSelected = selectedHabits.includes(habit.id);
               return (
                 <button
                   key={habit.id}
                   onClick={() => toggleHabit(habit.id)}
-                  className={`flex flex-col items-center justify-center p-4 rounded-xl border-2 transition-all active:scale-95 ${isSelected
-                      ? 'border-teal-500 bg-teal-500/20'
-                      : 'border-[var(--border)] bg-gray-900/50 text-[var(--text-secondary)] hover:border-gray-700'
-                    }`}
+                  className={`flex flex-col items-center justify-center p-4 rounded-xl border-2 transition-all active:scale-95 ${
+                    isSelected
+                      ? "border-teal-500 bg-teal-500/20"
+                      : "border-[var(--border)] bg-[var(--bg-primary)]/50 text-[var(--text-secondary)] hover:border-[var(--border)]"
+                  }`}
                 >
                   <span className="text-3xl mb-2">{habit.emoji}</span>
-                  <span className={`text-sm font-semibold ${isSelected ? 'text-[var(--accent-teal)]' : ''}`}>{habit.name}</span>
+                  <span
+                    className={`text-sm font-semibold ${isSelected ? "text-[var(--accent-teal)]" : ""}`}
+                  >
+                    {habit.name}
+                  </span>
                 </button>
               );
             })}
@@ -233,10 +275,11 @@ export default function OnboardingScreen({ onComplete }) {
           <button
             onClick={handleNext}
             disabled={selectedHabits.length === 0}
-            className={`w-full font-bold text-lg py-4 rounded-2xl mt-auto transition-all duration-300 active:scale-95 ${selectedHabits.length > 0
-                ? 'bg-teal-500 text-teal-950 shadow-[0_0_20px_rgba(20,184,166,0.3)]'
-                : 'bg-gray-800 text-gray-500'
-              }`}
+            className={`w-full font-bold text-lg py-4 rounded-2xl mt-auto transition-all duration-300 active:scale-95 ${
+              selectedHabits.length > 0
+                ? "bg-teal-500 text-teal-950 shadow-[0_0_20px_rgba(20,184,166,0.3)]"
+                : "bg-[var(--bg-card)] text-[var(--text-muted)]"
+            }`}
           >
             Continue
           </button>
@@ -247,30 +290,36 @@ export default function OnboardingScreen({ onComplete }) {
       {step === 4 && (
         <div className="flex flex-col items-center animate-fade-in text-center w-full max-w-sm">
           <div className="flex w-full justify-between items-center mb-8">
-            <h2 className="text-3xl font-bold text-left leading-tight w-2/3">Set your times</h2>
+            <h2 className="text-3xl font-bold text-left leading-tight w-2/3">
+              Set your times
+            </h2>
             <img src={neoImg} alt="Neo" className="w-[120px] neo-float" />
           </div>
 
           <div className="w-full flex flex-col gap-6 mb-12">
-            {selectedHabits.includes('h_wake') && (
-              <div className="bg-gray-900/80 p-5 rounded-2xl border border-[var(--border)] text-left">
-                <label className="text-sm text-[var(--text-secondary)] font-bold uppercase tracking-wider block mb-3">I wake up at</label>
+            {selectedHabits.includes("h_wake") && (
+              <div className="bg-[var(--bg-primary)]/80 p-5 rounded-2xl border border-[var(--border)] text-left">
+                <label className="text-sm text-[var(--text-secondary)] font-bold uppercase tracking-wider block mb-3">
+                  I wake up at
+                </label>
                 <input
                   type="time"
                   value={wakeTime}
-                  onChange={e => setWakeTime(e.target.value)}
-                  className="w-full bg-gray-800 border-none rounded-xl px-4 py-3 text-[var(--text-primary)] text-2xl outline-none focus:ring-2 focus:ring-teal-500 [color-scheme:dark]"
+                  onChange={(e) => setWakeTime(e.target.value)}
+                  className="w-full bg-[var(--bg-card)] border-none rounded-xl px-4 py-3 text-[var(--text-primary)] text-2xl outline-none focus:ring-2 focus:ring-teal-500 "
                 />
               </div>
             )}
-            {selectedHabits.includes('h_sleep') && (
-              <div className="bg-gray-900/80 p-5 rounded-2xl border border-[var(--border)] text-left">
-                <label className="text-sm text-[var(--text-secondary)] font-bold uppercase tracking-wider block mb-3">I sleep at</label>
+            {selectedHabits.includes("h_sleep") && (
+              <div className="bg-[var(--bg-primary)]/80 p-5 rounded-2xl border border-[var(--border)] text-left">
+                <label className="text-sm text-[var(--text-secondary)] font-bold uppercase tracking-wider block mb-3">
+                  I sleep at
+                </label>
                 <input
                   type="time"
                   value={sleepTime}
-                  onChange={e => setSleepTime(e.target.value)}
-                  className="w-full bg-gray-800 border-none rounded-xl px-4 py-3 text-[var(--text-primary)] text-2xl outline-none focus:ring-2 focus:ring-purple-500 [color-scheme:dark]"
+                  onChange={(e) => setSleepTime(e.target.value)}
+                  className="w-full bg-[var(--bg-card)] border-none rounded-xl px-4 py-3 text-[var(--text-primary)] text-2xl outline-none focus:ring-2 focus:ring-purple-500 "
                 />
               </div>
             )}
@@ -288,12 +337,15 @@ export default function OnboardingScreen({ onComplete }) {
       {/* NOTIFICATIONS POPUP (Overlay over Step 4) */}
       {step === 5 && (
         <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 animate-fade-in">
-          <div className="bg-gray-900 border border-[var(--border)] rounded-3xl p-6 w-full max-w-sm flex flex-col items-center text-center shadow-2xl relative overflow-hidden">
+          <div className="bg-[var(--bg-primary)] border border-[var(--border)] rounded-3xl p-6 w-full max-w-sm flex flex-col items-center text-center shadow-2xl relative overflow-hidden">
             <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-teal-500 to-indigo-500"></div>
 
             <div className="text-5xl mb-4 mt-2">🔔</div>
             <h2 className="text-2xl font-bold mb-2">Enable Notifications</h2>
-            <p className="text-[var(--text-secondary)] text-sm mb-6">Neo will nudge you at the right time, every day so you never forget.</p>
+            <p className="text-[var(--text-secondary)] text-sm mb-6">
+              Neo will nudge you at the right time, every day so you never
+              forget.
+            </p>
 
             <div className="flex flex-col w-full gap-3">
               <button
@@ -304,7 +356,7 @@ export default function OnboardingScreen({ onComplete }) {
               </button>
               <button
                 onClick={handleLater}
-                className="w-full bg-gray-800 hover:bg-gray-700 text-gray-300 font-bold py-3 rounded-xl transition-colors"
+                className="w-full bg-[var(--bg-card)] hover:bg-[var(--bg-card-hover)] text-[var(--text-secondary)] font-bold py-3 rounded-xl transition-colors"
               >
                 Later
               </button>
@@ -316,10 +368,16 @@ export default function OnboardingScreen({ onComplete }) {
       {/* STEP 6: ALL DONE */}
       {step === 6 && (
         <div className="flex flex-col items-center justify-center animate-fade-in text-center w-full max-w-sm h-full">
-          <img src={neoImg} alt="Neo" className="w-[200px] mb-8 neo-celebrate drop-shadow-[0_0_30px_rgba(251,191,36,0.3)]" />
+          <img
+            src={neoImg}
+            alt="Neo"
+            className="w-[200px] mb-8 neo-celebrate drop-shadow-[0_0_30px_rgba(251,191,36,0.3)]"
+          />
 
           <h2 className="text-4xl font-extrabold mb-3">Ready, {name}! 🎉</h2>
-          <p className="text-[var(--text-secondary)] text-xl mb-12">Neo's got your back from here.</p>
+          <p className="text-[var(--text-secondary)] text-xl mb-12">
+            Neo's got your back from here.
+          </p>
 
           <button
             onClick={finishOnboarding}

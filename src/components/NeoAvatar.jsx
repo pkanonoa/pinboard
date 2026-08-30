@@ -1,14 +1,14 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { createPortal } from 'react-dom';
-import { motion, AnimatePresence } from 'framer-motion';
-import confetti from 'canvas-confetti';
-import neoImg from '../assets/neo.png';
-import neoSadImg from '../assets/neo-sad.png';
-import neoProgressbarImg from '../assets/neo-progressbar.png';
-import { useVoiceLogger } from '../hooks/useVoiceLogger';
-import { updateHabitInStorage, syncStateToBackend } from '../utils';
-import { syncMonthlyGoalProgress } from '../utils';
-import { useTheme } from '../hooks/useTheme';
+import React, { useState, useEffect, useRef } from "react";
+import { createPortal } from "react-dom";
+import { motion, AnimatePresence } from "framer-motion";
+import confetti from "canvas-confetti";
+import neoImg from "../assets/neo.png";
+import neoSadImg from "../assets/neo-sad.png";
+import neoProgressbarImg from "../assets/neo-progressbar.png";
+import { useVoiceLogger } from "../hooks/useVoiceLogger";
+import { updateHabitInStorage, syncStateToBackend } from "../utils";
+import { syncMonthlyGoalProgress } from "../utils";
+import { useTheme } from "../hooks/useTheme";
 
 const INSPIRATIONAL_QUOTES = [
   "Small daily wins create massive yearly results! 🏆",
@@ -20,29 +20,36 @@ const INSPIRATIONAL_QUOTES = [
   "Make today something your future self will thank you for! ✨",
   "Every finished task clears your mind and builds momentum! 🚀",
   "Don't stop when you're tired, stop when you're done! 💪",
-  "Your potential is endless. Show up today! 🌟"
+  "Your potential is endless. Show up today! 🌟",
 ];
 
 // Returns 'morning' | 'noon' | 'evening' | 'night'
 const getTimePeriod = () => {
   const h = new Date().getHours();
-  if (h >= 5 && h < 11) return 'morning';
-  if (h >= 11 && h < 16) return 'noon';
-  if (h >= 16 && h < 21) return 'evening';
-  return 'night';
+  if (h >= 5 && h < 11) return "morning";
+  if (h >= 11 && h < 16) return "noon";
+  if (h >= 16 && h < 21) return "evening";
+  return "night";
 };
 
 const getPeriodGreeting = (period, name) => {
-  const n = name && name !== 'friend' ? `, ${name}` : '';
-  if (period === 'morning') return `Good morning${n}!`;
-  if (period === 'noon') return `Good afternoon${n}!`;
-  if (period === 'evening') return `Good evening${n}!`;
+  const n = name && name !== "friend" ? `, ${name}` : "";
+  if (period === "morning") return `Good morning${n}!`;
+  if (period === "noon") return `Good afternoon${n}!`;
+  if (period === "evening") return `Good evening${n}!`;
   return `Hey there${n}!`;
 };
 
-export default function NeoAvatar({ habits = [], tasks = [], allGoalsOnTrack = false, suggestions = [], onSuggestionAction = () => {}, onDismissSuggestion = () => {} }) {
+export default function NeoAvatar({
+  habits = [],
+  tasks = [],
+  allGoalsOnTrack = false,
+  suggestions = [],
+  onSuggestionAction = () => {},
+  onDismissSuggestion = () => {},
+}) {
   const [speech, setSpeech] = useState(null);
-  const [speechType, setSpeechType] = useState('default'); // 'default', 'success', 'fail', 'listening'
+  const [speechType, setSpeechType] = useState("default"); // 'default', 'success', 'fail', 'listening'
   const [bounce, setBounce] = useState(false);
   const [wiggle, setWiggle] = useState(false);
   const [isSuggestionsOpen, setIsSuggestionsOpen] = useState(false);
@@ -57,12 +64,12 @@ export default function NeoAvatar({ habits = [], tasks = [], allGoalsOnTrack = f
   habitsRef.current = habits;
 
   // Exclude paused habits
-  const activeHabits = habits.filter(h => !h.paused);
+  const activeHabits = habits.filter((h) => !h.paused);
   const totalHabits = activeHabits.length;
-  const doneHabits = activeHabits.filter(h => h.count >= h.goal).length;
+  const doneHabits = activeHabits.filter((h) => h.count >= h.goal).length;
   const pct = totalHabits > 0 ? doneHabits / totalHabits : 1;
 
-  const userName = localStorage.getItem('pinboard_user_name') || 'friend';
+  const userName = localStorage.getItem("pinboard_user_name") || "friend";
 
   // Compute state & animation based on habit progress
   let state = 1;
@@ -71,7 +78,7 @@ export default function NeoAvatar({ habits = [], tasks = [], allGoalsOnTrack = f
   // Check if they are a new user who has never logged any completions
   let hasAnyCompletion = false;
   try {
-    const logStr = localStorage.getItem('pinboard_completion_log');
+    const logStr = localStorage.getItem("pinboard_completion_log");
     if (logStr) {
       hasAnyCompletion = JSON.parse(logStr).length > 0;
     }
@@ -101,10 +108,12 @@ export default function NeoAvatar({ habits = [], tasks = [], allGoalsOnTrack = f
   // ── Mood-aware full greeting (1st open per period) ────────────────────
   const buildFullGreeting = (period, currentState, tasks, habits) => {
     const greet = getPeriodGreeting(period, userName);
-    const pending = tasks.filter(t => !t.done);
-    const overdue = tasks.filter(t => !t.done && t.dueDate && new Date(t.dueDate) < new Date());
-    const activeH = habits.filter(h => !h.paused);
-    const remaining = activeH.filter(h => h.count < h.goal);
+    const pending = tasks.filter((t) => !t.done);
+    const overdue = tasks.filter(
+      (t) => !t.done && t.dueDate && new Date(t.dueDate) < new Date(),
+    );
+    const activeH = habits.filter((h) => !h.paused);
+    const remaining = activeH.filter((h) => h.count < h.goal);
 
     const happy = currentState >= 4; // 4, 5, 6
     const sad = currentState === 1;
@@ -116,33 +125,33 @@ export default function NeoAvatar({ habits = [], tasks = [], allGoalsOnTrack = f
       if (pending.length > 0)
         return `${greet} We've got ${pending.length} tasks ahead — slow and steady wins! 🐢`;
       if (remaining.length > 0)
-        return `${greet} ${remaining.length} ritual${remaining.length > 1 ? 's' : ''} left today. Every small step counts 💛`;
+        return `${greet} ${remaining.length} ritual${remaining.length > 1 ? "s" : ""} left today. Every small step counts 💛`;
       return `${greet} Even on slow days, showing up is everything 💛`;
     }
 
     if (happy) {
       // Happy Neo — celebratory & energetic
-      if (period === 'morning')
+      if (period === "morning")
         return `${greet} Let's absolutely CRUSH it today! 🚀🔥`;
-      if (period === 'noon')
+      if (period === "noon")
         return `${greet} Midday check-in — you're killing it! Keep going! ⚡`;
-      if (period === 'evening')
+      if (period === "evening")
         return `${greet} Evening power hour! Finish strong today! 💪✨`;
       return `${greet} Even at night Neo believes in you! Rest well & grind tomorrow! 🌙`;
     }
 
     // Neutral (state 2-3)
-    if (period === 'morning') {
+    if (period === "morning") {
       if (pending.length > 0)
-        return `${greet} ${pending.length} task${pending.length > 1 ? 's' : ''} and your rituals are waiting. Let's go! 🎯`;
+        return `${greet} ${pending.length} task${pending.length > 1 ? "s" : ""} and your rituals are waiting. Let's go! 🎯`;
       return `${greet} Ready to build today's momentum? ✨`;
     }
-    if (period === 'noon') {
+    if (period === "noon") {
       if (remaining.length > 0)
-        return `${greet} Still ${remaining.length} ritual${remaining.length > 1 ? 's' : ''} left — afternoon push time! 🏃`;
+        return `${greet} Still ${remaining.length} ritual${remaining.length > 1 ? "s" : ""} left — afternoon push time! 🏃`;
       return `${greet} You're halfway through the day — keep the energy up! ⚡`;
     }
-    if (period === 'evening') {
+    if (period === "evening") {
       return `${greet} Time to wrap up the day strong! 🌆`;
     }
     return `${greet} Night owl mode activated! 🦉 What's left on your list?`;
@@ -150,23 +159,28 @@ export default function NeoAvatar({ habits = [], tasks = [], allGoalsOnTrack = f
 
   // ── Short hi message (2nd+ open in same period) ───────────────────────
   const buildShortHi = (currentState, tasks, habits) => {
-    const pending = tasks.filter(t => !t.done);
-    const overdue = tasks.filter(t => !t.done && t.dueDate && new Date(t.dueDate) < new Date());
-    const activeH = habits.filter(h => !h.paused);
-    const remaining = activeH.filter(h => h.count < h.goal);
+    const pending = tasks.filter((t) => !t.done);
+    const overdue = tasks.filter(
+      (t) => !t.done && t.dueDate && new Date(t.dueDate) < new Date(),
+    );
+    const activeH = habits.filter((h) => !h.paused);
+    const remaining = activeH.filter((h) => h.count < h.goal);
 
     const happy = currentState >= 4;
     const sad = currentState === 1;
 
     // Priority: overdue → pending task → habit reminder → quote
     if (overdue.length > 0) {
-      if (happy) return `Still on fire! Don't forget "${overdue[0].name}" is overdue 🔥`;
-      if (sad) return `Hey... "${overdue[0].name}" is still waiting. You've got this 💛`;
+      if (happy)
+        return `Still on fire! Don't forget "${overdue[0].name}" is overdue 🔥`;
+      if (sad)
+        return `Hey... "${overdue[0].name}" is still waiting. You've got this 💛`;
       return `Hey! "${overdue[0].name}" is overdue — quick catch-up! ⏰`;
     }
     if (pending.length > 0) {
       const t = pending[Math.floor(Math.random() * pending.length)];
-      if (happy) return `Psst — "${t.name}" is still on the list! Let's blast through it! ⚡`;
+      if (happy)
+        return `Psst — "${t.name}" is still on the list! Let's blast through it! ⚡`;
       if (sad) return `When you're ready, "${t.name}" is waiting 🤍`;
       return `Reminder: "${t.name}" needs your attention 🎯`;
     }
@@ -178,21 +192,29 @@ export default function NeoAvatar({ habits = [], tasks = [], allGoalsOnTrack = f
     }
     // Fallback: quote (mood-tinted)
     const quotes = happy
-      ? ["You're absolutely on FIRE today! 🔥🏆", "Max productivity unlocked! 🚀", "Neo is proud of you today! ⭐"]
+      ? [
+          "You're absolutely on FIRE today! 🔥🏆",
+          "Max productivity unlocked! 🚀",
+          "Neo is proud of you today! ⭐",
+        ]
       : sad
-        ? ["Rest if you must, but don't quit 💛", "Progress > perfection, always 🌿", "Small steps still move you forward 🤝"]
+        ? [
+            "Rest if you must, but don't quit 💛",
+            "Progress > perfection, always 🌿",
+            "Small steps still move you forward 🤝",
+          ]
         : INSPIRATIONAL_QUOTES;
     return quotes[Math.floor(Math.random() * quotes.length)];
   };
 
   // Trigger contextual speech: task reminders, habit checks, or inspiration
   const triggerNotification = () => {
-    if (speechType === 'listening') return; // Don't interrupt if listening
+    if (speechType === "listening") return; // Don't interrupt if listening
     const currentTasks = tasksRef.current || [];
     const currentHabits = habitsRef.current || [];
     const msg = buildShortHi(state, currentTasks, currentHabits);
     setSpeech(msg);
-    setSpeechType('default');
+    setSpeechType("default");
     setBounce(true);
     setTimeout(() => setBounce(false), 380);
     if (speechTimeoutRef.current) clearTimeout(speechTimeoutRef.current);
@@ -207,7 +229,7 @@ export default function NeoAvatar({ habits = [], tasks = [], allGoalsOnTrack = f
     const hasGreetedThisPeriod = localStorage.getItem(periodKey);
 
     // sessionStorage is wiped every time the browser/tab is fully closed & reopened
-    const isNewSession = !sessionStorage.getItem('neo_session_started');
+    const isNewSession = !sessionStorage.getItem("neo_session_started");
 
     const currentTasks = tasksRef.current || [];
     const currentHabits = habitsRef.current || [];
@@ -215,28 +237,33 @@ export default function NeoAvatar({ habits = [], tasks = [], allGoalsOnTrack = f
     let msg;
     let displayTime = 6000;
 
-    const firstWelcomeShown = localStorage.getItem('neo_first_welcome_shown') === 'true';
+    const firstWelcomeShown =
+      localStorage.getItem("neo_first_welcome_shown") === "true";
 
     if (!firstWelcomeShown) {
       // Very first time ever — one-time onboarding welcome
-      localStorage.setItem('neo_first_welcome_shown', 'true');
-      localStorage.setItem(periodKey, '1');
-      sessionStorage.setItem('neo_session_started', '1');
+      localStorage.setItem("neo_first_welcome_shown", "true");
+      localStorage.setItem(periodKey, "1");
+      sessionStorage.setItem("neo_session_started", "1");
       msg = `Welcome to Pinboard, ${userName}! 🎉 Neo is so excited to help you build habits and conquer your days! Let's make today your first victory! 🧅✨`;
       displayTime = 9000;
     } else if (isNewSession) {
       // App was fully closed and reopened — always greet warmly
-      sessionStorage.setItem('neo_session_started', '1');
-      localStorage.setItem(periodKey, '1');
+      sessionStorage.setItem("neo_session_started", "1");
+      localStorage.setItem(periodKey, "1");
 
-      const pending = (tasksRef.current || []).filter(t => !t.done);
-      const activeH = (habitsRef.current || []).filter(h => !h.paused);
-      const remaining = activeH.filter(h => h.count < h.goal);
+      const pending = (tasksRef.current || []).filter((t) => !t.done);
+      const activeH = (habitsRef.current || []).filter((h) => !h.paused);
+      const remaining = activeH.filter((h) => h.count < h.goal);
 
       const periodWord =
-        period === 'morning' ? 'Good morning' :
-        period === 'noon'    ? 'Good afternoon' :
-        period === 'evening' ? 'Good evening' : 'Welcome back';
+        period === "morning"
+          ? "Good morning"
+          : period === "noon"
+            ? "Good afternoon"
+            : period === "evening"
+              ? "Good evening"
+              : "Welcome back";
 
       if (state === 1) {
         // Sad Neo
@@ -245,34 +272,37 @@ export default function NeoAvatar({ habits = [], tasks = [], allGoalsOnTrack = f
         // Happy Neo
         msg = `${periodWord}, ${userName}! 🎉 Neo is SO happy you're back — let's keep crushing it! 🔥`;
       } else if (pending.length > 0 && remaining.length > 0) {
-        msg = `${periodWord}, ${userName}! 👋 You've got ${pending.length} task${pending.length > 1 ? 's' : ''} and ${remaining.length} ritual${remaining.length > 1 ? 's' : ''} waiting. Let's go! 💪`;
+        msg = `${periodWord}, ${userName}! 👋 You've got ${pending.length} task${pending.length > 1 ? "s" : ""} and ${remaining.length} ritual${remaining.length > 1 ? "s" : ""} waiting. Let's go! 💪`;
       } else if (pending.length > 0) {
-        msg = `${periodWord}, ${userName}! 👋 ${pending.length} task${pending.length > 1 ? 's' : ''} still on the list — Neo believes in you! ✨`;
+        msg = `${periodWord}, ${userName}! 👋 ${pending.length} task${pending.length > 1 ? "s" : ""} still on the list — Neo believes in you! ✨`;
       } else if (remaining.length > 0) {
-        msg = `${periodWord}, ${userName}! 👋 ${remaining.length} ritual${remaining.length > 1 ? 's' : ''} left today. You got this 💪`;
+        msg = `${periodWord}, ${userName}! 👋 ${remaining.length} ritual${remaining.length > 1 ? "s" : ""} left today. You got this 💪`;
       } else {
         msg = `${periodWord}, ${userName}! 🧅 Great to have you back. Neo is rooting for you today!`;
       }
     } else if (!hasGreetedThisPeriod) {
       // Same session, new time period → full mood-aware greeting
-      localStorage.setItem(periodKey, '1');
+      localStorage.setItem(periodKey, "1");
       msg = buildFullGreeting(period, state, currentTasks, currentHabits);
     } else {
       // Same session, same period → short reminder
       msg = buildShortHi(state, currentTasks, currentHabits);
     }
 
-    if (!speech || speechType !== 'listening') {
+    if (!speech || speechType !== "listening") {
       setSpeech(msg);
-      setSpeechType('default');
+      setSpeechType("default");
       if (speechTimeoutRef.current) clearTimeout(speechTimeoutRef.current);
       speechTimeoutRef.current = setTimeout(() => setSpeech(null), displayTime);
     }
 
     // Automatic motivational quote timer: fires every 15 minutes
-    const autoInterval = setInterval(() => {
-      triggerNotification();
-    }, 15 * 60 * 1000);
+    const autoInterval = setInterval(
+      () => {
+        triggerNotification();
+      },
+      15 * 60 * 1000,
+    );
 
     return () => {
       if (speechTimeoutRef.current) clearTimeout(speechTimeoutRef.current);
@@ -280,24 +310,30 @@ export default function NeoAvatar({ habits = [], tasks = [], allGoalsOnTrack = f
     };
   }, []);
 
-
-
   // Confetti on reaching 100% habits
   const prevPctRef = useRef(pct);
   useEffect(() => {
     if (pct === 1 && prevPctRef.current < 1) {
       const today = new Date().toLocaleDateString();
-      const firedDate = localStorage.getItem('pinboard_confetti_date');
+      const firedDate = localStorage.getItem("pinboard_confetti_date");
       if (firedDate !== today) {
         confetti({
           particleCount: 150,
           spread: 80,
           origin: { y: 0.4 },
-          colors: theme === 'light' 
-            ? ['#0d9488', '#7c3aed', '#d97706', '#dc2626', '#16a34a', '#0f172a'] 
-            : undefined
+          colors:
+            theme === "light"
+              ? [
+                  "#0d9488",
+                  "#7c3aed",
+                  "#d97706",
+                  "#dc2626",
+                  "#16a34a",
+                  "#0f172a",
+                ]
+              : undefined,
         });
-        localStorage.setItem('pinboard_confetti_date', today);
+        localStorage.setItem("pinboard_confetti_date", today);
       }
       setSpeech("YESSS!! All rituals crushed!! You're on fire! 🎉");
       if (speechTimeoutRef.current) clearTimeout(speechTimeoutRef.current);
@@ -312,85 +348,91 @@ export default function NeoAvatar({ habits = [], tasks = [], allGoalsOnTrack = f
       setBounce(true);
       setTimeout(() => setBounce(false), 380);
     };
-    window.addEventListener('neo-bounce', handleBounce);
-    return () => window.removeEventListener('neo-bounce', handleBounce);
+    window.addEventListener("neo-bounce", handleBounce);
+    return () => window.removeEventListener("neo-bounce", handleBounce);
   }, []);
 
   // Dismiss speech bubble when clicking anywhere outside Neo
   useEffect(() => {
     const handleDocumentClick = (e) => {
-      const neoElement = document.getElementById('neo-avatar-container');
+      const neoElement = document.getElementById("neo-avatar-container");
       if (neoElement && !neoElement.contains(e.target)) {
         setSpeech(null);
       }
     };
 
     if (speech) {
-      document.addEventListener('click', handleDocumentClick);
+      document.addEventListener("click", handleDocumentClick);
     }
     return () => {
-      document.removeEventListener('click', handleDocumentClick);
+      document.removeEventListener("click", handleDocumentClick);
     };
   }, [speech]);
 
   // Voice Logger Logic
   const handleVoiceLog = React.useCallback((parsed) => {
     const { habitId, action, value, feedback } = parsed;
-    if (action === 'increment') syncMonthlyGoalProgress(habitId, value ?? 1);
-    else if (action === 'set') {
-      const habit = habitsRef.current.find(h => h.id === habitId);
+    if (action === "increment") syncMonthlyGoalProgress(habitId, value ?? 1);
+    else if (action === "set") {
+      const habit = habitsRef.current.find((h) => h.id === habitId);
       if (habit) syncMonthlyGoalProgress(habitId, (value ?? 0) - habit.count);
-    } else if (action === 'complete') {
-      const habit = habitsRef.current.find(h => h.id === habitId);
+    } else if (action === "complete") {
+      const habit = habitsRef.current.find((h) => h.id === habitId);
       if (habit && habit.count < habit.goal) {
         syncMonthlyGoalProgress(habitId, habit.goal - habit.count);
       }
     }
     updateHabitInStorage(habitId, action, value);
-    
-    setSpeech(feedback || 'Got it!');
-    setSpeechType('success');
+
+    setSpeech(feedback || "Got it!");
+    setSpeechType("success");
     setBounce(true);
     setTimeout(() => setBounce(false), 400);
     if (speechTimeoutRef.current) clearTimeout(speechTimeoutRef.current);
     speechTimeoutRef.current = setTimeout(() => {
       setSpeech(null);
-      setSpeechType('default');
+      setSpeechType("default");
     }, 4000);
 
-    window.dispatchEvent(new CustomEvent('neo-bounce'));
-    window.dispatchEvent(new CustomEvent('neo_celebration'));
+    window.dispatchEvent(new CustomEvent("neo-bounce"));
+    window.dispatchEvent(new CustomEvent("neo_celebration"));
     syncStateToBackend();
   }, []);
 
-  const { startListening, stopListening, listening, result } = useVoiceLogger(habits, handleVoiceLog);
+  const { startListening, stopListening, listening, result } = useVoiceLogger(
+    habits,
+    handleVoiceLog,
+  );
 
   useEffect(() => {
     if (listening) {
       setSpeech("I'm listening... 🎙️");
-      setSpeechType('listening');
+      setSpeechType("listening");
       if (speechTimeoutRef.current) clearTimeout(speechTimeoutRef.current);
-    } else if (speechType === 'listening') {
+    } else if (speechType === "listening") {
       // If listening stopped but no result came yet, reset
       setSpeech(null);
-      setSpeechType('default');
+      setSpeechType("default");
     }
   }, [listening]);
 
   useEffect(() => {
     if (result && !result.success) {
-      if (result.message.includes('not-allowed') || result.message.includes('denied')) {
+      if (
+        result.message.includes("not-allowed") ||
+        result.message.includes("denied")
+      ) {
         setSpeech("Microphone access denied 🎙️");
       } else {
         setSpeech("Hmm, didn't catch that. Try again?");
         setWiggle(true);
         setTimeout(() => setWiggle(false), 400);
       }
-      setSpeechType('fail');
+      setSpeechType("fail");
       if (speechTimeoutRef.current) clearTimeout(speechTimeoutRef.current);
       speechTimeoutRef.current = setTimeout(() => {
         setSpeech(null);
-        setSpeechType('default');
+        setSpeechType("default");
       }, 3000);
     }
   }, [result]);
@@ -423,10 +465,12 @@ export default function NeoAvatar({ habits = [], tasks = [], allGoalsOnTrack = f
     if (longPressTimerRef.current) clearTimeout(longPressTimerRef.current);
   };
 
-  const bestStreak = habits.length > 0 ? Math.max(...habits.map(h => h.streak || 0)) : 0;
+  const bestStreak =
+    habits.length > 0 ? Math.max(...habits.map((h) => h.streak || 0)) : 0;
 
   const renderSuggestionsDrawer = () => {
-    if (!isSuggestionsOpen || !suggestions || suggestions.length === 0) return null;
+    if (!isSuggestionsOpen || !suggestions || suggestions.length === 0)
+      return null;
     return createPortal(
       <AnimatePresence>
         {/* Backdrop */}
@@ -437,43 +481,65 @@ export default function NeoAvatar({ habits = [], tasks = [], allGoalsOnTrack = f
           onClick={() => setIsSuggestionsOpen(false)}
           className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm pointer-events-auto"
         />
-        
+
         {/* suggestions bottom sheet/drawer */}
         <motion.div
-          initial={{ y: '100%', opacity: 0 }}
+          initial={{ y: "100%", opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
-          exit={{ y: '100%', opacity: 0 }}
-          transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+          exit={{ y: "100%", opacity: 0 }}
+          transition={{ type: "spring", damping: 25, stiffness: 200 }}
           className="fixed bottom-0 left-0 right-0 z-[110] bg-[var(--bg-card)] border-t border-[var(--border)] shadow-2xl rounded-t-3xl max-h-[80vh] flex flex-col p-5 pb-safe pointer-events-auto"
         >
           <div className="flex items-center justify-between pb-4 border-b border-[var(--border)]/80 mb-4">
             <h2 className="text-lg font-bold text-[var(--text-primary)] flex items-center gap-2">
               <span>🧅</span> Neo's suggestions
             </h2>
-            <button 
+            <button
               onClick={() => setIsSuggestionsOpen(false)}
-              className="p-1.5 bg-gray-800/80 hover:bg-gray-700/80 rounded-full text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
+              className="p-1.5 bg-[var(--bg-card)]/80 hover:bg-[var(--bg-card-hover)]/80 rounded-full text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
             >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M6 18L18 6M6 6l12 12"></path>
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2.5"
+                  d="M6 18L18 6M6 6l12 12"
+                ></path>
               </svg>
             </button>
           </div>
 
           <div className="flex-1 overflow-y-auto pr-1 flex flex-col gap-3 pb-16">
-            {suggestions.map(s => {
+            {suggestions.map((s) => {
               const borderColor =
-                s.priority <= 2 ? 'border-l-amber-500' :
-                s.priority <= 4 ? 'border-l-teal-500' :
-                s.priority === 6 ? 'border-l-green-500' : 'border-l-indigo-500';
+                s.priority <= 2
+                  ? "border-l-amber-500"
+                  : s.priority <= 4
+                    ? "border-l-teal-500"
+                    : s.priority === 6
+                      ? "border-l-green-500"
+                      : "border-l-indigo-500";
               const iconBg =
-                s.priority <= 2 ? 'bg-amber-500/10' :
-                s.priority <= 4 ? 'bg-teal-500/10' :
-                s.priority === 6 ? 'bg-green-500/10' : 'bg-indigo-500/10';
+                s.priority <= 2
+                  ? "bg-amber-500/10"
+                  : s.priority <= 4
+                    ? "bg-teal-500/10"
+                    : s.priority === 6
+                      ? "bg-green-500/10"
+                      : "bg-indigo-500/10";
               const btnColor =
-                s.priority <= 2 ? 'text-[var(--warning)] border-amber-500/30 hover:bg-amber-500/10' :
-                s.priority <= 4 ? 'text-[var(--accent-teal)] border-teal-500/30 hover:bg-teal-500/10' :
-                s.priority === 6 ? 'text-green-400 border-green-500/30 hover:bg-green-500/10' : 'text-[var(--accent-purple)] border-indigo-500/30 hover:bg-indigo-500/10';
+                s.priority <= 2
+                  ? "text-[var(--warning)] border-amber-500/30 hover:bg-amber-500/10"
+                  : s.priority <= 4
+                    ? "text-[var(--accent-teal)] border-teal-500/30 hover:bg-teal-500/10"
+                    : s.priority === 6
+                      ? "text-green-400 border-green-500/30 hover:bg-green-500/10"
+                      : "text-[var(--accent-purple)] border-indigo-500/30 hover:bg-indigo-500/10";
 
               return (
                 <div
@@ -481,12 +547,18 @@ export default function NeoAvatar({ habits = [], tasks = [], allGoalsOnTrack = f
                   className={`bg-[var(--bg-card)] border border-[var(--border)]/60 border-l-4 ${borderColor} rounded-2xl p-3.5`}
                 >
                   <div className="flex items-start gap-3">
-                    <div className={`w-9 h-9 rounded-xl ${iconBg} flex items-center justify-center text-lg shrink-0 mt-0.5`}>
-                       {s.icon}
+                    <div
+                      className={`w-9 h-9 rounded-xl ${iconBg} flex items-center justify-center text-lg shrink-0 mt-0.5`}
+                    >
+                      {s.icon}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold text-[var(--text-primary)] leading-snug">{s.title}</p>
-                      <p className="text-xs text-[var(--text-secondary)] mt-0.5 leading-relaxed">{s.body}</p>
+                      <p className="text-sm font-semibold text-[var(--text-primary)] leading-snug">
+                        {s.title}
+                      </p>
+                      <p className="text-xs text-[var(--text-secondary)] mt-0.5 leading-relaxed">
+                        {s.body}
+                      </p>
                       <div className="flex items-center gap-2 mt-2.5">
                         <button
                           onClick={() => {
@@ -499,11 +571,21 @@ export default function NeoAvatar({ habits = [], tasks = [], allGoalsOnTrack = f
                         </button>
                         <button
                           onClick={() => onDismissSuggestion(s.id)}
-                          className="ml-auto p-1.5 text-gray-500 hover:text-gray-300 transition-colors rounded-lg hover:bg-white/5 active:scale-90"
+                          className="ml-auto p-1.5 text-[var(--text-muted)] hover:text-[var(--text-secondary)] transition-colors rounded-lg hover:bg-white/5 active:scale-90"
                           aria-label="Dismiss"
                         >
-                          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M6 18L18 6M6 6l12 12"></path>
+                          <svg
+                            className="w-3.5 h-3.5"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth="2.5"
+                              d="M6 18L18 6M6 6l12 12"
+                            ></path>
                           </svg>
                         </button>
                       </div>
@@ -515,35 +597,38 @@ export default function NeoAvatar({ habits = [], tasks = [], allGoalsOnTrack = f
           </div>
         </motion.div>
       </AnimatePresence>,
-      document.body
+      document.body,
     );
   };
 
   return (
-    <div className="relative flex flex-col items-center justify-center select-none z-40 pointer-events-none w-full my-4">
-
+    <div className="fixed bottom-[80px] right-2 flex flex-col items-end justify-end select-none z-45 pointer-events-none">
       {/* Speech Bubble (Glassmorphism) */}
       <div
-        className={`absolute bottom-full mb-2 px-4 py-2.5 rounded-2xl text-xs font-semibold shadow-2xl max-w-[210px] text-center transition-all duration-300 pointer-events-none leading-snug border ${speech ? 'opacity-100 scale-100' : 'opacity-0 scale-95'} ${
-          speechType === 'success' 
-            ? 'bg-emerald-500/20 text-emerald-100 border-emerald-500/30 backdrop-blur-md' 
-            : speechType === 'fail' 
-            ? 'bg-red-500/20 text-red-100 border-red-500/30 backdrop-blur-md' 
-            : speechType === 'listening' 
-            ? 'bg-red-500/30 text-red-100 border-red-500/50 backdrop-blur-md animate-pulse' 
-            : theme === 'light' 
-            ? 'bg-[var(--bg-card)] text-[var(--text-primary)] border-[var(--border)]' 
-            : 'bg-white/10 text-[var(--text-primary)] border-white/20 backdrop-blur-md drop-shadow-lg'
+        className={`absolute bottom-[105px] right-2 mb-2 px-4 py-2.5 rounded-2xl text-xs font-semibold shadow-2xl max-w-[210px] text-center transition-all duration-300 pointer-events-none leading-snug border ${speech ? "opacity-100 scale-100" : "opacity-0 scale-95"} ${
+          speechType === "success"
+            ? "bg-emerald-500/20 text-emerald-100 border-emerald-500/30 backdrop-blur-md"
+            : speechType === "fail"
+              ? "bg-red-500/20 text-red-100 border-red-500/30 backdrop-blur-md"
+              : speechType === "listening"
+                ? "bg-red-500/30 text-red-100 border-red-500/50 backdrop-blur-md animate-pulse"
+                : theme === "light"
+                  ? "bg-[var(--bg-card)] text-[var(--text-primary)] border-[var(--border)]"
+                  : "bg-white/10 text-[var(--text-primary)] border-white/20 backdrop-blur-md drop-shadow-lg"
         }`}
       >
         {speech}
-        <div 
-          className={`absolute left-1/2 bottom-0 transform -translate-x-1/2 translate-y-[95%] w-0 h-0 border-l-[6px] border-r-[6px] border-t-[8px] border-l-transparent border-r-transparent ${
-            speechType === 'success' ? 'border-t-emerald-500/30' : 
-            speechType === 'fail' ? 'border-t-red-500/30' : 
-            speechType === 'listening' ? 'border-t-red-500/50' : 
-            theme === 'light' ? 'border-t-[var(--bg-card)]' :
-            'border-t-white/20'
+        <div
+          className={`absolute right-6 bottom-0 transform translate-y-[95%] w-0 h-0 border-l-[6px] border-r-[6px] border-t-[8px] border-l-transparent border-r-transparent ${
+            speechType === "success"
+              ? "border-t-emerald-500/30"
+              : speechType === "fail"
+                ? "border-t-red-500/30"
+                : speechType === "listening"
+                  ? "border-t-red-500/50"
+                  : theme === "light"
+                    ? "border-t-[var(--bg-card)]"
+                    : "border-t-white/20"
           }`}
         ></div>
       </div>
@@ -551,7 +636,7 @@ export default function NeoAvatar({ habits = [], tasks = [], allGoalsOnTrack = f
       {/* Main Avatar Container */}
       <div
         id="neo-avatar-container"
-        className={`relative cursor-pointer mt-2 pointer-events-auto transition-transform duration-400 ${wiggle ? 'neo-wiggle-once' : ''}`}
+        className={`relative cursor-pointer mt-2 pointer-events-auto transition-transform duration-400 ${wiggle ? "neo-wiggle-once" : ""}`}
         onClick={handleTap}
         onMouseDown={startPress}
         onMouseUp={cancelPress}
@@ -559,8 +644,12 @@ export default function NeoAvatar({ habits = [], tasks = [], allGoalsOnTrack = f
         onTouchStart={startPress}
         onTouchEnd={cancelPress}
         onTouchCancel={cancelPress}
-        onContextMenu={(e) => { e.preventDefault(); e.stopPropagation(); return false; }}
-        style={{ width: '96px', height: '96px', WebkitTouchCallout: 'none' }}
+        onContextMenu={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          return false;
+        }}
+        style={{ width: "96px", height: "96px", WebkitTouchCallout: "none" }}
       >
         {/* Glowing Suggestions Badge Dot */}
         {suggestions && suggestions.length > 0 && (
@@ -573,19 +662,31 @@ export default function NeoAvatar({ habits = [], tasks = [], allGoalsOnTrack = f
         )}
 
         <div className={`${animationClass} w-full h-full relative`}>
-          <div className={`w-full h-full transition-transform duration-600 ${bounce ? 'neo-bounce-once' : ''}`}>
-
+          <div
+            className={`w-full h-full transition-transform duration-600 ${bounce ? "neo-bounce-once" : ""}`}
+          >
             {/* State 1: Sad Neo, State 5: Glow Neo, State 6: Progressbar Neo */}
             <img
-              src={state === 6 ? neoProgressbarImg : state === 1 ? neoSadImg : neoImg}
+              src={
+                state === 6
+                  ? neoProgressbarImg
+                  : state === 1
+                    ? neoSadImg
+                    : neoImg
+              }
               alt="Neo"
               draggable="false"
               className={`w-full h-full object-contain ${
-                theme === 'light' ? (state >= 5 ? 'drop-shadow-[0_8px_20px_rgba(0,0,0,0.15)]' : '') :
-                state === 5 ? 'drop-shadow-[0_0_18px_#f5c518]'
-                  : state === 6 ? 'drop-shadow-[0_0_22px_#34d399]'
-                    : ''
-                }`}
+                theme === "light"
+                  ? state >= 5
+                    ? "drop-shadow-[0_8px_20px_rgba(0,0,0,0.15)]"
+                    : ""
+                  : state === 5
+                    ? "drop-shadow-[0_0_18px_#f5c518]"
+                    : state === 6
+                      ? "drop-shadow-[0_0_22px_#34d399]"
+                      : ""
+              }`}
             />
 
             {/* State 3: 6 Sparkles */}
@@ -598,9 +699,11 @@ export default function NeoAvatar({ habits = [], tasks = [], allGoalsOnTrack = f
                     style={{
                       top: `${Math.random() * 80}%`,
                       left: `${Math.random() * 80 + 10}%`,
-                      animationDelay: `${Math.random() * 2}s`
+                      animationDelay: `${Math.random() * 2}s`,
                     }}
-                  >✨</span>
+                  >
+                    ✨
+                  </span>
                 ))}
               </>
             )}
@@ -615,9 +718,11 @@ export default function NeoAvatar({ habits = [], tasks = [], allGoalsOnTrack = f
                     style={{
                       top: `${Math.random() * 90}%`,
                       left: `${Math.random() * 90 + 5}%`,
-                      animationDelay: `${Math.random() * 1.5}s`
+                      animationDelay: `${Math.random() * 1.5}s`,
                     }}
-                  >✨</span>
+                  >
+                    ✨
+                  </span>
                 ))}
               </>
             )}
@@ -635,7 +740,6 @@ export default function NeoAvatar({ habits = [], tasks = [], allGoalsOnTrack = f
                 📈
               </div>
             )}
-
           </div>
         </div>
       </div>

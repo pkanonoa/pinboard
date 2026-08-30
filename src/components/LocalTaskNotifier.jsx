@@ -1,13 +1,20 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { AnimatePresence, motion } from 'framer-motion';
-import { saveNotification } from '../db';
+import React, { useEffect, useRef, useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
+import { saveNotification } from "../db";
 
 export default function LocalTaskNotifier() {
   const notifiedTasksRef = useRef(new Set());
   const [activeToast, setActiveToast] = useState(null);
 
   useEffect(() => {
-    const dispatchNotification = ({ title, body, iconEmoji = '⏰', type = 'habit', deepLink = '#rituals', tag }) => {
+    const dispatchNotification = ({
+      title,
+      body,
+      iconEmoji = "⏰",
+      type = "habit",
+      deepLink = "#rituals",
+      tag,
+    }) => {
       // 1. Show in-app toast
       setActiveToast({ title, body, icon: iconEmoji });
       setTimeout(() => setActiveToast(null), 8000); // Hide after 8 seconds
@@ -20,29 +27,34 @@ export default function LocalTaskNotifier() {
         timestamp: Date.now(),
         read: false,
         type,
-        deepLink
+        deepLink,
       };
 
       saveNotification(notifRecord).then(() => {
-        window.dispatchEvent(new Event('NEW_NOTIFICATION_LOCAL'));
+        window.dispatchEvent(new Event("NEW_NOTIFICATION_LOCAL"));
       });
 
       // 3. Fire OS-level browser notification if permitted (Outside app)
-      if ('Notification' in window && Notification.permission === 'granted') {
+      if ("Notification" in window && Notification.permission === "granted") {
         const options = {
           body,
-          icon: '/pwa-192x192.png',
-          tag
+          icon: "/pwa-192x192.png",
+          tag,
         };
 
-        if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
-          navigator.serviceWorker.ready.then(registration => {
-            registration.showNotification(title, options).catch(() => {
+        if (
+          "serviceWorker" in navigator &&
+          navigator.serviceWorker.controller
+        ) {
+          navigator.serviceWorker.ready
+            .then((registration) => {
+              registration.showNotification(title, options).catch(() => {
+                new Notification(title, options);
+              });
+            })
+            .catch(() => {
               new Notification(title, options);
             });
-          }).catch(() => {
-            new Notification(title, options);
-          });
         } else {
           try {
             new Notification(title, options);
@@ -57,20 +69,20 @@ export default function LocalTaskNotifier() {
       try {
         const now = new Date();
         const yyyy = now.getFullYear();
-        const mm = String(now.getMonth() + 1).padStart(2, '0');
-        const dd = String(now.getDate()).padStart(2, '0');
-        const hh = String(now.getHours()).padStart(2, '0');
-        const mins = String(now.getMinutes()).padStart(2, '0');
+        const mm = String(now.getMonth() + 1).padStart(2, "0");
+        const dd = String(now.getDate()).padStart(2, "0");
+        const hh = String(now.getHours()).padStart(2, "0");
+        const mins = String(now.getMinutes()).padStart(2, "0");
         const todayStr = `${yyyy}-${mm}-${dd}`;
         const currentMinuteStr = `${yyyy}-${mm}-${dd}T${hh}:${mins}`;
 
         // ==========================
         // TASKS DUE DATE LOGIC
         // ==========================
-        const savedTasks = localStorage.getItem('pinboard_tasks');
+        const savedTasks = localStorage.getItem("pinboard_tasks");
         if (savedTasks) {
           const tasks = JSON.parse(savedTasks);
-          tasks.forEach(task => {
+          tasks.forEach((task) => {
             if (!task.done && task.dueDate) {
               const taskDueMinute = task.dueDate.slice(0, 16);
 
@@ -80,12 +92,12 @@ export default function LocalTaskNotifier() {
                 if (!notifiedTasksRef.current.has(notifKey)) {
                   notifiedTasksRef.current.add(notifKey);
                   dispatchNotification({
-                    title: '⏰ Task Due!',
+                    title: "⏰ Task Due!",
                     body: task.name,
-                    iconEmoji: '⏰',
-                    type: 'task',
-                    deepLink: '#tasks',
-                    tag: `task-${task.id}`
+                    iconEmoji: "⏰",
+                    type: "task",
+                    deepLink: "#tasks",
+                    tag: `task-${task.id}`,
                   });
                 }
               }
@@ -96,22 +108,29 @@ export default function LocalTaskNotifier() {
         // ==========================
         // RITUALS (HABITS) LOGIC
         // ==========================
-        const savedRituals = localStorage.getItem('pinboard_rituals_data');
+        const savedRituals = localStorage.getItem("pinboard_rituals_data");
         if (savedRituals) {
           const ritualsData = JSON.parse(savedRituals);
           const habits = ritualsData.habits || [];
 
-          habits.forEach(habit => {
+          habits.forEach((habit) => {
             if (habit.paused) return;
             // Skip if already completed today
-            if (habit.count >= habit.goal && habit.lastCompletedDate === todayStr) return;
+            if (
+              habit.count >= habit.goal &&
+              habit.lastCompletedDate === todayStr
+            )
+              return;
 
             if (habit.reminderEnabled) {
               // 1. Time Interval
-              if (habit.reminderType === 'interval') {
+              if (habit.reminderType === "interval") {
                 const intervalVal = habit.reminderInterval || 2;
-                const intervalUnit = habit.reminderIntervalUnit || 'hours';
-                const intervalMs = intervalUnit === 'minutes' ? intervalVal * 60 * 1000 : intervalVal * 60 * 60 * 1000;
+                const intervalUnit = habit.reminderIntervalUnit || "hours";
+                const intervalMs =
+                  intervalUnit === "minutes"
+                    ? intervalVal * 60 * 1000
+                    : intervalVal * 60 * 60 * 1000;
 
                 const currentHour = now.getHours();
                 // Alert during waking hours (8am to 10pm)
@@ -126,21 +145,25 @@ export default function LocalTaskNotifier() {
                   } else if (now.getTime() - lastSent >= intervalMs) {
                     dispatchNotification({
                       title: `🔄 Routine: ${habit.name}`,
-                      body: `Quick reminder for your ${habit.name} ritual! (${habit.count}/${habit.goal} ${habit.unit || ''})`.trim(),
-                      iconEmoji: '🔄',
-                      type: 'habit',
-                      deepLink: '#rituals',
-                      tag: `habit-${habit.id}`
+                      body: `Quick reminder for your ${habit.name} ritual! (${habit.count}/${habit.goal} ${habit.unit || ""})`.trim(),
+                      iconEmoji: "🔄",
+                      type: "habit",
+                      deepLink: "#rituals",
+                      tag: `habit-${habit.id}`,
                     });
                     localStorage.setItem(lastSentKey, now.getTime().toString());
                   }
                 }
               }
               // 2. Goal / Progress Based
-              else if (habit.reminderType === 'goal_progress') {
-                const checkInTimes = Array.isArray(habit.checkInTimes) && habit.checkInTimes.length > 0
-                  ? habit.checkInTimes
-                  : (habit.reminderTime ? [habit.reminderTime] : ['12:00', '18:00']);
+              else if (habit.reminderType === "goal_progress") {
+                const checkInTimes =
+                  Array.isArray(habit.checkInTimes) &&
+                  habit.checkInTimes.length > 0
+                    ? habit.checkInTimes
+                    : habit.reminderTime
+                      ? [habit.reminderTime]
+                      : ["12:00", "18:00"];
 
                 for (const checkInTime of checkInTimes) {
                   if (checkInTime === `${hh}:${mins}`) {
@@ -150,25 +173,36 @@ export default function LocalTaskNotifier() {
 
                       const currentValue = habit.count || 0;
                       const targetValue = habit.goal || 1;
-                      const progress = targetValue > 0 ? currentValue / targetValue : 0;
-                      const threshold = habit.alertThreshold !== undefined ? Number(habit.alertThreshold) : 0.5;
+                      const progress =
+                        targetValue > 0 ? currentValue / targetValue : 0;
+                      const threshold =
+                        habit.alertThreshold !== undefined
+                          ? Number(habit.alertThreshold)
+                          : 0.5;
 
                       if (progress < threshold) {
-                        const remainingValue = Math.max(0, targetValue - currentValue);
-                        const unitStr = habit.unit ? ` ${habit.unit}` : '';
+                        const remainingValue = Math.max(
+                          0,
+                          targetValue - currentValue,
+                        );
+                        const unitStr = habit.unit ? ` ${habit.unit}` : "";
                         const remainingStr = `${remainingValue.toLocaleString()}${unitStr}`;
                         const percentStr = `${Math.round(progress * 100)}%`;
-                        const template = habit.messageTemplate || "You're {remaining} away from your goal. Let's get moving! 🚶";
-                        const body = template.replace(/{remaining}/g, remainingStr).replace(/{percent}/g, percentStr);
+                        const template =
+                          habit.messageTemplate ||
+                          "You're {remaining} away from your goal. Let's get moving! 🚶";
+                        const body = template
+                          .replace(/{remaining}/g, remainingStr)
+                          .replace(/{percent}/g, percentStr);
                         const title = `🎯 ${habit.name} check-in`;
 
                         dispatchNotification({
                           title,
                           body,
-                          iconEmoji: '🎯',
-                          type: 'habit',
-                          deepLink: '#rituals',
-                          tag: `habit-${habit.id}`
+                          iconEmoji: "🎯",
+                          type: "habit",
+                          deepLink: "#rituals",
+                          tag: `habit-${habit.id}`,
                         });
                       }
                     }
@@ -190,18 +224,21 @@ export default function LocalTaskNotifier() {
                     let title = `⏰ Time for ${habit.name}`;
                     let body = `You haven't completed this yet today.`;
                     const lowerName = habit.name.toLowerCase();
-                    if (lowerName.includes('wake up') || lowerName.includes('wakeup')) {
-                      title = '⏰ Time to wakeup!';
-                      body = 'Rise and shine, it is time to start your day!';
+                    if (
+                      lowerName.includes("wake up") ||
+                      lowerName.includes("wakeup")
+                    ) {
+                      title = "⏰ Time to wakeup!";
+                      body = "Rise and shine, it is time to start your day!";
                     }
 
                     dispatchNotification({
                       title,
                       body,
-                      iconEmoji: '⏰',
-                      type: 'habit',
-                      deepLink: '#rituals',
-                      tag: `habit-${habit.id}`
+                      iconEmoji: "⏰",
+                      type: "habit",
+                      deepLink: "#rituals",
+                      tag: `habit-${habit.id}`,
                     });
                   }
                 }
@@ -213,50 +250,64 @@ export default function LocalTaskNotifier() {
         // ==========================
         // DAILY REVIEW & GOALS PACE LOGIC
         // ==========================
-        const dailyReviewTime = localStorage.getItem('pinboard_daily_review_time') || '20:00';
+        const dailyReviewTime =
+          localStorage.getItem("pinboard_daily_review_time") || "20:00";
         if (dailyReviewTime === `${hh}:${mins}`) {
           // 1. Task Digest
           if (savedTasks) {
             const tasks = JSON.parse(savedTasks);
-            const pendingTasks = tasks.filter(t => !t.done);
+            const pendingTasks = tasks.filter((t) => !t.done);
             if (pendingTasks.length > 0) {
               const notifKey = `task_digest_${todayStr}`;
               if (!notifiedTasksRef.current.has(notifKey)) {
                 notifiedTasksRef.current.add(notifKey);
 
-                let bodyStr = pendingTasks.slice(0, 3).map(t => `• ${t.name}`).join('\n');
+                let bodyStr = pendingTasks
+                  .slice(0, 3)
+                  .map((t) => `• ${t.name}`)
+                  .join("\n");
                 if (pendingTasks.length > 3) {
                   bodyStr += `\n...and ${pendingTasks.length - 3} more.`;
                 }
 
                 dispatchNotification({
-                  title: '📋 Daily Task Review',
+                  title: "📋 Daily Task Review",
                   body: bodyStr,
-                  iconEmoji: '📋',
-                  type: 'task',
-                  deepLink: '#tasks',
-                  tag: 'task-digest'
+                  iconEmoji: "📋",
+                  type: "task",
+                  deepLink: "#tasks",
+                  tag: "task-digest",
                 });
               }
             }
           }
 
           // 2. Monthly Goals Pace
-          const savedGoals = localStorage.getItem('pinboard_goals');
+          const savedGoals = localStorage.getItem("pinboard_goals");
           if (savedGoals) {
             const monthlyGoals = JSON.parse(savedGoals);
             if (Array.isArray(monthlyGoals) && monthlyGoals.length > 0) {
-              const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+              const daysInMonth = new Date(
+                now.getFullYear(),
+                now.getMonth() + 1,
+                0,
+              ).getDate();
               const daysPassed = now.getDate();
               const daysRemaining = daysInMonth - daysPassed;
 
-              monthlyGoals.forEach(goal => {
+              monthlyGoals.forEach((goal) => {
                 if (!goal.id || !goal.target || goal.isCompleted) return;
                 const progress = goal.progress || 0;
                 const target = goal.target;
                 const progressPct = target > 0 ? progress / target : 0;
-                const expectedPct = daysInMonth > 0 ? daysPassed / daysInMonth : 1;
-                const pace = expectedPct > 0 ? progressPct / expectedPct : (progressPct > 0 ? 999 : 0);
+                const expectedPct =
+                  daysInMonth > 0 ? daysPassed / daysInMonth : 1;
+                const pace =
+                  expectedPct > 0
+                    ? progressPct / expectedPct
+                    : progressPct > 0
+                      ? 999
+                      : 0;
 
                 const notifKey = `goal_pace_${goal.id}_${todayStr}`;
                 if (!notifiedTasksRef.current.has(notifKey)) {
@@ -265,20 +316,20 @@ export default function LocalTaskNotifier() {
                   let title, body;
                   if (pace < 0.6) {
                     title = `🔴 ${goal.name} is falling behind`;
-                    body = `Only ${progress}/${target} ${goal.unit || ''} logged. ${daysRemaining} days left — let's pick it up!`;
+                    body = `Only ${progress}/${target} ${goal.unit || ""} logged. ${daysRemaining} days left — let's pick it up!`;
                   } else if (pace < 0.9) {
                     title = `⚠️ ${goal.name} needs attention`;
-                    body = `A little behind pace — ${progress}/${target} ${goal.unit || ''}. ${daysRemaining} days remaining.`;
+                    body = `A little behind pace — ${progress}/${target} ${goal.unit || ""}. ${daysRemaining} days remaining.`;
                   }
 
                   if (title && body) {
                     dispatchNotification({
                       title,
                       body,
-                      iconEmoji: '🎯',
-                      type: 'goal',
-                      deepLink: '#goals',
-                      tag: `goal-${goal.id}`
+                      iconEmoji: "🎯",
+                      type: "goal",
+                      deepLink: "#goals",
+                      tag: `goal-${goal.id}`,
                     });
                   }
                 }
@@ -307,9 +358,13 @@ export default function LocalTaskNotifier() {
           exit={{ opacity: 0, y: -20, scale: 0.9 }}
           className="fixed top-6 left-1/2 -translate-x-1/2 z-[100] bg-indigo-600 text-[var(--text-primary)] px-5 py-3 rounded-2xl shadow-2xl flex items-center gap-3 border border-indigo-400 max-w-[90vw]"
         >
-          <span className="text-2xl animate-bounce">{activeToast.icon || '⏰'}</span>
+          <span className="text-2xl animate-bounce">
+            {activeToast.icon || "⏰"}
+          </span>
           <div className="flex flex-col">
-            <span className="text-xs font-bold text-indigo-200 uppercase tracking-wider">{activeToast.title || 'Notification'}</span>
+            <span className="text-xs font-bold text-indigo-200 uppercase tracking-wider">
+              {activeToast.title || "Notification"}
+            </span>
             <span className="text-sm font-semibold">{activeToast.body}</span>
           </div>
         </motion.div>

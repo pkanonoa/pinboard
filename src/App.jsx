@@ -1,28 +1,35 @@
-import React, { useState, useEffect } from 'react';
-import { Home, Goal, ClipboardList, Repeat, MoreHorizontal, Bell } from 'lucide-react';
-import InstallPrompt from './components/InstallPrompt';
-import NotificationManager from './components/NotificationManager';
-import ToldToSection from './components/ToldToSection';
-import DailyRitualsSection from './components/DailyRitualsSection';
-import Dashboard from './components/Dashboard';
-import ChartsSection from './components/ChartsSection';
-import BadgeCelebration from './components/BadgeCelebration';
-import NeoCelebration from './components/NeoCelebration';
-import RewardsSection from './components/RewardsSection';
-import SettingsSection from './components/SettingsSection';
-import NotificationDrawer from './components/NotificationDrawer';
-import GoalsSection from './components/GoalsSection';
-import OnboardingScreen from './components/OnboardingScreen';
-import MoreSection from './components/MoreSection';
-import WeeklyReviewScreen from './components/WeeklyReviewScreen';
-import { getNotifications, cleanOldNotifications } from './db';
-import { syncStateToBackend } from './utils';
-import { maybeResetDismissals } from './utils/smartSuggestions';
-import LocalTaskNotifier from './components/LocalTaskNotifier';
-import { useTheme } from './hooks/useTheme';
+import React, { useState, useEffect } from "react";
+import {
+  Home,
+  Goal,
+  ClipboardList,
+  Repeat,
+  MoreHorizontal,
+  Bell,
+} from "lucide-react";
+import InstallPrompt from "./components/InstallPrompt";
+import NotificationManager from "./components/NotificationManager";
+import ToldToSection from "./components/ToldToSection";
+import DailyRitualsSection from "./components/DailyRitualsSection";
+import Dashboard from "./components/Dashboard";
+import ChartsSection from "./components/ChartsSection";
+import BadgeCelebration from "./components/BadgeCelebration";
+import NeoCelebration from "./components/NeoCelebration";
+import RewardsSection from "./components/RewardsSection";
+import SettingsSection from "./components/SettingsSection";
+import NotificationDrawer from "./components/NotificationDrawer";
+import GoalsSection from "./components/GoalsSection";
+import OnboardingScreen from "./components/OnboardingScreen";
+import MoreSection from "./components/MoreSection";
+import WeeklyReviewScreen from "./components/WeeklyReviewScreen";
+import { getNotifications, cleanOldNotifications } from "./db";
+import { syncStateToBackend } from "./utils";
+import { maybeResetDismissals } from "./utils/smartSuggestions";
+import LocalTaskNotifier from "./components/LocalTaskNotifier";
+import { useTheme } from "./hooks/useTheme";
 
 function App() {
-  const [currentTab, setCurrentTab] = useState('dashboard');
+  const [currentTab, setCurrentTab] = useState("dashboard");
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
   const [onboarded, setOnboarded] = useState(true);
@@ -32,17 +39,17 @@ function App() {
 
   const handleSetCurrentTab = (tab) => {
     if (tab !== currentTab) {
-      const subTabs = ['charts', 'rewards', 'settings'];
-      
-      if (tab === 'dashboard') {
-        window.history.replaceState({ tab: 'dashboard' }, '', '#dashboard');
+      const subTabs = ["charts", "rewards", "settings"];
+
+      if (tab === "dashboard") {
+        window.history.replaceState({ tab: "dashboard" }, "", "#dashboard");
       } else if (subTabs.includes(tab)) {
-        window.history.pushState({ tab }, '', `#${tab}`);
+        window.history.pushState({ tab }, "", `#${tab}`);
       } else {
-        if (currentTab === 'dashboard') {
-          window.history.pushState({ tab }, '', `#${tab}`);
+        if (currentTab === "dashboard") {
+          window.history.pushState({ tab }, "", `#${tab}`);
         } else {
-          window.history.replaceState({ tab }, '', `#${tab}`);
+          window.history.replaceState({ tab }, "", `#${tab}`);
         }
       }
       setCurrentTab(tab);
@@ -54,94 +61,111 @@ function App() {
       if (e.state && e.state.tab) {
         setCurrentTab(e.state.tab);
       } else {
-        const hash = window.location.hash.replace('#', '');
-        if (['dashboard', 'goals', 'tasks', 'rituals', 'more', 'charts', 'rewards', 'settings'].includes(hash)) {
+        const hash = window.location.hash.replace("#", "");
+        if (
+          [
+            "dashboard",
+            "goals",
+            "tasks",
+            "rituals",
+            "more",
+            "charts",
+            "rewards",
+            "settings",
+          ].includes(hash)
+        ) {
           setCurrentTab(hash);
         } else {
-          setCurrentTab('dashboard');
+          setCurrentTab("dashboard");
         }
       }
     };
 
-    window.addEventListener('popstate', handlePopState);
-    if (!window.location.hash || window.location.hash === '#dashboard') {
-      window.history.replaceState({ tab: 'dashboard' }, '', '#dashboard');
+    window.addEventListener("popstate", handlePopState);
+    if (!window.location.hash || window.location.hash === "#dashboard") {
+      window.history.replaceState({ tab: "dashboard" }, "", "#dashboard");
     } else {
       // If deep linked, set it
-      const hash = window.location.hash.replace('#', '');
+      const hash = window.location.hash.replace("#", "");
       setCurrentTab(hash);
     }
-    
-    return () => window.removeEventListener('popstate', handlePopState);
+
+    return () => window.removeEventListener("popstate", handlePopState);
   }, []);
 
   // Initialize theme on load
   useEffect(() => {
     maybeResetDismissals();
 
-    const isOnboarded = localStorage.getItem('pinboard_onboarded') === 'true';
+    const isOnboarded = localStorage.getItem("pinboard_onboarded") === "true";
     setOnboarded(isOnboarded);
-    
+
     if (isOnboarded) {
       syncStateToBackend();
     }
-    
+
     const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible') {
+      if (document.visibilityState === "visible") {
         syncStateToBackend();
       }
     };
-    document.addEventListener('visibilitychange', handleVisibilityChange);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
 
     // Initial system theme detection
-    if (!localStorage.getItem('pinboard_theme') && !isOnboarded) {
-      if (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) {
-        setTheme('light');
+    if (!localStorage.getItem("pinboard_theme") && !isOnboarded) {
+      if (
+        window.matchMedia &&
+        window.matchMedia("(prefers-color-scheme: light)").matches
+      ) {
+        setTheme("light");
       } else {
-        setTheme('dark');
+        setTheme("dark");
       }
     }
 
     const systemThemeListener = (e) => {
-      if (!localStorage.getItem('pinboard_theme')) {
-        setTheme(e.matches ? 'dark' : 'light');
+      if (!localStorage.getItem("pinboard_theme")) {
+        setTheme(e.matches ? "dark" : "light");
       }
     };
-    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
     if (mediaQuery.addEventListener) {
-      mediaQuery.addEventListener('change', systemThemeListener);
+      mediaQuery.addEventListener("change", systemThemeListener);
     }
-    
+
     // Cleanup old notifications and check unread count
     cleanOldNotifications().then(() => {
       checkUnread();
     });
-    
-    window.addEventListener('focus', checkUnread);
-    window.addEventListener('notifications_read', checkUnread);
-    window.addEventListener('NEW_NOTIFICATION_LOCAL', checkUnread);
+
+    window.addEventListener("focus", checkUnread);
+    window.addEventListener("notifications_read", checkUnread);
+    window.addEventListener("NEW_NOTIFICATION_LOCAL", checkUnread);
     const swMessageListener = (event) => {
-      if (event.data && event.data.type === 'NEW_NOTIFICATION') {
+      if (event.data && event.data.type === "NEW_NOTIFICATION") {
         checkUnread();
       }
-      if (event.data?.deepLink === '/weekly-review') {
+      if (event.data?.deepLink === "/weekly-review") {
         setShowWeeklyReview(true);
       }
     };
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.addEventListener('message', swMessageListener);
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.addEventListener("message", swMessageListener);
     }
-    
+
     return () => {
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-      window.removeEventListener('focus', checkUnread);
-      window.removeEventListener('notifications_read', checkUnread);
-      window.removeEventListener('NEW_NOTIFICATION_LOCAL', checkUnread);
-      if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.removeEventListener('message', swMessageListener);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      window.removeEventListener("focus", checkUnread);
+      window.removeEventListener("notifications_read", checkUnread);
+      window.removeEventListener("NEW_NOTIFICATION_LOCAL", checkUnread);
+      if ("serviceWorker" in navigator) {
+        navigator.serviceWorker.removeEventListener(
+          "message",
+          swMessageListener,
+        );
       }
       if (mediaQuery.removeEventListener) {
-        mediaQuery.removeEventListener('change', systemThemeListener);
+        mediaQuery.removeEventListener("change", systemThemeListener);
       }
     };
   }, []);
@@ -149,35 +173,42 @@ function App() {
   const checkUnread = async () => {
     try {
       const notifs = await getNotifications();
-      setUnreadCount(notifs.filter(n => !n.read).length);
-    } catch(e) {}
+      setUnreadCount(notifs.filter((n) => !n.read).length);
+    } catch (e) {}
   };
 
   if (!onboarded) {
-    return <OnboardingScreen onComplete={() => {
-      setOnboarded(true);
-      window.history.replaceState({ tab: 'dashboard' }, '', '#dashboard');
-      setCurrentTab('dashboard');
-    }} />;
+    return (
+      <OnboardingScreen
+        onComplete={() => {
+          setOnboarded(true);
+          window.history.replaceState({ tab: "dashboard" }, "", "#dashboard");
+          setCurrentTab("dashboard");
+        }}
+      />
+    );
   }
 
   const onTouchStart = (e) => {
-    setTouchStartXY({ x: e.targetTouches[0].clientX, y: e.targetTouches[0].clientY });
+    setTouchStartXY({
+      x: e.targetTouches[0].clientX,
+      y: e.targetTouches[0].clientY,
+    });
   };
 
   const onTouchEnd = (e) => {
     if (!touchStartXY) return;
     const touchEndX = e.changedTouches[0].clientX;
     const touchEndY = e.changedTouches[0].clientY;
-    
+
     const dx = touchStartXY.x - touchEndX;
     const dy = touchStartXY.y - touchEndY;
-    
+
     // Swipe needs to be mostly horizontal, and at least 70px
     if (Math.abs(dx) > Math.abs(dy) * 2 && Math.abs(dx) > 70) {
-      const tabs = ['dashboard', 'goals', 'tasks', 'rituals', 'more'];
+      const tabs = ["dashboard", "goals", "tasks", "rituals", "more"];
       const currentIndex = tabs.indexOf(currentTab);
-      
+
       if (currentIndex !== -1) {
         if (dx > 0 && currentIndex < tabs.length - 1) {
           handleSetCurrentTab(tabs[currentIndex + 1]);
@@ -190,7 +221,7 @@ function App() {
   };
 
   return (
-    <div 
+    <div
       className="flex flex-col items-center min-h-screen p-4 relative pt-4 pb-24 overflow-x-hidden"
       onTouchStart={onTouchStart}
       onTouchEnd={onTouchEnd}
@@ -203,79 +234,90 @@ function App() {
       {showWeeklyReview && (
         <WeeklyReviewScreen onClose={() => setShowWeeklyReview(false)} />
       )}
-      <NotificationDrawer 
-        isOpen={isDrawerOpen} 
-        onClose={() => setIsDrawerOpen(false)} 
-        setCurrentTab={handleSetCurrentTab} 
+      <NotificationDrawer
+        isOpen={isDrawerOpen}
+        onClose={() => setIsDrawerOpen(false)}
+        setCurrentTab={handleSetCurrentTab}
       />
-      
+
       {/* Bell Icon */}
-      <button 
+      <button
         onClick={() => setIsDrawerOpen(true)}
         className="fixed top-4 right-4 z-[35] w-9 h-9 flex items-center justify-center bg-[var(--bg-card)] rounded-full shadow-md border border-[var(--border)] hover:bg-[var(--bg-card-hover)] active:scale-95 transition-all"
         title="Notifications"
       >
-        <Bell className="w-4.5 h-4.5 text-indigo-300" strokeWidth={2} />
+        <Bell
+          className="w-4.5 h-4.5 text-[var(--accent-purple)]"
+          strokeWidth={2}
+        />
         {unreadCount > 0 && (
           <span className="absolute top-2 right-2 flex h-2 w-2">
             <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-400"></span>
           </span>
         )}
       </button>
-      
-      {currentTab === 'dashboard' && <Dashboard setCurrentTab={handleSetCurrentTab} />}
-      {currentTab === 'tasks' && <ToldToSection />}
-      {currentTab === 'rituals' && <DailyRitualsSection />}
-      {currentTab === 'charts' && <ChartsSection />}
-      {currentTab === 'rewards' && <RewardsSection />}
-      {currentTab === 'settings' && <SettingsSection />}
-      {currentTab === 'goals' && <GoalsSection />}
-      {currentTab === 'more' && <MoreSection setCurrentTab={handleSetCurrentTab} onOpenWeeklyReview={() => setShowWeeklyReview(true)} />}
+
+      {currentTab === "dashboard" && (
+        <Dashboard setCurrentTab={handleSetCurrentTab} />
+      )}
+      {currentTab === "tasks" && <ToldToSection />}
+      {currentTab === "rituals" && <DailyRitualsSection />}
+      {currentTab === "charts" && <ChartsSection />}
+      {currentTab === "rewards" && <RewardsSection />}
+      {currentTab === "settings" && <SettingsSection />}
+      {currentTab === "goals" && <GoalsSection />}
+      {currentTab === "more" && (
+        <MoreSection
+          setCurrentTab={handleSetCurrentTab}
+          onOpenWeeklyReview={() => setShowWeeklyReview(true)}
+        />
+      )}
 
       {/* PWA Install Prompt */}
       <InstallPrompt />
 
       {/* Bottom Navigation */}
-      <div className={`fixed bottom-0 left-0 right-0 h-16 flex items-center justify-around z-50 px-2 pb-safe bg-[var(--bg-card)] border-t border-[var(--border)] ${theme === 'light' ? 'backdrop-blur-md bg-opacity-90' : ''}`}>
-        <button 
-          onClick={() => handleSetCurrentTab('dashboard')}
-          className={`flex flex-col items-center justify-center w-full h-full space-y-1 transition-colors active:scale-95 ${currentTab === 'dashboard' ? 'text-blue-400' : 'text-gray-500 hover:text-[var(--text-secondary)]'}`}
+      <div
+        className={`fixed bottom-0 left-0 right-0 h-16 flex items-center justify-around z-50 px-2 pb-safe bg-[var(--bg-card)] border-t border-[var(--border)] ${theme === "light" ? "backdrop-blur-md bg-opacity-90" : ""}`}
+      >
+        <button
+          onClick={() => handleSetCurrentTab("dashboard")}
+          className={`flex flex-col items-center justify-center w-full h-full space-y-1 transition-colors active:scale-95 ${currentTab === "dashboard" ? "text-blue-400" : "text-[var(--text-muted)] hover:text-[var(--text-secondary)]"}`}
         >
           <Home className="w-6 h-6" strokeWidth={2} />
           <span className="text-[10px] font-medium">Home</span>
         </button>
-        <button 
-          onClick={() => handleSetCurrentTab('goals')}
-          className={`flex flex-col items-center justify-center w-full h-full space-y-1 transition-colors active:scale-95 ${currentTab === 'goals' ? 'text-[var(--accent-purple)]' : 'text-gray-500 hover:text-[var(--text-secondary)]'}`}
+        <button
+          onClick={() => handleSetCurrentTab("goals")}
+          className={`flex flex-col items-center justify-center w-full h-full space-y-1 transition-colors active:scale-95 ${currentTab === "goals" ? "text-[var(--accent-purple)]" : "text-[var(--text-muted)] hover:text-[var(--text-secondary)]"}`}
         >
           <Goal className="w-6 h-6" strokeWidth={2} />
           <span className="text-[10px] font-medium">Goals</span>
         </button>
-        <button 
-          onClick={() => handleSetCurrentTab('tasks')}
-          className={`flex flex-col items-center justify-center w-full h-full space-y-1 transition-colors active:scale-95 ${currentTab === 'tasks' ? 'text-[var(--accent-purple)]' : 'text-gray-500 hover:text-[var(--text-secondary)]'}`}
+        <button
+          onClick={() => handleSetCurrentTab("tasks")}
+          className={`flex flex-col items-center justify-center w-full h-full space-y-1 transition-colors active:scale-95 ${currentTab === "tasks" ? "text-[var(--accent-purple)]" : "text-[var(--text-muted)] hover:text-[var(--text-secondary)]"}`}
         >
           <ClipboardList className="w-6 h-6" strokeWidth={2} />
           <span className="text-[10px] font-medium">Tasks</span>
         </button>
-        <button 
-          onClick={() => handleSetCurrentTab('rituals')}
-          className={`flex flex-col items-center justify-center w-full h-full space-y-1 transition-colors active:scale-95 ${currentTab === 'rituals' ? 'text-[var(--success)]' : 'text-gray-500 hover:text-[var(--text-secondary)]'}`}
+        <button
+          onClick={() => handleSetCurrentTab("rituals")}
+          className={`flex flex-col items-center justify-center w-full h-full space-y-1 transition-colors active:scale-95 ${currentTab === "rituals" ? "text-[var(--success)]" : "text-[var(--text-muted)] hover:text-[var(--text-secondary)]"}`}
         >
           <Repeat className="w-6 h-6" strokeWidth={2} />
           <span className="text-[10px] font-medium">Rituals</span>
         </button>
-        <button 
-          onClick={() => handleSetCurrentTab('more')}
-          className={`flex flex-col items-center justify-center w-full h-full space-y-1 transition-colors active:scale-95 ${currentTab === 'more' ? 'text-[var(--text-primary)]' : 'text-gray-500 hover:text-[var(--text-secondary)]'}`}
+        <button
+          onClick={() => handleSetCurrentTab("more")}
+          className={`flex flex-col items-center justify-center w-full h-full space-y-1 transition-colors active:scale-95 ${currentTab === "more" ? "text-[var(--text-primary)]" : "text-[var(--text-muted)] hover:text-[var(--text-secondary)]"}`}
         >
           <MoreHorizontal className="w-6 h-6" strokeWidth={2} />
           <span className="text-[10px] font-medium">More</span>
         </button>
       </div>
     </div>
-  )
+  );
 }
 
-export default App
-
+export default App;

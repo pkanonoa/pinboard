@@ -1,9 +1,9 @@
-import { useState, useRef } from 'react';
-import { parseVoiceCommand } from '../utils/voiceParser';
+import { useState, useRef } from "react";
+import { parseVoiceCommand } from "../utils/voiceParser";
 
 export function useVoiceLogger(habits, onLog) {
   const [listening, setListening] = useState(false);
-  const [transcript, setTranscript] = useState('');
+  const [transcript, setTranscript] = useState("");
   const [result, setResult] = useState(null); // { success, message }
   const recognitionRef = useRef(null);
 
@@ -12,16 +12,19 @@ export function useVoiceLogger(habits, onLog) {
       window.SpeechRecognition || window.webkitSpeechRecognition;
 
     if (!SpeechRecognition) {
-      setResult({ success: false, message: 'Voice not supported on this browser' });
+      setResult({
+        success: false,
+        message: "Voice not supported on this browser",
+      });
       return;
     }
 
     // Clear previous result
     setResult(null);
-    setTranscript('');
+    setTranscript("");
 
     const recognition = new SpeechRecognition();
-    recognition.lang = 'en-US';
+    recognition.lang = "en-US";
     recognition.interimResults = false;
     recognition.maxAlternatives = 1;
     recognitionRef.current = recognition;
@@ -44,9 +47,12 @@ export function useVoiceLogger(habits, onLog) {
 
     recognition.onerror = (e) => {
       setListening(false);
-      if (e.error === 'no-speech') {
-        setResult({ success: false, message: 'No speech detected. Try again?' });
-      } else if (e.error !== 'aborted') {
+      if (e.error === "no-speech") {
+        setResult({
+          success: false,
+          message: "No speech detected. Try again?",
+        });
+      } else if (e.error !== "aborted") {
         setResult({ success: false, message: `Mic error: ${e.error}` });
       }
     };

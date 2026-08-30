@@ -42,7 +42,9 @@ export default function NeoCelebration() {
     if (window.__pendingBadges && window.__pendingBadges.length > 0) {
       const nextBadge = window.__pendingBadges.shift();
       setTimeout(() => {
-        window.dispatchEvent(new CustomEvent("showBadgeModal", { detail: nextBadge }));
+        window.dispatchEvent(
+          new CustomEvent("showBadgeModal", { detail: nextBadge }),
+        );
       }, 350);
     }
   };
@@ -57,8 +59,10 @@ export default function NeoCelebration() {
       <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
 
       <div
-        className="relative w-full max-w-sm bg-[#13131a] rounded-3xl shadow-2xl overflow-hidden border border-[var(--border)]/80"
-        style={{ animation: "slideUpFade 0.45s cubic-bezier(0.34,1.56,0.64,1) both" }}
+        className="relative w-full max-w-sm bg-[var(--bg-primary)] rounded-3xl shadow-2xl overflow-hidden border border-[var(--border)]/80"
+        style={{
+          animation: "slideUpFade 0.45s cubic-bezier(0.34,1.56,0.64,1) both",
+        }}
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center gap-4 p-6 pb-4">
@@ -69,26 +73,28 @@ export default function NeoCelebration() {
             style={{ filter: "drop-shadow(0 0 20px rgba(99,102,241,0.6))" }}
           />
           <div className="flex-1 min-w-0">
-            <p className="text-[var(--text-primary)] font-bold text-base leading-snug">{quote}</p>
+            <p className="text-[var(--text-primary)] font-bold text-base leading-snug">
+              {quote}
+            </p>
           </div>
         </div>
 
         <button
-          className="w-full flex items-center justify-center py-3.5 hover:bg-gray-800/30 active:bg-gray-800/50 transition-colors border-t border-[var(--border)]/40"
+          className="w-full flex items-center justify-center py-3.5 hover:bg-[var(--bg-card)]/30 active:bg-[var(--bg-card)]/50 transition-colors border-t border-[var(--border)]/40"
           onClick={handleDismiss}
         >
-          <span className="text-gray-500 text-xs font-semibold tracking-widest uppercase">
+          <span className="text-[var(--text-muted)] text-xs font-semibold tracking-widest uppercase">
             Tap to continue
           </span>
         </button>
       </div>
 
       <style>{`
-        @keyframes slideUpFade {
-          from { opacity: 0; transform: translateY(50px) scale(0.95); }
-          to   { opacity: 1; transform: translateY(0) scale(1); }
-        }
-      `}</style>
+ @keyframes slideUpFade {
+ from { opacity: 0; transform: translateY(50px) scale(0.95); }
+ to { opacity: 1; transform: translateY(0) scale(1); }
+ }
+ `}</style>
     </div>
   );
 }

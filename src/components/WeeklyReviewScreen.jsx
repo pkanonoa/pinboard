@@ -1,8 +1,8 @@
-import React, { useState, useEffect, useRef } from 'react';
-import neoImg from '../assets/neo.png';
-import { getUserStats } from '../utils';
-import ShareCard from './ShareCard';
-import { useShareCard } from '../hooks/useShareCard';
+import React, { useState, useEffect, useRef } from "react";
+import neoImg from "../assets/neo.png";
+import { getUserStats } from "../utils";
+import ShareCard from "./ShareCard";
+import { useShareCard } from "../hooks/useShareCard";
 
 // ── helpers ──────────────────────────────────────────────────────────────────
 
@@ -20,14 +20,20 @@ function getWeekBounds() {
 }
 
 function fmtShort(date) {
-  return date.toLocaleDateString('en-US', { weekday: undefined, month: 'short', day: 'numeric' });
+  return date.toLocaleDateString("en-US", {
+    weekday: undefined,
+    month: "short",
+    day: "numeric",
+  });
 }
 
 function getISOWeek(date) {
-  const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+  const d = new Date(
+    Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()),
+  );
   d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7));
   const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
-  return Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+  return Math.ceil(((d - yearStart) / 86400000 + 1) / 7);
 }
 
 function buildWeeklyData() {
@@ -39,76 +45,117 @@ function buildWeeklyData() {
   let monthlyGoals = [];
   let stats = {};
 
-  try { completionLog = JSON.parse(localStorage.getItem('pinboard_completion_log') || '[]'); } catch (e) {}
   try {
-    const rd = JSON.parse(localStorage.getItem('pinboard_rituals_data') || '{}');
+    completionLog = JSON.parse(
+      localStorage.getItem("pinboard_completion_log") || "[]",
+    );
+  } catch (e) {}
+  try {
+    const rd = JSON.parse(
+      localStorage.getItem("pinboard_rituals_data") || "{}",
+    );
     habits = rd.habits || [];
   } catch (e) {}
-  try { monthlyGoals = JSON.parse(localStorage.getItem('pinboard_goals') || '[]'); } catch (e) {}
-  try { stats = JSON.parse(localStorage.getItem('pinboard_stats') || '{}'); } catch (e) {}
+  try {
+    monthlyGoals = JSON.parse(localStorage.getItem("pinboard_goals") || "[]");
+  } catch (e) {}
+  try {
+    stats = JSON.parse(localStorage.getItem("pinboard_stats") || "{}");
+  } catch (e) {}
 
   // filter to this week
-  const weekLogs = completionLog.filter(log => new Date(log.timestamp) >= sevenDaysAgo);
+  const weekLogs = completionLog.filter(
+    (log) => new Date(log.timestamp) >= sevenDaysAgo,
+  );
 
-  // Build per-habit completion day map  { habitId -> Set of date strings }
+  // Build per-habit completion day map { habitId -> Set of date strings }
   const habitDayMap = {};
   for (const log of weekLogs) {
-    if (log.type === 'habit') {
+    if (log.type === "habit") {
       const day = new Date(log.timestamp).toISOString().slice(0, 10);
       if (!habitDayMap[log.id]) habitDayMap[log.id] = new Set();
       habitDayMap[log.id].add(day);
     }
   }
 
-  const nonPausedHabits = habits.filter(h => !h.paused);
+  const nonPausedHabits = habits.filter((h) => !h.paused);
   const totalPossible = nonPausedHabits.length * 7;
-  const totalCompletions = Object.values(habitDayMap).reduce((acc, s) => acc + s.size, 0);
-  const overallScore = totalPossible > 0 ? Math.round((totalCompletions / totalPossible) * 100) : 0;
+  const totalCompletions = Object.values(habitDayMap).reduce(
+    (acc, s) => acc + s.size,
+    0,
+  );
+  const overallScore =
+    totalPossible > 0
+      ? Math.round((totalCompletions / totalPossible) * 100)
+      : 0;
 
   // Best & worst habit
-  let bestHabit = null, bestDays = -1;
-  let worstHabit = null, worstDays = 8;
+  let bestHabit = null,
+    bestDays = -1;
+  let worstHabit = null,
+    worstDays = 8;
   for (const h of nonPausedHabits) {
     const days = (habitDayMap[h.id] || new Set()).size;
-    if (days > bestDays) { bestDays = days; bestHabit = h; }
-    if (days < worstDays) { worstDays = days; worstHabit = h; }
+    if (days > bestDays) {
+      bestDays = days;
+      bestHabit = h;
+    }
+    if (days < worstDays) {
+      worstDays = days;
+      worstHabit = h;
+    }
   }
 
   // Streak snapshot delta
   let snapshot = {};
-  try { snapshot = JSON.parse(localStorage.getItem('pinboard_streak_snapshot') || '{}'); } catch (e) {}
-  const streakDeltas = nonPausedHabits.map(h => ({
+  try {
+    snapshot = JSON.parse(
+      localStorage.getItem("pinboard_streak_snapshot") || "{}",
+    );
+  } catch (e) {}
+  const streakDeltas = nonPausedHabits.map((h) => ({
     id: h.id,
     name: h.name,
     streak: h.streak || 0,
     prev: snapshot[h.id] || 0,
-    delta: (h.streak || 0) - (snapshot[h.id] || 0)
+    delta: (h.streak || 0) - (snapshot[h.id] || 0),
   }));
 
   // Points this week
   const pointsThisWeek = weekLogs.length * 10; // simple: 10pts per completion log entry
-  const bestWeekEver = parseInt(localStorage.getItem('pinboard_best_week_points') || '0', 10);
+  const bestWeekEver = parseInt(
+    localStorage.getItem("pinboard_best_week_points") || "0",
+    10,
+  );
   if (pointsThisWeek > bestWeekEver) {
-    localStorage.setItem('pinboard_best_week_points', String(pointsThisWeek));
+    localStorage.setItem("pinboard_best_week_points", String(pointsThisWeek));
   }
 
   // Last week points (stored separately)
-  const lastWeekPoints = parseInt(localStorage.getItem('pinboard_last_week_points') || '0', 10);
+  const lastWeekPoints = parseInt(
+    localStorage.getItem("pinboard_last_week_points") || "0",
+    10,
+  );
 
   // Monthly goals pulse
   const now = new Date();
-  const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+  const daysInMonth = new Date(
+    now.getFullYear(),
+    now.getMonth() + 1,
+    0,
+  ).getDate();
   const daysPassed = now.getDate();
-  const activeGoals = monthlyGoals.filter(g => !g.isCompleted);
-  const goalsPulse = activeGoals.map(g => {
+  const activeGoals = monthlyGoals.filter((g) => !g.isCompleted);
+  const goalsPulse = activeGoals.map((g) => {
     const progress = g.progress || 0;
     const target = g.target || 1;
     const progressPct = target > 0 ? progress / target : 0;
     const expectedPct = daysInMonth > 0 ? daysPassed / daysInMonth : 1;
-    const pace = expectedPct > 0 ? progressPct / expectedPct : (progressPct > 0 ? 999 : 0);
-    let status = 'on_track';
-    if (pace < 0.6) status = 'behind';
-    else if (pace < 0.9) status = 'at_risk';
+    const pace =
+      expectedPct > 0 ? progressPct / expectedPct : progressPct > 0 ? 999 : 0;
+    let status = "on_track";
+    if (pace < 0.6) status = "behind";
+    else if (pace < 0.9) status = "at_risk";
     return { ...g, progress, target, status };
   });
 
@@ -126,7 +173,7 @@ function buildWeeklyData() {
     goalsPulse,
     nonPausedHabits,
     totalCompletions,
-    totalPossible
+    totalPossible,
   };
 }
 
@@ -143,31 +190,51 @@ function ScoreRing({ score }) {
     return () => clearTimeout(timer);
   }, [score, circumference]);
 
-  const color = score >= 70 ? '#34d399' : score >= 40 ? '#fbbf24' : '#f87171';
-  const label = score >= 70 ? 'Great week!' : score >= 40 ? 'Getting there' : 'Needs work';
+  const color = score >= 70 ? "#34d399" : score >= 40 ? "#fbbf24" : "#f87171";
+  const label =
+    score >= 70 ? "Great week!" : score >= 40 ? "Getting there" : "Needs work";
 
   return (
     <div className="flex flex-col items-center gap-2">
       <div className="relative w-36 h-36 flex items-center justify-center">
         <svg className="w-full h-full -rotate-90" viewBox="0 0 128 128">
           {/* track */}
-          <circle cx="64" cy="64" r={radius} fill="none" stroke="#1e1e28" strokeWidth="10" />
+          <circle
+            cx="64"
+            cy="64"
+            r={radius}
+            fill="none"
+            stroke="#1e1e28"
+            strokeWidth="10"
+          />
           {/* progress */}
           <circle
-            cx="64" cy="64" r={radius} fill="none"
-            stroke={color} strokeWidth="10"
+            cx="64"
+            cy="64"
+            r={radius}
+            fill="none"
+            stroke={color}
+            strokeWidth="10"
             strokeLinecap="round"
             strokeDasharray={circumference}
             strokeDashoffset={offset}
-            style={{ transition: 'stroke-dashoffset 1.1s cubic-bezier(0.4,0,0.2,1)' }}
+            style={{
+              transition: "stroke-dashoffset 1.1s cubic-bezier(0.4,0,0.2,1)",
+            }}
           />
         </svg>
         <div className="absolute flex flex-col items-center leading-tight">
-          <span className="text-3xl font-black text-[var(--text-primary)]">{score}%</span>
-          <span className="text-[10px] text-[var(--text-secondary)] font-medium">This week</span>
+          <span className="text-3xl font-black text-[var(--text-primary)]">
+            {score}%
+          </span>
+          <span className="text-[10px] text-[var(--text-secondary)] font-medium">
+            This week
+          </span>
         </div>
       </div>
-      <span className="text-xs font-semibold" style={{ color }}>{label}</span>
+      <span className="text-xs font-semibold" style={{ color }}>
+        {label}
+      </span>
     </div>
   );
 }
@@ -177,16 +244,26 @@ export default function WeeklyReviewScreen({ onClose }) {
   const { mon, sun } = getWeekBounds();
   const data = useRef(buildWeeklyData()).current;
   const {
-    overallScore, bestHabit, bestDays, worstHabit, worstDays,
-    streakDeltas, pointsThisWeek, lastWeekPoints, bestWeekEver, isNewRecord, goalsPulse,
-    totalCompletions, totalPossible
+    overallScore,
+    bestHabit,
+    bestDays,
+    worstHabit,
+    worstDays,
+    streakDeltas,
+    pointsThisWeek,
+    lastWeekPoints,
+    bestWeekEver,
+    isNewRecord,
+    goalsPulse,
+    totalCompletions,
+    totalPossible,
   } = data;
 
   const [intention, setIntention] = useState(
-    () => localStorage.getItem('pinboard_weekly_intention') || ''
+    () => localStorage.getItem("pinboard_weekly_intention") || "",
   );
   const [prevIntention] = useState(
-    () => localStorage.getItem('pinboard_prev_weekly_intention') || ''
+    () => localStorage.getItem("pinboard_prev_weekly_intention") || "",
   );
   const [intentionSkipped, setIntentionSkipped] = useState(false);
 
@@ -197,7 +274,7 @@ export default function WeeklyReviewScreen({ onClose }) {
   useEffect(() => {
     if (shareData) {
       const run = async () => {
-        await new Promise(r => setTimeout(r, 150));
+        await new Promise((r) => setTimeout(r, 150));
         await shareCard();
         setShareData(null);
       };
@@ -206,17 +283,20 @@ export default function WeeklyReviewScreen({ onClose }) {
   }, [shareData]);
 
   const handleShareClick = () => {
-    const userName = localStorage.getItem('pinboard_user_name') || 'User';
+    const userName = localStorage.getItem("pinboard_user_name") || "User";
     const weekLabel = `${fmtShort(mon)} – ${fmtShort(sun)}`;
     const stats = getUserStats();
     const levelName = stats.currentLevel.name;
-    const bestStreak = streakDeltas.length > 0 ? Math.max(...streakDeltas.map(s => s.streak)) : 0;
+    const bestStreak =
+      streakDeltas.length > 0
+        ? Math.max(...streakDeltas.map((s) => s.streak))
+        : 0;
 
     let mvpHabit = null;
     if (bestHabit) {
       mvpHabit = {
         name: bestHabit.name,
-        days: bestDays
+        days: bestDays,
       };
     }
 
@@ -228,7 +308,7 @@ export default function WeeklyReviewScreen({ onClose }) {
       habitsDone: totalCompletions,
       habitTotal: totalPossible,
       levelName,
-      mvpHabit
+      mvpHabit,
     });
   };
 
@@ -236,23 +316,25 @@ export default function WeeklyReviewScreen({ onClose }) {
   useEffect(() => {
     try {
       let habits = [];
-      const rd = JSON.parse(localStorage.getItem('pinboard_rituals_data') || '{}');
+      const rd = JSON.parse(
+        localStorage.getItem("pinboard_rituals_data") || "{}",
+      );
       habits = rd.habits || [];
       const snap = {};
       for (const h of habits) snap[h.id] = h.streak || 0;
-      localStorage.setItem('pinboard_streak_snapshot', JSON.stringify(snap));
+      localStorage.setItem("pinboard_streak_snapshot", JSON.stringify(snap));
       // store last week points
-      localStorage.setItem('pinboard_last_week_points', String(pointsThisWeek));
+      localStorage.setItem("pinboard_last_week_points", String(pointsThisWeek));
     } catch (e) {}
   }, []);
 
   const headerLabel = `Week of ${fmtShort(mon)} — ${fmtShort(sun)}`;
-  const neoAnim = overallScore >= 70 ? 'neo-proud-pulse' : 'neo-gentle-float';
+  const neoAnim = overallScore >= 70 ? "neo-proud-pulse" : "neo-gentle-float";
 
   function saveIntention() {
     if (intention.trim()) {
-      localStorage.setItem('pinboard_prev_weekly_intention', intention.trim());
-      localStorage.setItem('pinboard_weekly_intention', '');
+      localStorage.setItem("pinboard_prev_weekly_intention", intention.trim());
+      localStorage.setItem("pinboard_weekly_intention", "");
     }
   }
 
@@ -262,13 +344,20 @@ export default function WeeklyReviewScreen({ onClose }) {
   }
 
   // Streak bar helper
-  const maxStreak = Math.max(...streakDeltas.map(s => s.streak), 1);
+  const maxStreak = Math.max(...streakDeltas.map((s) => s.streak), 1);
 
   return (
     <div className="fixed inset-0 z-[200] flex flex-col bg-[var(--bg-card)] overflow-hidden animate-slide-up">
       {/* Off-screen rendering container for share card capture */}
       {shareData && (
-        <div style={{ position: 'absolute', left: '-9999px', top: '-9999px', zIndex: -100 }}>
+        <div
+          style={{
+            position: "absolute",
+            left: "-9999px",
+            top: "-9999px",
+            zIndex: -100,
+          }}
+        >
           <ShareCard ref={shareCardRef} {...shareData} />
         </div>
       )}
@@ -277,38 +366,62 @@ export default function WeeklyReviewScreen({ onClose }) {
       <div className="relative flex flex-col items-center pt-10 pb-4 px-5">
         <button
           onClick={handleClose}
-          className="absolute top-5 right-5 w-8 h-8 flex items-center justify-center rounded-full bg-gray-800 hover:bg-gray-700 text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-all active:scale-90 text-lg"
+          className="absolute top-5 right-5 w-8 h-8 flex items-center justify-center rounded-full bg-[var(--bg-card)] hover:bg-[var(--bg-card-hover)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-all active:scale-90 text-lg"
           aria-label="Close"
         >
           ✕
         </button>
-        <span className="text-xs text-gray-500 font-medium tracking-wide mb-1">{headerLabel}</span>
-        <h1 className="text-2xl font-black text-[var(--text-primary)] mb-4">Your Weekly Recap</h1>
+        <span className="text-xs text-[var(--text-muted)] font-medium tracking-wide mb-1">
+          {headerLabel}
+        </span>
+        <h1 className="text-2xl font-black text-[var(--text-primary)] mb-4">
+          Your Weekly Recap
+        </h1>
         <div className={`${neoAnim}`} style={{ width: 120, height: 120 }}>
-          <img src={neoImg} alt="Neo" className="w-full h-full object-contain" draggable={false} />
+          <img
+            src={neoImg}
+            alt="Neo"
+            className="w-full h-full object-contain"
+            draggable={false}
+          />
         </div>
       </div>
 
       {/* ── Scrollable Content ── */}
       <div className="flex-1 overflow-y-auto px-4 pb-36 space-y-3">
-
         {/* 1. Overall Score */}
         <div className="bg-[var(--bg-card)] border border-[var(--border)]/60 rounded-2xl p-5 flex flex-col items-center gap-3">
-          <h2 className="text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider self-start">Overall Score</h2>
+          <h2 className="text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider self-start">
+            Overall Score
+          </h2>
           <ScoreRing score={overallScore} />
         </div>
 
         {/* 2. Best Habit */}
         {bestHabit && (
           <div className="bg-[var(--bg-card)] border-l-4 border-emerald-500 rounded-2xl p-4 space-y-1">
-            <span className="text-xs font-bold text-[var(--success)] uppercase tracking-wider">🏆 Best habit</span>
+            <span className="text-xs font-bold text-[var(--success)] uppercase tracking-wider">
+              🏆 Best habit
+            </span>
             <div className="flex items-center gap-2 mt-1">
-              <span className="text-[var(--text-primary)] font-bold text-base">{bestHabit.name}</span>
-              {bestDays === 7 && <span className="text-yellow-400 text-lg">👑</span>}
+              <span className="text-[var(--text-primary)] font-bold text-base">
+                {bestHabit.name}
+              </span>
+              {bestDays === 7 && (
+                <span className="text-yellow-400 text-lg">👑</span>
+              )}
             </div>
-            <p className="text-sm text-[var(--text-secondary)]">Completed <span className="text-[var(--text-primary)] font-semibold">{bestDays} / 7</span> days</p>
+            <p className="text-sm text-[var(--text-secondary)]">
+              Completed{" "}
+              <span className="text-[var(--text-primary)] font-semibold">
+                {bestDays} / 7
+              </span>{" "}
+              days
+            </p>
             {bestDays === 7 && (
-              <p className="text-xs text-[var(--success)] font-semibold">Perfect week! Neo is so proud 🧅✨</p>
+              <p className="text-xs text-[var(--success)] font-semibold">
+                Perfect week! Neo is so proud 🧅✨
+              </p>
             )}
           </div>
         )}
@@ -316,39 +429,65 @@ export default function WeeklyReviewScreen({ onClose }) {
         {/* 3. Worst Habit */}
         {worstHabit && worstHabit.id !== bestHabit?.id && (
           <div className="bg-[var(--bg-card)] border-l-4 border-amber-500 rounded-2xl p-4 space-y-1">
-            <span className="text-xs font-bold text-[var(--warning)] uppercase tracking-wider">⚠️ Needs work</span>
-            <div className="text-[var(--text-primary)] font-bold text-base mt-1">{worstHabit.name}</div>
-            <p className="text-sm text-[var(--text-secondary)]">Only completed <span className="text-[var(--text-primary)] font-semibold">{worstDays} / 7</span> days</p>
-            <p className="text-xs text-gray-500 italic mt-1">Try pausing it if life is busy — no shame in that 💛</p>
+            <span className="text-xs font-bold text-[var(--warning)] uppercase tracking-wider">
+              ⚠️ Needs work
+            </span>
+            <div className="text-[var(--text-primary)] font-bold text-base mt-1">
+              {worstHabit.name}
+            </div>
+            <p className="text-sm text-[var(--text-secondary)]">
+              Only completed{" "}
+              <span className="text-[var(--text-primary)] font-semibold">
+                {worstDays} / 7
+              </span>{" "}
+              days
+            </p>
+            <p className="text-xs text-[var(--text-muted)] italic mt-1">
+              Try pausing it if life is busy — no shame in that 💛
+            </p>
           </div>
         )}
 
         {/* 4. Streak Changes */}
         {streakDeltas.length > 0 && (
           <div className="bg-[var(--bg-card)] border border-[var(--border)]/60 rounded-2xl p-4">
-            <h2 className="text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider mb-3">Streak Changes</h2>
+            <h2 className="text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider mb-3">
+              Streak Changes
+            </h2>
             <div className="flex flex-col gap-2">
-              {streakDeltas.map(s => {
+              {streakDeltas.map((s) => {
                 const barWidth = Math.round((s.streak / maxStreak) * 100);
-                const deltaColor = s.delta > 0 ? 'text-[var(--success)]' : s.delta < 0 ? 'text-[var(--danger)]' : 'text-gray-500';
-                const deltaLabel = s.delta > 0 ? `+${s.delta} ↑` : s.delta < 0 ? `${s.delta} ↓` : '=';
+                const deltaColor =
+                  s.delta > 0
+                    ? "text-[var(--success)]"
+                    : s.delta < 0
+                      ? "text-[var(--danger)]"
+                      : "text-[var(--text-muted)]";
+                const deltaLabel =
+                  s.delta > 0
+                    ? `+${s.delta} ↑`
+                    : s.delta < 0
+                      ? `${s.delta} ↓`
+                      : "=";
                 return (
                   <div key={s.id} className="flex flex-col gap-1">
                     <div className="flex items-center justify-between">
                       <span className="text-sm text-[var(--text-primary)] font-medium flex items-center gap-1.5">
                         🔥 {s.name}
                       </span>
-                      <span className="text-sm text-gray-300 flex items-center gap-2">
+                      <span className="text-sm text-[var(--text-secondary)] flex items-center gap-2">
                         <span className="font-bold">{s.streak}d</span>
-                        <span className={`text-xs font-bold ${deltaColor}`}>{deltaLabel}</span>
+                        <span className={`text-xs font-bold ${deltaColor}`}>
+                          {deltaLabel}
+                        </span>
                       </span>
                     </div>
-                    <div className="h-1 bg-gray-800 rounded-full overflow-hidden">
+                    <div className="h-1 bg-[var(--bg-card)] rounded-full overflow-hidden">
                       <div
                         className="h-full rounded-full transition-all duration-700"
                         style={{
                           width: `${barWidth}%`,
-                          background: s.delta >= 0 ? '#34d399' : '#f87171'
+                          background: s.delta >= 0 ? "#34d399" : "#f87171",
                         }}
                       />
                     </div>
@@ -361,52 +500,91 @@ export default function WeeklyReviewScreen({ onClose }) {
 
         {/* 5. Points This Week */}
         <div className="bg-[var(--bg-card)] border border-[var(--border)]/60 rounded-2xl p-4">
-          <h2 className="text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider mb-3">Points This Week</h2>
+          <h2 className="text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider mb-3">
+            Points This Week
+          </h2>
           <div className="flex items-center gap-3 mb-3">
-            <span className="text-3xl font-black text-yellow-400">⭐ {pointsThisWeek}</span>
-            <span className="text-sm text-[var(--text-secondary)]">points earned</span>
+            <span className="text-3xl font-black text-yellow-400">
+              ⭐ {pointsThisWeek}
+            </span>
+            <span className="text-sm text-[var(--text-secondary)]">
+              points earned
+            </span>
           </div>
           {/* Mini bar: this week vs last week */}
           <div className="space-y-1.5">
             {[
-              { label: 'This week', pts: pointsThisWeek, color: '#818cf8' },
-              { label: 'Last week', pts: lastWeekPoints, color: '#4b5563' }
-            ].map(row => {
-              const pct = bestWeekEver > 0 ? Math.round((row.pts / bestWeekEver) * 100) : 0;
+              { label: "This week", pts: pointsThisWeek, color: "#818cf8" },
+              { label: "Last week", pts: lastWeekPoints, color: "#4b5563" },
+            ].map((row) => {
+              const pct =
+                bestWeekEver > 0
+                  ? Math.round((row.pts / bestWeekEver) * 100)
+                  : 0;
               return (
                 <div key={row.label} className="flex items-center gap-2">
-                  <span className="text-xs text-gray-500 w-20 shrink-0">{row.label}</span>
-                  <div className="flex-1 h-1.5 bg-gray-800 rounded-full overflow-hidden">
+                  <span className="text-xs text-[var(--text-muted)] w-20 shrink-0">
+                    {row.label}
+                  </span>
+                  <div className="flex-1 h-1.5 bg-[var(--bg-card)] rounded-full overflow-hidden">
                     <div
                       className="h-full rounded-full transition-all duration-700"
                       style={{ width: `${pct}%`, background: row.color }}
                     />
                   </div>
-                  <span className="text-xs text-[var(--text-secondary)] w-8 text-right">{row.pts}</span>
+                  <span className="text-xs text-[var(--text-secondary)] w-8 text-right">
+                    {row.pts}
+                  </span>
                 </div>
               );
             })}
           </div>
           {isNewRecord && (
-            <p className="text-xs font-bold text-[var(--accent-purple)] mt-2">🎉 New personal record this week!</p>
+            <p className="text-xs font-bold text-[var(--accent-purple)] mt-2">
+              🎉 New personal record this week!
+            </p>
           )}
           {!isNewRecord && bestWeekEver > 0 && (
-            <p className="text-xs text-gray-500 mt-2">Your best week: <span className="text-[var(--text-secondary)] font-semibold">{bestWeekEver} pts</span></p>
+            <p className="text-xs text-[var(--text-muted)] mt-2">
+              Your best week:{" "}
+              <span className="text-[var(--text-secondary)] font-semibold">
+                {bestWeekEver} pts
+              </span>
+            </p>
           )}
         </div>
 
         {/* 6. Monthly Goals Pulse */}
         {goalsPulse.length > 0 && (
           <div className="bg-[var(--bg-card)] border border-[var(--border)]/60 rounded-2xl p-4">
-            <h2 className="text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider mb-3">Monthly Goals</h2>
+            <h2 className="text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider mb-3">
+              Monthly Goals
+            </h2>
             <div className="flex flex-col gap-2">
-              {goalsPulse.map(g => {
-                const icon = g.status === 'on_track' ? '📈' : g.status === 'at_risk' ? '⚠️' : '🔴';
-                const statusLabel = g.status === 'on_track' ? 'on track' : g.status === 'at_risk' ? 'at risk' : 'falling behind';
-                const statusColor = g.status === 'on_track' ? 'text-[var(--success)]' : g.status === 'at_risk' ? 'text-[var(--warning)]' : 'text-[var(--danger)]';
+              {goalsPulse.map((g) => {
+                const icon =
+                  g.status === "on_track"
+                    ? "📈"
+                    : g.status === "at_risk"
+                      ? "⚠️"
+                      : "🔴";
+                const statusLabel =
+                  g.status === "on_track"
+                    ? "on track"
+                    : g.status === "at_risk"
+                      ? "at risk"
+                      : "falling behind";
+                const statusColor =
+                  g.status === "on_track"
+                    ? "text-[var(--success)]"
+                    : g.status === "at_risk"
+                      ? "text-[var(--warning)]"
+                      : "text-[var(--danger)]";
                 return (
                   <div key={g.id} className="flex items-center justify-between">
-                    <span className="text-sm text-[var(--text-primary)]">{icon} {g.name}</span>
+                    <span className="text-sm text-[var(--text-primary)]">
+                      {icon} {g.name}
+                    </span>
                     <span className={`text-xs font-semibold ${statusColor}`}>
                       {statusLabel} ({g.progress}/{g.target})
                     </span>
@@ -421,26 +599,37 @@ export default function WeeklyReviewScreen({ onClose }) {
         {!intentionSkipped && (
           <div className="bg-[var(--bg-card)] border border-[var(--border)]/60 rounded-2xl p-4">
             <div className="flex items-center justify-between mb-2">
-              <h2 className="text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider">One thing to focus on next week</h2>
+              <h2 className="text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider">
+                One thing to focus on next week
+              </h2>
               <button
-                onClick={() => { saveIntention(); setIntentionSkipped(true); }}
-                className="text-xs text-gray-500 hover:text-[var(--text-secondary)] transition-colors"
+                onClick={() => {
+                  saveIntention();
+                  setIntentionSkipped(true);
+                }}
+                className="text-xs text-[var(--text-muted)] hover:text-[var(--text-secondary)] transition-colors"
               >
                 Skip
               </button>
             </div>
             {prevIntention && (
-              <p className="text-xs text-gray-600 italic mb-2">Last week: "{prevIntention}"</p>
+              <p className="text-xs text-[var(--text-muted)] italic mb-2">
+                Last week: "{prevIntention}"
+              </p>
             )}
             <textarea
               value={intention}
-              onChange={e => setIntention(e.target.value)}
+              onChange={(e) => setIntention(e.target.value)}
               onBlur={() => {
-                if (intention.trim()) localStorage.setItem('pinboard_weekly_intention', intention.trim());
+                if (intention.trim())
+                  localStorage.setItem(
+                    "pinboard_weekly_intention",
+                    intention.trim(),
+                  );
               }}
               placeholder="e.g. Don't miss water for 7 days straight"
               rows={2}
-              className="w-full bg-[var(--bg-card)] border border-gray-700 rounded-xl px-3 py-2 text-[var(--text-primary)] text-sm placeholder-gray-600 outline-none focus:border-indigo-500 resize-none transition-colors"
+              className="w-full bg-[var(--bg-card)] border border-[var(--border)] rounded-xl px-3 py-2 text-[var(--text-primary)] text-sm placeholder-gray-600 outline-none focus:border-indigo-500 resize-none transition-colors"
             />
           </div>
         )}
@@ -453,7 +642,7 @@ export default function WeeklyReviewScreen({ onClose }) {
           disabled={isGenerating}
           className="w-full py-3 bg-teal-500 hover:bg-teal-600 disabled:bg-teal-700 text-[var(--text-primary)] font-bold rounded-2xl transition-all active:scale-95 shadow-lg shadow-teal-900/40 text-sm flex items-center justify-center gap-1.5"
         >
-          {isGenerating ? 'Generating card...' : '📤 Share my week'}
+          {isGenerating ? "Generating card..." : "📤 Share my week"}
         </button>
         <button
           onClick={handleClose}
@@ -465,4 +654,3 @@ export default function WeeklyReviewScreen({ onClose }) {
     </div>
   );
 }
-

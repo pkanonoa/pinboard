@@ -1,31 +1,37 @@
-import React, { useState, useEffect } from 'react';
-import { Reorder } from 'framer-motion';
-import { syncStateToBackend } from '../utils';
-import { saveNotification } from '../db';
-import { useTheme } from '../hooks/useTheme';
+import React, { useState, useEffect } from "react";
+import { Reorder } from "framer-motion";
+import { syncStateToBackend } from "../utils";
+import { saveNotification } from "../db";
+import { useTheme } from "../hooks/useTheme";
 
 export default function SettingsSection() {
   const { theme, setTheme, THEMES } = useTheme();
 
   const [notificationsEnabled, setNotificationsEnabled] = useState(
-    localStorage.getItem('pinboard_push_subscribed') === 'true'
+    localStorage.getItem("pinboard_push_subscribed") === "true",
   );
 
   const [dailyReviewTime, setDailyReviewTime] = useState(
-    localStorage.getItem('pinboard_daily_review_time') || '20:00'
+    localStorage.getItem("pinboard_daily_review_time") || "20:00",
   );
 
   const [habits, setHabits] = useState([]);
   const [editingHabitId, setEditingHabitId] = useState(null);
 
   useEffect(() => {
-    const saved = localStorage.getItem('pinboard_rituals_data');
+    const saved = localStorage.getItem("pinboard_rituals_data");
     if (saved) {
-      try { setHabits(JSON.parse(saved).habits || []); } catch (e) { }
+      try {
+        setHabits(JSON.parse(saved).habits || []);
+      } catch (e) {}
     }
 
     // Auto-subscribe if they enabled it in device settings
-    if ('Notification' in window && Notification.permission === 'granted' && !notificationsEnabled) {
+    if (
+      "Notification" in window &&
+      Notification.permission === "granted" &&
+      !notificationsEnabled
+    ) {
       const subscribe = async () => {
         try {
           const reg = await navigator.serviceWorker.ready;
@@ -33,44 +39,50 @@ export default function SettingsSection() {
           const publicVapidKey = import.meta.env.VITE_VAPID_PUBLIC_KEY;
 
           const urlBase64ToUint8Array = (base64String) => {
-            const padding = '='.repeat((4 - base64String.length % 4) % 4);
-            const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+            const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
+            const base64 = (base64String + padding)
+              .replace(/-/g, "+")
+              .replace(/_/g, "/");
             const rawData = window.atob(base64);
             const outputArray = new Uint8Array(rawData.length);
-            for (let i = 0; i < rawData.length; ++i) { outputArray[i] = rawData.charCodeAt(i); }
+            for (let i = 0; i < rawData.length; ++i) {
+              outputArray[i] = rawData.charCodeAt(i);
+            }
             return outputArray;
           };
 
           await reg.pushManager.subscribe({
             userVisibleOnly: true,
-            applicationServerKey: urlBase64ToUint8Array(publicVapidKey)
+            applicationServerKey: urlBase64ToUint8Array(publicVapidKey),
           });
 
           setNotificationsEnabled(true);
-          localStorage.setItem('pinboard_push_subscribed', 'true');
+          localStorage.setItem("pinboard_push_subscribed", "true");
           syncStateToBackend();
         } catch (e) {
-          console.error('Auto-subscribe failed:', e);
+          console.error("Auto-subscribe failed:", e);
         }
       };
       subscribe();
     }
 
-    const focus = localStorage.getItem('pinboard_settings_focus');
+    const focus = localStorage.getItem("pinboard_settings_focus");
     if (focus) {
-      localStorage.removeItem('pinboard_settings_focus');
+      localStorage.removeItem("pinboard_settings_focus");
       setTimeout(() => {
         const el = document.getElementById(`settings-${focus}`);
-        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
       }, 150);
     }
   }, []);
 
   const saveHabits = (newHabits) => {
     setHabits(newHabits);
-    const existing = JSON.parse(localStorage.getItem('pinboard_rituals_data') || '{}');
+    const existing = JSON.parse(
+      localStorage.getItem("pinboard_rituals_data") || "{}",
+    );
     existing.habits = newHabits;
-    localStorage.setItem('pinboard_rituals_data', JSON.stringify(existing));
+    localStorage.setItem("pinboard_rituals_data", JSON.stringify(existing));
     syncStateToBackend();
   };
 
@@ -81,96 +93,107 @@ export default function SettingsSection() {
   const handleDailyReviewTimeChange = (e) => {
     const val = e.target.value;
     setDailyReviewTime(val);
-    localStorage.setItem('pinboard_daily_review_time', val);
+    localStorage.setItem("pinboard_daily_review_time", val);
     syncStateToBackend();
   };
 
   const handleToggleNotifications = async () => {
     if (!notificationsEnabled) {
       // Trying to enable
-      if ('Notification' in window) {
+      if ("Notification" in window) {
         const perm = await Notification.requestPermission();
-        if (perm === 'granted') {
+        if (perm === "granted") {
           setNotificationsEnabled(true);
-          localStorage.setItem('pinboard_push_subscribed', 'true');
+          localStorage.setItem("pinboard_push_subscribed", "true");
           syncStateToBackend();
         } else {
-          alert('Notification permission denied by browser.');
+          alert("Notification permission denied by browser.");
         }
       } else {
-        alert('Notifications are not supported in this browser.');
+        alert("Notifications are not supported in this browser.");
       }
     } else {
       // Trying to disable
       setNotificationsEnabled(false);
-      localStorage.setItem('pinboard_push_subscribed', 'false');
+      localStorage.setItem("pinboard_push_subscribed", "false");
       syncStateToBackend();
     }
   };
 
   const testNotification = async () => {
-    if (Notification.permission === 'granted') {
+    if (Notification.permission === "granted") {
       try {
         const reg = await navigator.serviceWorker.ready;
-        const title = 'Test Notification';
-        const body = 'This is a test notification from Pinboard Settings!';
+        const title = "Test Notification";
+        const body = "This is a test notification from Pinboard Settings!";
 
         reg.showNotification(title, {
           body: body,
-          icon: '/logo.jpg',
-          vibrate: [200, 100, 200]
+          icon: "/logo.jpg",
+          vibrate: [200, 100, 200],
         });
 
         // Save it to the in-app drawer
         await saveNotification({
-          id: Date.now().toString() + Math.random().toString(36).substring(2, 9),
+          id:
+            Date.now().toString() + Math.random().toString(36).substring(2, 9),
           title: title,
           body: body,
-          type: 'summary',
+          type: "summary",
           timestamp: Date.now(),
-          read: false
+          read: false,
         });
 
         // Notify App to update the bell
-        window.dispatchEvent(new Event('notifications_read'));
-
+        window.dispatchEvent(new Event("notifications_read"));
       } catch (e) {
         console.error(e);
-        alert('Database Error: ' + e.message);
+        alert("Database Error: " + e.message);
       }
     } else {
-      alert('Please enable notifications first.');
+      alert("Please enable notifications first.");
     }
   };
 
   const updateHabit = (id, updates) => {
-    const newHabits = habits.map(h => h.id === id ? { ...h, ...updates } : h);
+    const newHabits = habits.map((h) =>
+      h.id === id ? { ...h, ...updates } : h,
+    );
     saveHabits(newHabits);
   };
 
   const deleteHabit = (id) => {
-    if (window.confirm('Delete this habit?')) {
-      saveHabits(habits.filter(h => h.id !== id));
+    if (window.confirm("Delete this habit?")) {
+      saveHabits(habits.filter((h) => h.id !== id));
     }
   };
 
   const clearCompletedTasks = () => {
-    const tasks = JSON.parse(localStorage.getItem('pinboard_tasks') || '[]');
-    const newTasks = tasks.filter(t => !t.done);
-    localStorage.setItem('pinboard_tasks', JSON.stringify(newTasks));
+    const tasks = JSON.parse(localStorage.getItem("pinboard_tasks") || "[]");
+    const newTasks = tasks.filter((t) => !t.done);
+    localStorage.setItem("pinboard_tasks", JSON.stringify(newTasks));
     syncStateToBackend();
-    alert('Completed tasks cleared.');
+    alert("Completed tasks cleared.");
   };
 
   const resetStreaks = () => {
-    if (window.confirm('Are you sure you want to reset all streaks to 0?')) {
-      const newHabits = habits.map(h => ({ ...h, streak: 0, count: 0, lastCompletedDate: null }));
+    if (window.confirm("Are you sure you want to reset all streaks to 0?")) {
+      const newHabits = habits.map((h) => ({
+        ...h,
+        streak: 0,
+        count: 0,
+        lastCompletedDate: null,
+      }));
       saveHabits(newHabits);
     }
   };
 
   const clearAllData = () => {
-    if (window.confirm('WARNING: This will delete ALL data. Are you absolutely sure?')) {
+    if (
+      window.confirm(
+        "WARNING: This will delete ALL data. Are you absolutely sure?",
+      )
+    ) {
       localStorage.clear();
       window.location.reload();
     }
@@ -180,105 +203,189 @@ export default function SettingsSection() {
     <div className="w-full max-w-md flex flex-col gap-6 z-10 pb-8 animate-fade-in">
       <div className="flex items-center gap-3 mb-2">
         <div className="w-10 h-10 rounded-xl bg-pink-500/20 border border-pink-500/30 flex items-center justify-center">
-          <svg className="w-6 h-6 text-pink-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+          <svg
+            className="w-6 h-6 text-pink-400"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="2"
+              d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
+            ></path>
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="2"
+              d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+            ></path>
           </svg>
         </div>
-        <h2 className="text-2xl font-bold text-[var(--text-primary)]">Settings</h2>
+        <h2 className="text-2xl font-bold text-[var(--text-primary)]">
+          Settings
+        </h2>
       </div>
 
       {/* Notifications */}
-      <section id="settings-notifications" className="bg-gray-900 border border-[var(--border)] rounded-xl p-5 shadow-lg">
-        <h3 className="text-sm font-bold text-[var(--text-secondary)] uppercase tracking-wider mb-4">Notifications</h3>
+      <section
+        id="settings-notifications"
+        className="bg-[var(--bg-primary)] border border-[var(--border)] rounded-xl p-5 shadow-lg"
+      >
+        <h3 className="text-sm font-bold text-[var(--text-secondary)] uppercase tracking-wider mb-4">
+          Notifications
+        </h3>
 
-        {(!('Notification' in window) || Notification.permission !== 'granted') && (
-          <div className="bg-gray-800 p-4 rounded-lg mb-4 text-center border border-gray-700">
-            <p className="text-gray-300 text-sm">Please enable notifications in your device app settings to receive reminders.</p>
+        {(!("Notification" in window) ||
+          Notification.permission !== "granted") && (
+          <div className="bg-[var(--bg-card)] p-4 rounded-lg mb-4 text-center border border-[var(--border)]">
+            <p className="text-[var(--text-secondary)] text-sm">
+              Please enable notifications in your device app settings to receive
+              reminders.
+            </p>
           </div>
         )}
 
         <div className="flex items-center justify-between mb-4">
-          <span className="text-[var(--text-primary)] font-medium">Daily Review Time</span>
+          <span className="text-[var(--text-primary)] font-medium">
+            Daily Review Time
+          </span>
           <input
             type="time"
             value={dailyReviewTime}
             onChange={handleDailyReviewTimeChange}
-            className="bg-gray-800 border border-gray-700 rounded-lg px-3 py-1.5 text-[var(--text-primary)] outline-none focus:border-indigo-500"
+            className="bg-[var(--bg-card)] border border-[var(--border)] rounded-lg px-3 py-1.5 text-[var(--text-primary)] outline-none focus:border-indigo-500"
           />
         </div>
 
         <button
           onClick={testNotification}
-          className="w-full py-2 bg-gray-800 hover:bg-gray-700 text-[var(--accent-purple)] font-bold rounded-lg transition-colors border border-gray-700"
+          className="w-full py-2 bg-[var(--bg-card)] hover:bg-[var(--bg-card-hover)] text-[var(--accent-purple)] font-bold rounded-lg transition-colors border border-[var(--border)]"
         >
           Test Notification
         </button>
       </section>
 
       {/* Habits Management */}
-      <section id="settings-rituals" className="bg-gray-900 border border-[var(--border)] rounded-xl p-5 shadow-lg">
-        <h3 className="text-sm font-bold text-[var(--text-secondary)] uppercase tracking-wider mb-4">Rituals Management</h3>
-        <p className="text-xs text-gray-500 mb-3">Drag to reorder. Tap a habit to edit.</p>
+      <section
+        id="settings-rituals"
+        className="bg-[var(--bg-primary)] border border-[var(--border)] rounded-xl p-5 shadow-lg"
+      >
+        <h3 className="text-sm font-bold text-[var(--text-secondary)] uppercase tracking-wider mb-4">
+          Rituals Management
+        </h3>
+        <p className="text-xs text-[var(--text-muted)] mb-3">
+          Drag to reorder. Tap a habit to edit.
+        </p>
 
         {habits.length === 0 ? (
-          <p className="text-gray-500 italic text-sm">No rituals to manage.</p>
+          <p className="text-[var(--text-muted)] italic text-sm">
+            No rituals to manage.
+          </p>
         ) : (
-          <Reorder.Group axis="y" values={habits} onReorder={handleReorder} className="flex flex-col gap-3">
+          <Reorder.Group
+            axis="y"
+            values={habits}
+            onReorder={handleReorder}
+            className="flex flex-col gap-3"
+          >
             {habits.map((habit) => (
-              <Reorder.Item key={habit.id} value={habit} className="bg-gray-800 border border-gray-700 rounded-lg p-3 cursor-grab active:cursor-grabbing">
+              <Reorder.Item
+                key={habit.id}
+                value={habit}
+                className="bg-[var(--bg-card)] border border-[var(--border)] rounded-lg p-3 cursor-grab active:cursor-grabbing"
+              >
                 <div className="flex justify-between items-start mb-2">
                   <div className="flex items-center gap-3">
-                    <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 8h16M4 16h16"></path></svg>
-                    <span className="text-[var(--text-primary)] font-medium">{habit.name}</span>
+                    <svg
+                      className="w-5 h-5 text-[var(--text-muted)]"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M4 8h16M4 16h16"
+                      ></path>
+                    </svg>
+                    <span className="text-[var(--text-primary)] font-medium">
+                      {habit.name}
+                    </span>
                   </div>
                   <button
-                    onClick={() => setEditingHabitId(editingHabitId === habit.id ? null : habit.id)}
-                    className="text-xs text-[var(--accent-purple)] font-bold px-2 py-1 bg-gray-700 rounded hover:bg-gray-600"
+                    onClick={() =>
+                      setEditingHabitId(
+                        editingHabitId === habit.id ? null : habit.id,
+                      )
+                    }
+                    className="text-xs text-[var(--accent-purple)] font-bold px-2 py-1 bg-[var(--bg-card-hover)] rounded hover:bg-[var(--bg-card-hover)]"
                   >
-                    {editingHabitId === habit.id ? 'Close' : 'Edit'}
+                    {editingHabitId === habit.id ? "Close" : "Edit"}
                   </button>
                 </div>
 
                 {editingHabitId === habit.id && (
-                  <div className="mt-4 flex flex-col gap-3 border-t border-gray-700 pt-3">
+                  <div className="mt-4 flex flex-col gap-3 border-t border-[var(--border)] pt-3">
                     <input
                       type="text"
                       value={habit.name}
-                      onChange={(e) => updateHabit(habit.id, { name: e.target.value })}
+                      onChange={(e) =>
+                        updateHabit(habit.id, { name: e.target.value })
+                      }
                       placeholder="Habit name"
-                      className="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-[var(--text-primary)] outline-none focus:border-indigo-500"
+                      className="w-full bg-[var(--bg-primary)] border border-[var(--border)] rounded-lg px-3 py-2 text-[var(--text-primary)] outline-none focus:border-indigo-500"
                     />
                     <div className="flex gap-2">
                       <input
                         type="number"
                         value={habit.goal}
-                        onChange={(e) => updateHabit(habit.id, { goal: parseInt(e.target.value) || 1 })}
-                        className="w-24 bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-[var(--text-primary)] outline-none focus:border-indigo-500"
+                        onChange={(e) =>
+                          updateHabit(habit.id, {
+                            goal: parseInt(e.target.value) || 1,
+                          })
+                        }
+                        className="w-24 bg-[var(--bg-primary)] border border-[var(--border)] rounded-lg px-3 py-2 text-[var(--text-primary)] outline-none focus:border-indigo-500"
                       />
                       <input
                         type="text"
                         value={habit.unit}
-                        onChange={(e) => updateHabit(habit.id, { unit: e.target.value })}
-                        className="flex-1 bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-[var(--text-primary)] outline-none focus:border-indigo-500"
+                        onChange={(e) =>
+                          updateHabit(habit.id, { unit: e.target.value })
+                        }
+                        className="flex-1 bg-[var(--bg-primary)] border border-[var(--border)] rounded-lg px-3 py-2 text-[var(--text-primary)] outline-none focus:border-indigo-500"
                       />
                     </div>
 
                     <div className="flex items-center justify-between mt-2">
-                      <span className="text-sm text-gray-300">Habit Reminder</span>
+                      <span className="text-sm text-[var(--text-secondary)]">
+                        Habit Reminder
+                      </span>
                       <button
-                        onClick={() => updateHabit(habit.id, { reminderEnabled: !habit.reminderEnabled })}
-                        className={`w-10 h-5 rounded-full transition-colors relative ${habit.reminderEnabled ? 'bg-emerald-500' : 'bg-gray-700'}`}
+                        onClick={() =>
+                          updateHabit(habit.id, {
+                            reminderEnabled: !habit.reminderEnabled,
+                          })
+                        }
+                        className={`w-10 h-5 rounded-full transition-colors relative ${habit.reminderEnabled ? "bg-emerald-500" : "bg-[var(--bg-card-hover)]"}`}
                       >
-                        <div className={`w-3 h-3 bg-white rounded-full absolute top-1 transition-transform ${habit.reminderEnabled ? 'translate-x-6' : 'translate-x-1'}`}></div>
+                        <div
+                          className={`w-3 h-3 bg-white rounded-full absolute top-1 transition-transform ${habit.reminderEnabled ? "translate-x-6" : "translate-x-1"}`}
+                        ></div>
                       </button>
                     </div>
                     {habit.reminderEnabled && (
                       <input
                         type="time"
-                        value={habit.reminderTime || '09:00'}
-                        onChange={(e) => updateHabit(habit.id, { reminderTime: e.target.value })}
-                        className="bg-gray-900 border border-gray-700 rounded-lg px-3 py-1.5 text-[var(--text-primary)] outline-none focus:border-indigo-500 self-end"
+                        value={habit.reminderTime || "09:00"}
+                        onChange={(e) =>
+                          updateHabit(habit.id, {
+                            reminderTime: e.target.value,
+                          })
+                        }
+                        className="bg-[var(--bg-primary)] border border-[var(--border)] rounded-lg px-3 py-1.5 text-[var(--text-primary)] outline-none focus:border-indigo-500 self-end"
                       />
                     )}
 
@@ -297,78 +404,134 @@ export default function SettingsSection() {
       </section>
 
       {/* Paused Habits Section */}
-      {habits.some(h => h.paused) && (
-        <section className="bg-gray-900 border border-[var(--border)] rounded-xl p-5 shadow-lg">
-          <h3 className="text-sm font-bold text-[var(--text-secondary)] uppercase tracking-wider mb-4">Paused Rituals</h3>
+      {habits.some((h) => h.paused) && (
+        <section className="bg-[var(--bg-primary)] border border-[var(--border)] rounded-xl p-5 shadow-lg">
+          <h3 className="text-sm font-bold text-[var(--text-secondary)] uppercase tracking-wider mb-4">
+            Paused Rituals
+          </h3>
           <div className="flex flex-col gap-3">
-            {habits.filter(h => h.paused).map(habit => (
-              <div key={`paused_${habit.id}`} className="bg-gray-800 border border-gray-700 rounded-lg p-3 flex justify-between items-center">
-                <div>
-                  <div className="text-[var(--text-primary)] font-medium flex items-center gap-2">
-                    <span className="text-xl">😴</span> {habit.name}
+            {habits
+              .filter((h) => h.paused)
+              .map((habit) => (
+                <div
+                  key={`paused_${habit.id}`}
+                  className="bg-[var(--bg-card)] border border-[var(--border)] rounded-lg p-3 flex justify-between items-center"
+                >
+                  <div>
+                    <div className="text-[var(--text-primary)] font-medium flex items-center gap-2">
+                      <span className="text-xl">😴</span> {habit.name}
+                    </div>
+                    <div className="text-xs text-[var(--text-secondary)] mt-1">
+                      Resumes: {habit.resumeDate || "Unknown"}
+                    </div>
                   </div>
-                  <div className="text-xs text-[var(--text-secondary)] mt-1">
-                    Resumes: {habit.resumeDate || 'Unknown'}
-                  </div>
-                </div>
-                <button
-                  onClick={() => {
-                    const newHabits = habits.map(h =>
-                      h.id === habit.id
-                        ? { ...h, paused: false, pausedAt: null, resumeDate: null }
-                        : h
-                    );
-                    saveHabits(newHabits);
-                    window.dispatchEvent(new CustomEvent('neo-bounce'));
-
-                    // Unpause linked goals
-                    try {
-                      const savedGoals = localStorage.getItem('pinboard_goals');
-                      if (savedGoals) {
-                        const goals = JSON.parse(savedGoals);
-                        let goalsChanged = false;
-                        const updatedGoals = goals.map(g => {
-                          if (g.linkedHabitIds?.includes(habit.id) && g.paused) {
-                            goalsChanged = true;
-                            const now = Date.now();
-                            const pauseStart = g.pausedAt ? new Date(g.pausedAt).getTime() : now;
-                            return {
-                              ...g,
+                  <button
+                    onClick={() => {
+                      const newHabits = habits.map((h) =>
+                        h.id === habit.id
+                          ? {
+                              ...h,
                               paused: false,
                               pausedAt: null,
-                              totalPausedMs: (g.totalPausedMs || 0) + Math.max(0, now - pauseStart)
-                            };
+                              resumeDate: null,
+                            }
+                          : h,
+                      );
+                      saveHabits(newHabits);
+                      window.dispatchEvent(new CustomEvent("neo-bounce"));
+
+                      // Unpause linked goals
+                      try {
+                        const savedGoals =
+                          localStorage.getItem("pinboard_goals");
+                        if (savedGoals) {
+                          const goals = JSON.parse(savedGoals);
+                          let goalsChanged = false;
+                          const updatedGoals = goals.map((g) => {
+                            if (
+                              g.linkedHabitIds?.includes(habit.id) &&
+                              g.paused
+                            ) {
+                              goalsChanged = true;
+                              const now = Date.now();
+                              const pauseStart = g.pausedAt
+                                ? new Date(g.pausedAt).getTime()
+                                : now;
+                              return {
+                                ...g,
+                                paused: false,
+                                pausedAt: null,
+                                totalPausedMs:
+                                  (g.totalPausedMs || 0) +
+                                  Math.max(0, now - pauseStart),
+                              };
+                            }
+                            return g;
+                          });
+                          if (goalsChanged) {
+                            localStorage.setItem(
+                              "pinboard_goals",
+                              JSON.stringify(updatedGoals),
+                            );
+                            window.dispatchEvent(
+                              new Event("pinboard_goals_updated"),
+                            );
                           }
-                          return g;
-                        });
-                        if (goalsChanged) {
-                          localStorage.setItem('pinboard_goals', JSON.stringify(updatedGoals));
-                          window.dispatchEvent(new Event('pinboard_goals_updated'));
                         }
-                      }
-                    } catch (e) { }
-                  }}
-                  className="text-xs bg-teal-500 hover:bg-teal-400 text-teal-950 font-bold px-3 py-1.5 rounded-lg transition-colors"
-                >
-                  Unpause now
-                </button>
-              </div>
-            ))}
+                      } catch (e) {}
+                    }}
+                    className="text-xs bg-teal-500 hover:bg-teal-400 text-teal-950 font-bold px-3 py-1.5 rounded-lg transition-colors"
+                  >
+                    Unpause now
+                  </button>
+                </div>
+              ))}
           </div>
         </section>
       )}
 
       {/* App Preferences / Account */}
-      <section id="settings-account" className="bg-gray-900 border border-[var(--border)] rounded-xl p-5 shadow-lg">
-        <h3 className="text-sm font-bold text-[var(--text-secondary)] uppercase tracking-wider mb-4">App & Account</h3>
+      <section
+        id="settings-account"
+        className="bg-[var(--bg-primary)] border border-[var(--border)] rounded-xl p-5 shadow-lg"
+      >
+        <h3 className="text-sm font-bold text-[var(--text-secondary)] uppercase tracking-wider mb-4">
+          App & Account
+        </h3>
 
         <div className="mb-6">
-          <span className="text-[var(--text-primary)] font-medium block mb-2">Theme</span>
+          <span className="text-[var(--text-primary)] font-medium block mb-2">
+            Theme
+          </span>
           <div className="grid grid-cols-3 gap-2">
             {[
-              { id: 'dark', label: 'Dark', icon: '🌑', bg: '#0a0f1a', card: '#1a2535', text: '#f8fafc', accent: '#2dd4bf' },
-              { id: 'light', label: 'Light', icon: '☀️', bg: '#f8fafc', card: '#ffffff', text: '#0f172a', accent: '#0d9488' },
-              { id: 'amoled', label: 'AMOLED', icon: '⬛', bg: '#000000', card: '#111111', text: '#ffffff', accent: '#2dd4bf' }
+              {
+                id: "dark",
+                label: "Dark",
+                icon: "🌑",
+                bg: "#0a0f1a",
+                card: "#1a2535",
+                text: "#f8fafc",
+                accent: "#2dd4bf",
+              },
+              {
+                id: "light",
+                label: "Light",
+                icon: "☀️",
+                bg: "#f8fafc",
+                card: "#ffffff",
+                text: "#0f172a",
+                accent: "#0d9488",
+              },
+              {
+                id: "amoled",
+                label: "AMOLED",
+                icon: "⬛",
+                bg: "#000000",
+                card: "#111111",
+                text: "#ffffff",
+                accent: "#2dd4bf",
+              },
             ].map((t) => {
               const isActive = theme === t.id;
               return (
@@ -377,22 +540,48 @@ export default function SettingsSection() {
                   onClick={() => setTheme(t.id)}
                   className={`relative flex flex-col items-center justify-center p-3 rounded-xl border transition-all ${
                     isActive
-                      ? 'border-[var(--accent-teal)] bg-[var(--accent-teal)]/5 shadow-md'
-                      : 'border-[var(--border)] bg-[var(--bg-card)] hover:border-[var(--text-secondary)]'
+                      ? "border-[var(--accent-teal)] bg-[var(--accent-teal)]/5 shadow-md"
+                      : "border-[var(--border)] bg-[var(--bg-card)] hover:border-[var(--text-secondary)]"
                   }`}
                   style={{ backgroundColor: t.bg }}
                 >
                   {isActive && (
                     <div className="absolute top-1.5 right-1.5 bg-[var(--accent-teal)] text-teal-950 rounded-full w-4 h-4 flex items-center justify-center shadow-sm">
-                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7"></path></svg>
+                      <svg
+                        className="w-3 h-3"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="3"
+                          d="M5 13l4 4L19 7"
+                        ></path>
+                      </svg>
                     </div>
                   )}
                   <span className="text-xl mb-2">{t.icon}</span>
-                  <span className="text-xs font-semibold mb-2" style={{ color: t.text }}>{t.label}</span>
+                  <span
+                    className="text-xs font-semibold mb-2"
+                    style={{ color: t.text }}
+                  >
+                    {t.label}
+                  </span>
                   <div className="flex gap-1">
-                    <span className="w-2.5 h-2.5 rounded-full border border-gray-500/30" style={{ backgroundColor: t.card }}></span>
-                    <span className="w-2.5 h-2.5 rounded-full border border-gray-500/30" style={{ backgroundColor: t.text }}></span>
-                    <span className="w-2.5 h-2.5 rounded-full border border-gray-500/30" style={{ backgroundColor: t.accent }}></span>
+                    <span
+                      className="w-2.5 h-2.5 rounded-full border border-gray-500/30"
+                      style={{ backgroundColor: t.card }}
+                    ></span>
+                    <span
+                      className="w-2.5 h-2.5 rounded-full border border-gray-500/30"
+                      style={{ backgroundColor: t.text }}
+                    ></span>
+                    <span
+                      className="w-2.5 h-2.5 rounded-full border border-gray-500/30"
+                      style={{ backgroundColor: t.accent }}
+                    ></span>
                   </div>
                 </button>
               );
@@ -403,13 +592,13 @@ export default function SettingsSection() {
         <div className="flex flex-col gap-3">
           <button
             onClick={clearCompletedTasks}
-            className="w-full py-3 bg-gray-800 hover:bg-gray-700 text-[var(--text-primary)] font-medium rounded-lg transition-colors border border-gray-700"
+            className="w-full py-3 bg-[var(--bg-card)] hover:bg-[var(--bg-card-hover)] text-[var(--text-primary)] font-medium rounded-lg transition-colors border border-[var(--border)]"
           >
             Clear Completed Tasks
           </button>
           <button
             onClick={resetStreaks}
-            className="w-full py-3 bg-gray-800 hover:bg-gray-700 text-[var(--warning)] font-medium rounded-lg transition-colors border border-gray-700"
+            className="w-full py-3 bg-[var(--bg-card)] hover:bg-[var(--bg-card-hover)] text-[var(--warning)] font-medium rounded-lg transition-colors border border-[var(--border)]"
           >
             Reset All Streaks
           </button>
@@ -424,22 +613,26 @@ export default function SettingsSection() {
 
       {/* About */}
       <section className="flex flex-col items-center justify-center py-6 gap-2 opacity-60">
-        <div className="w-12 h-12 rounded-xl bg-gray-800 border border-gray-700 flex items-center justify-center">
+        <div className="w-12 h-12 rounded-xl bg-[var(--bg-card)] border border-[var(--border)] flex items-center justify-center">
           <img src="/logo.jpg" alt="Logo" className="w-8 h-8 rounded-lg" />
         </div>
-        <p className="text-sm font-bold text-[var(--text-primary)]">Pinboard <span className="font-normal text-[var(--text-secondary)]">v1.2.0</span></p>
-        <p className="text-xs text-gray-500">Made for you 🌱</p>
+        <p className="text-sm font-bold text-[var(--text-primary)]">
+          Pinboard{" "}
+          <span className="font-normal text-[var(--text-secondary)]">
+            v1.2.0
+          </span>
+        </p>
+        <p className="text-xs text-[var(--text-muted)]">Made for you 🌱</p>
         <button
           onClick={() => {
-            localStorage.removeItem('pinboard_onboarded');
+            localStorage.removeItem("pinboard_onboarded");
             window.location.reload();
           }}
-          className="mt-4 px-4 py-2 bg-gray-800 hover:bg-gray-700 text-[var(--text-secondary)] text-xs font-semibold rounded-lg transition-colors border border-gray-700"
+          className="mt-4 px-4 py-2 bg-[var(--bg-card)] hover:bg-[var(--bg-card-hover)] text-[var(--text-secondary)] text-xs font-semibold rounded-lg transition-colors border border-[var(--border)]"
         >
           Redo Setup
         </button>
       </section>
-
     </div>
   );
 }
