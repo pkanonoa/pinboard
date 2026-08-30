@@ -345,7 +345,7 @@ export default function Dashboard({ setCurrentTab }) {
       <div className="flex flex-col pr-14 pt-1">
         {/* Level badge & points line */}
         <div className="flex items-center gap-2 mt-3 flex-wrap">
-          <span className="bg-indigo-950/50 border border-indigo-500/30 text-[var(--accent-purple)] text-xs font-semibold px-3 py-1 rounded-full shadow-sm tracking-wide">
+          <span className="bg-indigo-500/10 border border-indigo-500/30 text-[var(--accent-purple)] text-xs font-semibold px-3 py-1 rounded-full shadow-sm tracking-wide">
             {currentLevelName}
           </span>
           <div className="flex items-center gap-1.5 bg-[var(--bg-card)] border border-[var(--border)]/80 px-3 py-1 rounded-full text-xs shadow-sm">
@@ -452,7 +452,7 @@ export default function Dashboard({ setCurrentTab }) {
               <div className="flex items-center gap-3 w-full justify-center">
                 <button
                   onClick={() => setCurrentTab("goals")}
-                  className="px-4 py-1.5 bg-indigo-500 hover:bg-indigo-600 text-[var(--text-primary)] rounded-xl text-xs font-semibold shadow-sm transition-all active:scale-95"
+                  className="px-4 py-1.5 bg-indigo-500 hover:bg-indigo-600 text-white rounded-xl text-xs font-semibold shadow-sm transition-all active:scale-95"
                 >
                   Set a goal
                 </button>

@@ -502,7 +502,7 @@ export default function GoalsSection() {
 
           <button
             type="submit"
-            className="w-full bg-indigo-500 hover:bg-indigo-600 text-[var(--text-primary)] py-3.5 rounded-xl text-[15px] font-bold transition-all active:scale-95"
+            className="w-full bg-indigo-500 hover:bg-indigo-600 text-white py-3.5 rounded-xl text-[15px] font-bold transition-all active:scale-95"
           >
             {editingGoalId ? "Save Changes" : "Create Goal"}
           </button>
