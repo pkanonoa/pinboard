@@ -377,7 +377,7 @@ export default function Dashboard({ setCurrentTab }) {
             {completedTasksToday}
           </span>
           <span className="text-xs text-[var(--text-secondary)] font-medium mt-1.5">
-            tasks
+            Tasks
           </span>
         </div>
         <div className="bg-[var(--bg-card)] border border-[var(--border)]/60 rounded-2xl py-3.5 px-2 flex flex-col items-center justify-center text-center shadow-sm">
@@ -385,7 +385,7 @@ export default function Dashboard({ setCurrentTab }) {
             {habitsDoneToday}
           </span>
           <span className="text-xs text-[var(--text-secondary)] font-medium mt-1.5">
-            rituals
+            Rituals
           </span>
         </div>
         <div className="bg-[var(--bg-card)] border border-[var(--border)]/60 rounded-2xl py-3.5 px-2 flex flex-col items-center justify-center text-center shadow-sm">
@@ -393,7 +393,7 @@ export default function Dashboard({ setCurrentTab }) {
             {bestStreak}
           </span>
           <span className="text-xs text-[var(--text-secondary)] font-medium mt-1.5">
-            streak
+            Streak
           </span>
         </div>
       </div>
