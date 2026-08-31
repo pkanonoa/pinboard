@@ -369,10 +369,10 @@ export default function SettingsSection() {
                             reminderEnabled: !habit.reminderEnabled,
                           })
                         }
-                        className={`w-10 h-5 rounded-full transition-colors relative ${habit.reminderEnabled ? "bg-emerald-500" : "bg-[var(--bg-card-hover)]"}`}
+                        className={`w-10 h-5 rounded-full transition-colors relative border border-[var(--border)] ${habit.reminderEnabled ? "bg-emerald-500" : "bg-[var(--bg-card-hover)]"}`}
                       >
                         <div
-                          className={`w-3 h-3 bg-white rounded-full absolute top-1 transition-transform ${habit.reminderEnabled ? "translate-x-6" : "translate-x-1"}`}
+                          className={`w-3 h-3 bg-white rounded-full absolute top-0.5 transition-transform ${habit.reminderEnabled ? "translate-x-5" : "translate-x-0.5"}`}
                         ></div>
                       </button>
                     </div>

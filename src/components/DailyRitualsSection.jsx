@@ -528,20 +528,19 @@ export default function DailyRitualsSection() {
   const handleLogBigNumber = (id, e) => {
     e.preventDefault();
     const val = parseInt(bigNumberInputs[id], 10);
-    if (isNaN(val) || val < 0) return;
+    if (isNaN(val) || val <= 0) return;
 
     const targetHabit = habits.find((h) => h.id === id);
     if (!targetHabit || targetHabit.paused) return;
 
-    // Synchronize difference with linked goals:
-    // If val is 0, this syncs (0 - targetHabit.count) which subtracts today's count from the goal
-    syncMonthlyGoalProgress(id, val - targetHabit.count);
+    // Synchronize addition with linked goals
+    syncMonthlyGoalProgress(id, val);
 
     const todayStr = getLocalYMD();
     setHabits((currentHabits) =>
       currentHabits.map((habit) => {
         if (habit.id === id) {
-          const newCount = val;
+          const newCount = habit.count + val;
           let newStreak = habit.streak;
           let newLastCompletedDate = habit.lastCompletedDate;
 
@@ -1117,10 +1116,10 @@ export default function DailyRitualsSection() {
                                     !editHabitData.reminderEnabled,
                                 })
                               }
-                              className={`w-10 h-5 rounded-full transition-colors relative ${editHabitData.reminderEnabled ? "bg-indigo-500" : "bg-gray-300 dark:bg-gray-600"}`}
+                              className={`w-10 h-5 rounded-full transition-colors relative border border-[var(--border)] ${editHabitData.reminderEnabled ? "bg-indigo-500" : "bg-gray-300 dark:bg-gray-600"}`}
                             >
                               <div
-                                className={`w-3 h-3 bg-white rounded-full absolute top-1 transition-transform ${editHabitData.reminderEnabled ? "translate-x-6" : "translate-x-1"}`}
+                                className={`w-3 h-3 bg-white rounded-full absolute top-0.5 transition-transform ${editHabitData.reminderEnabled ? "translate-x-5" : "translate-x-0.5"}`}
                               ></div>
                             </button>
                           </div>
@@ -1626,10 +1625,10 @@ export default function DailyRitualsSection() {
                                         [habit.id]:
                                           prev[habit.id] !== undefined
                                             ? undefined
-                                            : habit.count,
+                                            : "",
                                       }))
                                     }
-                                    title="Click to edit or adjust"
+                                    title="Click to add more"
                                   >
                                     Done
                                   </div>
@@ -1641,18 +1640,14 @@ export default function DailyRitualsSection() {
                                         [habit.id]:
                                           prev[habit.id] !== undefined
                                             ? undefined
-                                            : habit.count > 0
-                                              ? habit.count
-                                              : "",
+                                            : "",
                                       }))
                                     }
                                     className="px-4 py-2 bg-indigo-500/20 text-[var(--accent-purple)] hover:bg-indigo-500/30 rounded-lg font-medium text-sm flex items-center justify-center transition-colors active:scale-95 whitespace-nowrap"
                                   >
                                     {bigNumberInputs[habit.id] !== undefined
                                       ? "Cancel"
-                                      : habit.count > 0
-                                        ? "Edit"
-                                        : "Log"}
+                                      : "+ Log"}
                                   </button>
                                 )}
                               </div>
@@ -1725,8 +1720,8 @@ export default function DailyRitualsSection() {
                         >
                           <input
                             type="number"
-                            min="0"
-                            placeholder={`Log ${habit.unit || "amount"}...`}
+                            min="1"
+                            placeholder={`+ Amount in ${habit.unit || "units"}...`}
                             value={bigNumberInputs[habit.id] ?? ""}
                             onChange={(e) =>
                               setBigNumberInputs({
