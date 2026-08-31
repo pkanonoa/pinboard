@@ -184,12 +184,9 @@ export const syncMonthlyGoalProgress = (habitId, amount) => {
             (h) => h.date === todayStr,
           );
           if (existingToday >= 0) {
-            newHistory[existingToday].value = Math.max(
-              0,
-              newHistory[existingToday].value + amount,
-            );
+            newHistory[existingToday].value = newProgress;
           } else {
-            newHistory.push({ date: todayStr, value: Math.max(0, amount) });
+            newHistory.push({ date: todayStr, value: newProgress });
           }
         } else if (g.trackingType === "binary") {
           g.isCompleted = amount > 0;
