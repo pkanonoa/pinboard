@@ -415,9 +415,6 @@ export default function GoalsSection() {
                   </option>
                   <option value="cumulative">Total Amount (e.g. 500 pages)</option>
                   <option value="daily_log">Daily Average (e.g. 175 lbs)</option>
-                  <option value="binary">
-                    Done / Not Done (e.g. Run a marathon)
-                  </option>
                 </select>
               </div>
     
