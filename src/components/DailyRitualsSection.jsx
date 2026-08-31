@@ -816,7 +816,7 @@ export default function DailyRitualsSection() {
               <select
                 value={newHabit.type}
                 onChange={(e) => setNewHabit({ ...newHabit, type: e.target.value })}
-                className="w-full bg-[var(--bg-primary)]/50 border border-[var(--border)]/30 rounded-xl px-4 py-3 text-sm text-[var(--text-primary)] mb-2 focus:border-emerald-500 focus:outline-none"
+                className="w-full bg-[var(--bg-primary)] border border-[var(--border)] rounded-xl px-4 py-3 text-sm text-[var(--text-primary)] mb-2 focus:border-emerald-500 focus:outline-none"
               >
                 <option value="countable">+1 (water, pages)</option>
                 <option value="one_time">Mark Done (exercise, shower)</option>
@@ -830,7 +830,7 @@ export default function DailyRitualsSection() {
                 required
                 value={newHabit.name}
                 onChange={(e) => setNewHabit({ ...newHabit, name: e.target.value })}
-                className="w-full bg-[var(--bg-primary)]/50 border border-[var(--border)]/30 rounded-xl px-4 py-3 text-sm text-[var(--text-primary)] mb-2 focus:border-emerald-500 focus:outline-none"
+                className="w-full bg-[var(--bg-primary)] border border-[var(--border)] rounded-xl px-4 py-3 text-sm text-[var(--text-primary)] mb-2 focus:border-emerald-500 focus:outline-none"
               />
     
               {(newHabit.type === "countable" ||
@@ -845,7 +845,7 @@ export default function DailyRitualsSection() {
                     onChange={(e) =>
                       setNewHabit({ ...newHabit, goal: e.target.value })
                     }
-                    className="w-1/3 bg-[var(--bg-primary)]/50 border border-[var(--border)]/30 rounded-xl px-4 py-3 text-sm text-[var(--text-primary)] focus:border-emerald-500 focus:outline-none"
+                    className="w-1/3 bg-[var(--bg-primary)] border border-[var(--border)] rounded-xl px-4 py-3 text-sm text-[var(--text-primary)] focus:border-emerald-500 focus:outline-none"
                   />
                   <input
                     type="text"
@@ -855,7 +855,7 @@ export default function DailyRitualsSection() {
                     onChange={(e) =>
                       setNewHabit({ ...newHabit, unit: e.target.value })
                     }
-                    className="w-2/3 bg-[var(--bg-primary)]/50 border border-[var(--border)]/30 rounded-xl px-4 py-3 text-sm text-[var(--text-primary)] focus:border-emerald-500 focus:outline-none"
+                    className="w-2/3 bg-[var(--bg-primary)] border border-[var(--border)] rounded-xl px-4 py-3 text-sm text-[var(--text-primary)] focus:border-emerald-500 focus:outline-none"
                   />
                 </div>
               )}
@@ -873,7 +873,7 @@ export default function DailyRitualsSection() {
                       onChange={(e) =>
                         setNewHabit({ ...newHabit, targetTime: e.target.value })
                       }
-                      className="w-full bg-[var(--bg-primary)]/50 border border-[var(--border)]/30 rounded-xl px-4 py-3 text-sm text-[var(--text-primary)] focus:border-emerald-500 focus:outline-none "
+                      className="w-full bg-[var(--bg-primary)] border border-[var(--border)] rounded-xl px-4 py-3 text-sm text-[var(--text-primary)] focus:border-emerald-500 focus:outline-none "
                     />
                   </div>
                   <div className="w-1/2">
@@ -888,7 +888,7 @@ export default function DailyRitualsSection() {
                       onChange={(e) =>
                         setNewHabit({ ...newHabit, graceWindow: e.target.value })
                       }
-                      className="w-full bg-[var(--bg-primary)]/50 border border-[var(--border)]/30 rounded-xl px-4 py-3 text-sm text-[var(--text-primary)] focus:border-emerald-500 focus:outline-none"
+                      className="w-full bg-[var(--bg-primary)] border border-[var(--border)] rounded-xl px-4 py-3 text-sm text-[var(--text-primary)] focus:border-emerald-500 focus:outline-none"
                     />
                   </div>
                 </div>
@@ -944,7 +944,7 @@ export default function DailyRitualsSection() {
             return (
               <div
                 key={habit.id}
-                className={`p-4 rounded-2xl flex flex-col gap-3 relative transition-all duration-300 bg-[var(--bg-card)] border border-[var(--border)]/60 shadow-sm select-none ${habit.paused ? "opacity-50 grayscale" : ""} ${activeMenuId === habit.id ? "z-[60]" : "z-10"}`}
+                className={`p-4 rounded-2xl flex flex-col gap-3 relative transition-all duration-300 bg-[var(--bg-card)] border border-[var(--border)] shadow-sm select-none ${habit.paused ? "opacity-50 grayscale" : ""} ${activeMenuId === habit.id ? "z-[60]" : "z-10"}`}
                 onTouchStart={() => !editingHabitId && startLongPress(habit.id)}
                 onTouchEnd={clearLongPress}
                 onMouseDown={() => !editingHabitId && startLongPress(habit.id)}
@@ -1117,7 +1117,7 @@ export default function DailyRitualsSection() {
                                     !editHabitData.reminderEnabled,
                                 })
                               }
-                              className={`w-10 h-5 rounded-full transition-colors relative ${editHabitData.reminderEnabled ? "bg-indigo-500" : "bg-[var(--bg-card-hover)]"}`}
+                              className={`w-10 h-5 rounded-full transition-colors relative ${editHabitData.reminderEnabled ? "bg-indigo-500" : "bg-gray-300 dark:bg-gray-600"}`}
                             >
                               <div
                                 className={`w-3 h-3 bg-white rounded-full absolute top-1 transition-transform ${editHabitData.reminderEnabled ? "translate-x-6" : "translate-x-1"}`}

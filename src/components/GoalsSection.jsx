@@ -363,7 +363,7 @@ export default function GoalsSection() {
                 required
                 value={newGoal.name}
                 onChange={(e) => setNewGoal({ ...newGoal, name: e.target.value })}
-                className="w-full bg-[var(--bg-primary)]/50 border border-[var(--border)]/30 rounded-xl px-4 py-3 text-[15px] text-[var(--text-primary)] mb-4 focus:ring-1 focus:ring-indigo-500 focus:outline-none placeholder-gray-500"
+                className="w-full bg-[var(--bg-primary)] border border-[var(--border)] rounded-xl px-4 py-3 text-[15px] text-[var(--text-primary)] mb-4 focus:ring-1 focus:ring-indigo-500 focus:outline-none placeholder-[var(--text-muted)]"
               />
     
               <div className="flex gap-3 mb-4">
@@ -376,7 +376,7 @@ export default function GoalsSection() {
                     onChange={(e) =>
                       setNewGoal({ ...newGoal, category: e.target.value })
                     }
-                    className="w-full bg-[var(--bg-primary)]/50 border border-[var(--border)]/30 rounded-xl px-4 py-3 text-[14px] text-[var(--text-primary)] focus:ring-1 focus:ring-indigo-500 focus:outline-none appearance-none"
+                    className="w-full bg-[var(--bg-primary)] border border-[var(--border)] rounded-xl px-4 py-3 text-[14px] text-[var(--text-primary)] focus:ring-1 focus:ring-indigo-500 focus:outline-none appearance-none"
                   >
                     <option value="Body">Body</option>
                     <option value="Performance">Performance</option>
@@ -394,7 +394,7 @@ export default function GoalsSection() {
                     onChange={(e) =>
                       setNewGoal({ ...newGoal, dueDate: e.target.value })
                     }
-                    className="w-full bg-[var(--bg-primary)]/50 border border-[var(--border)]/30 rounded-xl px-4 py-3 text-[14px] text-[var(--text-primary)] focus:ring-1 focus:ring-indigo-500 focus:outline-none"
+                    className="w-full bg-[var(--bg-primary)] border border-[var(--border)] rounded-xl px-4 py-3 text-[14px] text-[var(--text-primary)] focus:ring-1 focus:ring-indigo-500 focus:outline-none"
                   />
                 </div>
               </div>
@@ -408,7 +408,7 @@ export default function GoalsSection() {
                   onChange={(e) =>
                     setNewGoal({ ...newGoal, trackingType: e.target.value })
                   }
-                  className="w-full bg-[var(--bg-primary)]/50 border border-[var(--border)]/30 rounded-xl px-4 py-3 text-[14px] text-[var(--text-primary)] focus:ring-1 focus:ring-indigo-500 focus:outline-none appearance-none"
+                  className="w-full bg-[var(--bg-primary)] border border-[var(--border)] rounded-xl px-4 py-3 text-[14px] text-[var(--text-primary)] focus:ring-1 focus:ring-indigo-500 focus:outline-none appearance-none"
                 >
                   <option value="count_toward">
                     Number of Times (e.g. 20 gym visits)
@@ -436,7 +436,7 @@ export default function GoalsSection() {
                       onChange={(e) =>
                         setNewGoal({ ...newGoal, target: e.target.value })
                       }
-                      className="w-full bg-[var(--bg-primary)]/50 border border-[var(--border)]/30 rounded-xl px-4 py-3 text-[14px] text-[var(--text-primary)] focus:ring-1 focus:ring-indigo-500 focus:outline-none"
+                      className="w-full bg-[var(--bg-primary)] border border-[var(--border)] rounded-xl px-4 py-3 text-[14px] text-[var(--text-primary)] focus:ring-1 focus:ring-indigo-500 focus:outline-none"
                     />
                   </div>
                   <div className="w-1/2">
@@ -451,7 +451,7 @@ export default function GoalsSection() {
                       onChange={(e) =>
                         setNewGoal({ ...newGoal, unit: e.target.value })
                       }
-                      className="w-full bg-[var(--bg-primary)]/50 border border-[var(--border)]/30 rounded-xl px-4 py-3 text-[14px] text-[var(--text-primary)] focus:ring-1 focus:ring-indigo-500 focus:outline-none placeholder-gray-500"
+                      className="w-full bg-[var(--bg-primary)] border border-[var(--border)] rounded-xl px-4 py-3 text-[14px] text-[var(--text-primary)] focus:ring-1 focus:ring-indigo-500 focus:outline-none placeholder-[var(--text-muted)]"
                     />
                   </div>
                 </div>
@@ -461,7 +461,7 @@ export default function GoalsSection() {
                 <label className="text-[11px] text-[var(--text-muted)] font-bold uppercase tracking-wider block mb-2 pl-1">
                   Link to Daily Rituals (Optional)
                 </label>
-                <div className="bg-[var(--bg-primary)]/50 border border-[var(--border)]/30 rounded-xl p-2 max-h-32 overflow-y-auto flex flex-col gap-1">
+                <div className="bg-[var(--bg-primary)] border border-[var(--border)] rounded-xl p-2 max-h-32 overflow-y-auto flex flex-col gap-1">
                   {availableHabits.length === 0 && (
                     <span className="text-xs text-[var(--text-muted)] p-2">
                       No rituals found.

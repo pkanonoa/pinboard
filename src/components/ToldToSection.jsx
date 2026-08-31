@@ -166,7 +166,7 @@ export default function ToldToSection() {
                 required
                 value={taskName}
                 onChange={(e) => setTaskName(e.target.value)}
-                className="w-full bg-[var(--bg-primary)]/50 border border-[var(--border)]/30 rounded-xl px-4 py-3 text-[var(--text-primary)] placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-colors"
+                className="w-full bg-[var(--bg-primary)] border border-[var(--border)] rounded-xl px-4 py-3 text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-colors"
               />
               <div className="flex gap-2">
                 <input
@@ -174,14 +174,14 @@ export default function ToldToSection() {
                   placeholder="Assigned by (optional)"
                   value={whoSaidIt}
                   onChange={(e) => setWhoSaidIt(e.target.value)}
-                  className="w-1/2 bg-[var(--bg-primary)]/50 border border-[var(--border)]/30 rounded-xl px-4 py-3 text-[var(--text-primary)] placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-colors text-sm"
+                  className="w-1/2 bg-[var(--bg-primary)] border border-[var(--border)] rounded-xl px-4 py-3 text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-colors text-sm"
                 />
                 <input
                   type="datetime-local"
                   value={dueDate}
                   min={new Date().toISOString().slice(0, 16)}
                   onChange={(e) => setDueDate(e.target.value)}
-                  className="w-1/2 bg-[var(--bg-primary)]/50 border border-[var(--border)]/30 rounded-xl px-3 py-3 text-[var(--text-secondary)] placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-colors text-sm"
+                  className="w-1/2 bg-[var(--bg-primary)] border border-[var(--border)] rounded-xl px-3 py-3 text-[var(--text-secondary)] placeholder-[var(--text-muted)] focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-colors text-sm"
                 />
               </div>
               <div className="flex gap-2 mt-3">

@@ -258,7 +258,7 @@ export default function OnboardingScreen({ onComplete }) {
                   className={`flex flex-col items-center justify-center p-4 rounded-xl border-2 transition-all active:scale-95 ${
                     isSelected
                       ? "border-teal-500 bg-teal-500/20"
-                      : "border-[var(--border)] bg-[var(--bg-primary)]/50 text-[var(--text-secondary)] hover:border-[var(--border)]"
+                      : "border-[var(--border)] bg-[var(--bg-primary)] text-[var(--text-secondary)] hover:border-[var(--border)]"
                   }`}
                 >
                   <span className="text-3xl mb-2">{habit.emoji}</span>
