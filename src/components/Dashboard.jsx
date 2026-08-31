@@ -70,7 +70,7 @@ export default function Dashboard({ setCurrentTab }) {
     if (savedTasks) {
       try {
         setTasks(JSON.parse(savedTasks));
-      } catch (e) {}
+      } catch (e) { }
     }
 
     const savedRitualsStr = localStorage.getItem("pinboard_rituals_data");
@@ -78,7 +78,7 @@ export default function Dashboard({ setCurrentTab }) {
       try {
         const savedData = JSON.parse(savedRitualsStr);
         setHabits(savedData.habits || []);
-      } catch (e) {}
+      } catch (e) { }
     }
 
     const savedGoals = localStorage.getItem("pinboard_goals");
@@ -86,7 +86,7 @@ export default function Dashboard({ setCurrentTab }) {
       try {
         const parsed = JSON.parse(savedGoals);
         if (Array.isArray(parsed)) setMonthlyGoals(parsed);
-      } catch (e) {}
+      } catch (e) { }
     }
 
     try {
@@ -241,7 +241,7 @@ export default function Dashboard({ setCurrentTab }) {
             window.dispatchEvent(new Event("pinboard_goals_updated"));
           }
         }
-      } catch (e) {}
+      } catch (e) { }
 
       // 3. Dispatch global reload event and refresh dashboard state
       window.dispatchEvent(new Event("pinboard_rituals_updated"));
@@ -288,7 +288,7 @@ export default function Dashboard({ setCurrentTab }) {
             minute: "2-digit",
           });
         }
-      } catch (e) {}
+      } catch (e) { }
     }
     return "4:00 PM";
   };
@@ -313,7 +313,7 @@ export default function Dashboard({ setCurrentTab }) {
       const savedData = savedDataStr ? JSON.parse(savedDataStr) : {};
       savedData.habits = updated;
       localStorage.setItem("pinboard_rituals_data", JSON.stringify(savedData));
-    } catch (e) {}
+    } catch (e) { }
 
     logCompletion("habit", habitId);
     window.dispatchEvent(new CustomEvent("neo_celebration"));
@@ -401,11 +401,10 @@ export default function Dashboard({ setCurrentTab }) {
       {/* Active Goal Card */}
       {(!promptDismissed || monthlyGoals.length > 0) && (
         <div
-          className={`border rounded-2xl p-4 shadow-sm transition-all ${
-            monthlyGoals.length > 0
+          className={`border rounded-2xl p-4 shadow-sm transition-all ${monthlyGoals.length > 0
               ? "bg-[var(--bg-card)] border-[var(--border)]/60"
               : "border-dashed border-[var(--border)]/60 bg-transparent"
-          }`}
+            }`}
         >
           <div className="flex justify-between items-center mb-2">
             <div className="flex items-center gap-2">
